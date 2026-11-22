@@ -21,16 +21,16 @@ from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.calculations.registry.errors import NoRevisionForPeriodError
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef, TemporalProjectionDirection
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.schema_verification import (
     VerificationFindingKind,
     VerificationPredicateDefinition,
     VerificationPredicateOperator,
     parse_verification_predicate_expression_memo,
 )
-from ....domain.calculations.registry.temporal import revision_temporal_resolution
 from ....domain.calculations.registry.tests.authored_editions import (
+    EditionBelowFilingGrade,
+    authored_editions_below_filing_grade,
     filing_grade_exercises,
     filing_year_envelope,
 )
@@ -207,23 +207,9 @@ def _violating_values(predicate: VerificationPredicateDefinition) -> dict[Casill
     return None
 
 
-def _subject_at(operation: PinnedAuthorityOperation, modelo: str, year: int) -> _BelowFilingSubject | None:
-    """The subject the annual edition of ``modelo`` for ``year`` offers, or ``None`` when it offers none."""
-    try:
-        grade = operation.reachable_authority_grade(modelo, filing_year=year, period=_ANNUAL)
-    except NoRevisionForPeriodError:
-        # The modelo serves no annual declaration for the year.
-        return None
-    if grade is RegistryAuthorityGrade.FILING:
-        return None
-    revision = operation.revision_for_context(modelo, filing_year=year, period=_ANNUAL)
-    resolution = revision_temporal_resolution(
-        revision, filing_year=year, period=_ANNUAL, support=operation.supported_filing_years()
-    )
-    # A projected year is refused as projected; the grade refusal under test is an edition's own declared grade.
-    if resolution.projection_direction is not TemporalProjectionDirection.AUTHORED:
-        return None
-    work_unit = _work_unit(operation, modelo, year, _ANNUAL)
+def _subject_at(operation: PinnedAuthorityOperation, edition: EditionBelowFilingGrade) -> _BelowFilingSubject | None:
+    """The subject an authored annual edition below filing grade offers, or ``None`` when it offers none."""
+    work_unit = _work_unit(operation, edition.modelo, edition.filing_year, edition.period)
     predicates = operation.revision(work_unit.modelo, work_unit.revision_id).verification_predicates
     advisory = next(((item, values) for item in predicates if (values := _firing_values(item)) is not None), None)
     blocking = next(((item, values) for item in predicates if (values := _violating_values(item)) is not None), None)
@@ -231,7 +217,7 @@ def _subject_at(operation: PinnedAuthorityOperation, modelo: str, year: int) -> 
         return None
     return _BelowFilingSubject(
         work_unit=work_unit,
-        grade=grade,
+        grade=edition.grade,
         advisory=advisory[0],
         firing_values=advisory[1],
         blocking=blocking[0],
@@ -245,11 +231,10 @@ def _below_filing_subject(operation: PinnedAuthorityOperation) -> _BelowFilingSu
     Editions rise to filing grade as their evidence lands, so the modelo and year are read from the authority,
     never fixed.
     """
-    for year in sorted(filing_year_envelope().years, reverse=True):
-        for modelo in sorted(operation.modelo_ids()):
-            subject = _subject_at(operation, modelo, year)
-            if subject is not None:
-                return subject
+    for edition in authored_editions_below_filing_grade(_ANNUAL):
+        subject = _subject_at(operation, edition)
+        if subject is not None:
+            return subject
     raise AssertionError(
         "precondition: an authored annual edition below filing grade inside the support envelope declares a two-box advisory "
         "check and a two-box blocking check"

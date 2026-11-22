@@ -22,7 +22,8 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    authored_revisions_where,
+    EditionBelowFilingGrade,
+    authored_editions_below_filing_grade,
 )
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
@@ -315,30 +316,39 @@ def test_export_modelo_111_refuses_when_profile_name_missing(
     assert not out.exists()
 
 
-# Every Modelo 200 edition declaring calculation grade, chosen by grade from the
-# registry rather than named by year: each one computes but cannot be filed, so a
-# real export of its exercise must stop at the typed grade refusal.
-_M200_CALCULATION_GRADE_REVISIONS = authored_revisions_where(
-    "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
-)
-assert _M200_CALCULATION_GRADE_REVISIONS, "Modelo 200 declares no calculation-grade edition to refuse"
+def _calculation_grade_edition() -> EditionBelowFilingGrade:
+    """The newest annual edition of the envelope authored for its own year and served at calculation grade.
+
+    Editions rise to filing grade as their evidence lands, so the modelo and year come from the authority. One
+    below calculation grade does not compute at all, so it is not taken. Read when the test runs, so a registry
+    with no such edition fails this case alone rather than its whole module.
+    """
+    edition = next(
+        (
+            edition
+            for edition in authored_editions_below_filing_grade("0A")
+            if edition.grade is RegistryAuthorityGrade.CALCULATION
+        ),
+        None,
+    )
+    assert edition is not None, (
+        "precondition: no annual edition of the support envelope authored for its own year is served at "
+        "calculation grade, so there is no computed declaration whose export is refused on grade"
+    )
+    return edition
 
 
-@pytest.mark.parametrize(
-    ("revision_id", "filing_year"),
-    [(str(revision.id), revision.valid_from.year) for revision in _M200_CALCULATION_GRADE_REVISIONS],
-    ids=lambda value: str(value),
-)
-def test_export_modelo_200_refuses_calculation_only_authority_for_filing(
-    revision_id: str, filing_year: int, tmp_path: Path, *, operation: PinnedAuthorityOperation
+def test_export_refuses_a_calculation_grade_edition_for_filing(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A Modelo 200 edition declaring calculation grade cannot satisfy filing-grade export."""
+    """An edition the authority serves at calculation grade computes but cannot satisfy a filing-grade export."""
 
+    edition = _calculation_grade_edition()
     set_export_profile_name()
     work_unit_id, _ = seed_verified_revision_without_inputs(
-        modelo="200", filing_year=filing_year, period="0A", operation=operation
+        modelo=edition.modelo, filing_year=edition.filing_year, period=edition.period, operation=operation
     )
-    out = tmp_path / "modelo-200.txt"
+    out = tmp_path / f"modelo-{edition.modelo}.txt"
 
     result = invoke(
         [
@@ -371,9 +381,9 @@ def test_export_modelo_200_refuses_calculation_only_authority_for_filing(
     evidence_values = evidence[0]["values"]
     assert evidence_values["authority_grade_declared"] is True
     assert evidence_values["declared_authority_grade"] == "calculation"
-    assert evidence_values["modelo"] == "200"
+    assert evidence_values["modelo"] == edition.modelo
     assert evidence_values["requested_authority_grade"] == "filing"
-    assert evidence_values["revision_id"] == revision_id
+    assert evidence_values["revision_id"] == edition.revision_id
     # Free exception text never crosses the runtime; the catalogue sentence does.
     assert error["message"] == tr(get_registered_error_code_by_code(error["code"]).message_key)
     assert not out.exists()
