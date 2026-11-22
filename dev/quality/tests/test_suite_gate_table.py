@@ -115,6 +115,10 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         # CADRUMO_DEV_AGENT_CHECKOUT. It refuses with exit 2 where none is
         # supplied, so the portable aggregate cannot run it on a plain checkout.
         "check-provider-catalog",
+        # The merge gate's fixture lane: it produces the generated window
+        # projections a bare checkout lacks and runs every producer check,
+        # minutes of work that a portable static aggregate does not repeat.
+        "fixtures-gate",
     }
 )
 
