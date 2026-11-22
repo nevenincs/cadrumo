@@ -540,6 +540,10 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # CSV row refusals are rendered synchronously inside the worker handoff;
         # the invocation language is restored before the batch result returns.
         ("application/ledger/bulk_classify_operation.py", "classify"),
+        # The batch edit says each row's refusal the same way, in its preview and its
+        # apply, inside one synchronous with-block before the result leaves the worker.
+        ("application/ledger/batch_update_operation.py", "preview"),
+        ("application/ledger/batch_update_operation.py", "apply"),
         # The terminal interface's installation area returns the override as a context
         # manager its callers enter only around synchronous rendering, never across a wait,
         # so the first-profile page can word an area before any profile holds a language.
@@ -582,6 +586,8 @@ _PROJECTION_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         ("application/overview/read_operation.py", "_capture"),
         ("application/review/read_operation.py", "_capture"),
         ("application/ledger/bulk_classify_operation.py", "classify"),
+        ("application/ledger/batch_update_operation.py", "preview"),
+        ("application/ledger/batch_update_operation.py", "apply"),
     }
 )
 

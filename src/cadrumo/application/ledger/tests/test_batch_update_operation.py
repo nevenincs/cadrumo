@@ -226,3 +226,32 @@ def test_apply_with_another_digest_refuses_and_carries_the_plan_it_found(
                 }
             ),
         )
+
+
+def test_a_category_alone_on_an_unclassified_movement_is_refused_with_its_cause(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    transactions: tuple[Transaction, Transaction],
+) -> None:
+    """The staged check sends such a cell to a classification first, so the preview must not count it as a change."""
+    category = spending_category_tokens(authority=authority_operation)[0].value
+    alone = LedgerPropertySet(fields=("category_id",), category_id=category)
+    unclassified, classified = transactions
+    rows = (
+        LedgerBatchUpdateRow(
+            transaction_id=unclassified.transaction_id,
+            expected_modified_at=unclassified.modified_at.isoformat(),
+            properties=alone,
+        ),
+        _rows(authority_operation, (classified,))[0],
+    )
+    subject = _subject(monkeypatch, authority_operation, transactions)
+    _previewed_digest(subject, rows)
+    result = cast(LedgerBatchUpdateExecutionResult, subject.operands.values[-1]).result
+    refused, applied = result.rows
+    assert (refused.outcome, refused.cause) == ("refused", "invalid")
+    # The person reads the catalogue's sentence, never the untranslated detail.
+    assert len(refused.messages) == 1 and refused.messages[0]
+    assert "classify the movement first" not in refused.messages[0]
+    assert applied.outcome == "applied"
+    assert (result.counts.applied, result.counts.refused) == (1, 1)

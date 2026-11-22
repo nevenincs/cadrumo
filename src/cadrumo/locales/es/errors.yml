@@ -413,6 +413,8 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
+    ledger_category_needs_business_classification: 'Una categoría de gasto necesita
+      una clasificación empresarial: clasifica primero este movimiento.'
     ledger_gross_above_cash_needs_withholding_category: La base y el IVA declarados
       suman más que el dinero que se movió; esa diferencia es una retención de IRPF
       y no se ha declarado ninguna categoría de IRPF.

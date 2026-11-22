@@ -707,6 +707,10 @@ export function SelectionInspector({
               unread,
               visible,
             });
+            const skipped = Object.values(preview.skipped).reduce(
+              (sum, count) => sum + count,
+              0,
+            );
             return (
               <form
                 key={field}
@@ -721,7 +725,15 @@ export function SelectionInspector({
                     htmlFor={`${shareId}-${field}`}
                     className="font-normal"
                   >
-                    {fieldName(t, field)}
+                    {/* A disabled "set for 0" says why: the movements it
+                        leaves out, as the choices above say it. */}
+                    {facts(t, [
+                      fieldName(t, field),
+                      skipped > 0 &&
+                        t("desktop.ledger.inspector.selection.skipped", {
+                          count: skipped,
+                        }),
+                    ])}
                   </FieldLabel>
                   <TextEditor
                     id={`${shareId}-${field}`}
