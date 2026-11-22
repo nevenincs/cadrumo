@@ -294,6 +294,36 @@ const focusNewest = (target: Page) =>
     return Number(newest.dataset.seq);
   });
 
+/**
+ * Waits until the following log has gone `past` records beyond record `seq`
+ * while the keyboard is still on it, looked at in every frame inside the
+ * page. A following log draws only its newest records, so the record leaves
+ * what is drawn a few hundred records on, and the keyboard with it: a wait
+ * polled from the test can overshoot that on a busy machine, and the keys
+ * would then start from the list rather than from a record the log passed.
+ */
+const passedBy = (target: Page, seq: number, past: number) =>
+  target.locator(".logview-list").evaluate(
+    (element, [on, by]) =>
+      new Promise<void>((done, fail) => {
+        const look = () => {
+          const active = document.activeElement;
+          if (
+            !(active instanceof HTMLElement) ||
+            active.dataset.seq !== `${on}`
+          )
+            return fail(new Error(`the keyboard left record ${on}`));
+          const newest = element.querySelector<HTMLElement>(
+            ":scope > .record:last-of-type",
+          );
+          if (Number(newest?.dataset.seq) > on + by) return done();
+          requestAnimationFrame(look);
+        };
+        look();
+      }),
+    [seq, past] as const,
+  );
+
 /** Tab from the filter field until focus is in the log's list. */
 const tabIntoLog = async (target: Page) => {
   const list = target.locator(".logview-list");
@@ -433,11 +463,7 @@ test("an arrow from a record the following log has moved past takes the view to 
   // The keyboard is on the newest record; the log goes on following and
   // that record is soon far above the view.
   const seq = await focusNewest(target);
-  await expect
-    .poll(async () =>
-      Number(await list.locator(".record").last().getAttribute("data-seq")),
-    )
-    .toBeGreaterThan(seq + 60);
+  await passedBy(target, seq, 60);
   await expect(follow).toHaveAttribute("aria-pressed", "true");
   for (const [key, least] of [
     ["ArrowDown", 1],
@@ -480,37 +506,59 @@ test("under a fast feed, every key from a record the log has passed takes the vi
   // scroll it causes, which is when the log used to carry on following.
   // Thirty keys, each looked at, under a feed that keeps the page busy.
   test.setTimeout(60_000);
+  // The page's clock is held and the test lets the batches in. At this rate
+  // a following log draws the record the keyboard is on away within a
+  // second, sooner than a busy machine may carry the next step of a test to
+  // the page; and a clock left running on a page that falls behind fires
+  // every batch it missed at once, so the page only falls further behind.
+  // While the keys are pressed, batches go in one after another, as fast as
+  // the page takes them, landing wherever they land between the keys.
+  await target.clock.install();
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=30",
   );
   await openLogs(target);
   const { list } = await overLog(target);
+  // Paused a few seconds ahead, as the page's time goes on while the test
+  // reads it: the jump lets each waiting timer fire once, the feed's too.
+  await target.clock.pauseAt((await target.evaluate(() => Date.now())) + 5_000);
   const seq = await focusNewest(target);
+  await target.clock.runFor(30 * 4);
   await expect
     .poll(async () =>
       Number(await list.locator(".record").last().getAttribute("data-seq")),
     )
-    .toBeGreaterThan(seq + 200);
-  for (let press = 0; press < 30; press++) {
-    await target.keyboard.press(press % 3 === 2 ? "PageDown" : "ArrowDown");
-    const at = await list.evaluate((element) => {
-      const row = document.activeElement as HTMLElement;
-      const box = element.getBoundingClientRect();
-      const rect = row.getBoundingClientRect();
-      return {
-        newest: row === element.querySelector(":scope > .record:last-of-type"),
-        inView: rect.bottom > box.top && rect.top < box.bottom,
-        // Read in the same moment as the view, not after another batch.
-        following:
-          document
-            .querySelector("[data-follow]")
-            ?.getAttribute("aria-pressed") === "true",
-      };
-    });
-    // On the newest record the log follows again, as it should.
-    if (at.newest) break;
-    expect(at.inView, `press ${press}`).toBe(true);
-    expect(at.following, `press ${press}`).toBe(false);
+    .toBeGreaterThan(seq + 60);
+  let feeding = true;
+  const feed = (async () => {
+    while (feeding) await target.clock.runFor(30);
+  })();
+  try {
+    for (let press = 0; press < 30; press++) {
+      await target.keyboard.press(press % 3 === 2 ? "PageDown" : "ArrowDown");
+      const at = await list.evaluate((element) => {
+        const row = document.activeElement as HTMLElement;
+        const box = element.getBoundingClientRect();
+        const rect = row.getBoundingClientRect();
+        return {
+          newest:
+            row === element.querySelector(":scope > .record:last-of-type"),
+          inView: rect.bottom > box.top && rect.top < box.bottom,
+          // Read in the same moment as the view, not after another batch.
+          following:
+            document
+              .querySelector("[data-follow]")
+              ?.getAttribute("aria-pressed") === "true",
+        };
+      });
+      // On the newest record the log follows again, as it should.
+      if (at.newest) break;
+      expect(at.inView, `press ${press}`).toBe(true);
+      expect(at.following, `press ${press}`).toBe(false);
+    }
+  } finally {
+    feeding = false;
+    await feed;
   }
 });
 
