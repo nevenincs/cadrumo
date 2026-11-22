@@ -1084,6 +1084,9 @@ application:
           caràcters.
         line_oss_rate_kind_refused: Aquest tipus d'OSS no està disponible per a aquesta
           línia.
+        m349_clave_category_mismatch: La clau d'operació del Model 349 contradiu la
+          categoria d'IVA indicada; una mateixa operació no es pot declarar alhora
+          com a interior i intracomunitària.
         operation_date_role_mismatch: 'La data d''operació va unida a la seva funció
           desada: en una factura desada pots moure-la, però no afegir-la ni treure-la.'
         operation_type_required: Aquesta categoria d'IVA necessita una clau d'operació

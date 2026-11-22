@@ -711,6 +711,7 @@ def intracommunity_clave(invoice: Invoice) -> str | None:
     devengo_date = invoice.operation_date or invoice.issued_at
     operation_type = invoice.operation_type
     if operation_type is not None:
+        _refuse_clave_contradicting_the_category(invoice, operation_type, effective_date=devengo_date)
         return _m349_clave_for_operation_type(
             invoice_id=invoice.invoice_id,
             source_kind=BindingSourceKind(invoice_source_kind(invoice)),
@@ -726,6 +727,42 @@ def intracommunity_clave(invoice: Invoice) -> str | None:
         return None
     derived = _clave_by_kind_and_category(devengo_date).get((invoice.kind, invoice.iva_category))
     return None if derived is None else derived.value
+
+
+def _refuse_clave_contradicting_the_category(
+    invoice: Invoice,
+    operation_type: IntracomOperationType,
+    *,
+    effective_date: date,
+) -> None:
+    """Refuse to declare an invoice whose clave and IVA category name different operations.
+
+    The record boundary refuses this pair at write admission, so a pair reaching
+    here was stored before that rule and still hydrates -- deliberately, so the
+    operator can open and correct it. What must not happen is DECLARING it: the
+    clave would file the base to VIES as an intra-community operation while the
+    category settles the same base elsewhere in Modelo 303, and RIVA art. 79
+    admits only the intra-community operations to the recapitulativa.
+
+    This sits beside the direction check in
+    :func:`_m349_clave_for_operation_type` and raises the same error type: both
+    are facts about the stored record that make its clave undeclarable, and the
+    calculation surfaces them as an input conflict naming the invoice rather
+    than filing a row nobody can reconcile.
+    """
+    if invoice.iva_category is None:
+        return
+    declared = resolve_iva_category_catalogue(effective_date=effective_date).category_for_operation_type(
+        operation_type.value,
+    )
+    if declared is None or declared == invoice.iva_category:
+        return
+    raise RegistryValidationError(
+        f"catalogue invoice {invoice.invoice_id!r} states modelo 349 clave {operation_type.value!r}, "
+        f"which declares a {declared.value!r} operation, while its iva_category is "
+        f"{invoice.iva_category.value!r}; the contradiction must be corrected on the record before "
+        f"it can be declared (RIVA art. 79)",
+    )
 
 
 def _m349_clave_for_operation_type(

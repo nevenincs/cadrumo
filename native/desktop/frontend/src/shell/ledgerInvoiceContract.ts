@@ -688,6 +688,7 @@ export type InvoiceRuleFindingCode =
   | "iva_category_undeclared"
   | "intra_community_spanish_identification"
   | "operation_type_required"
+  | "m349_clave_category_mismatch"
   | "operation_date_role_mismatch"
   | "advance_payment_not_fully_collected"
   | "lease_only_on_issued"

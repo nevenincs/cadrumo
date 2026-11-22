@@ -1027,6 +1027,9 @@ application:
         line_description_blank: A line's description cannot be blank.
         line_description_too_long: A line's description holds up to {limit} characters.
         line_oss_rate_kind_refused: This OSS rate kind is not available for this line.
+        m349_clave_category_mismatch: The Modelo 349 clave de operación contradicts
+          the stated IVA category; one operation cannot be declared domestically and
+          intra-community at once.
         operation_date_role_mismatch: The operation date travels with its stored role,
           so on a stored invoice it can be moved but not added or removed.
         operation_type_required: This IVA category needs a Modelo 349 operation key.

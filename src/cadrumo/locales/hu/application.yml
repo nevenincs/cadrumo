@@ -1075,6 +1075,9 @@ application:
         line_description_too_long: A tétel leírása legfeljebb {limit} karakter lehet.
         line_oss_rate_kind_refused: Ez az OSS-kulcstípus ennél a tételnél nem érhető
           el.
+        m349_clave_category_mismatch: A Modelo 349 művelet kódja ellentmond a megadott
+          IVA-kategóriának; ugyanaz a művelet nem jelenthető egyszerre belföldiként
+          és Közösségen belüliként.
         operation_date_role_mismatch: 'A teljesítési dátum a tárolt szerepéhez tartozik:
           tárolt számlán áthelyezheted, de nem adhatod hozzá és nem veheted el.'
         operation_type_required: Ehhez az IVA-kategóriához kell a Modelo 349 műveleti
