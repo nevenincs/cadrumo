@@ -185,10 +185,11 @@ def _validate_rectification(
         raise IvaValidationError("rectification requires rectifies_ledger_id")
     if base_amount == Decimal("0") or iva_amount == Decimal("0"):
         raise IvaValidationError("rectification base_amount and iva_amount must both be signed non-zero evidence")
-    required_flow = require_iva_flow_direction(
-        _required_declaration(declarations, f"rectification_flow.{category.value}"),
-        effective_date=effective_date,
-    )
+    required_flow = rectification_settlement_flow(category=category, effective_date=effective_date)
+    if required_flow is None:
+        raise IvaValidationError(
+            f"IVA deduction registry declaration is missing: rectification_flow.{category.value}",
+        )
     if flow_direction.value != required_flow.value:
         raise IvaValidationError("rectification category and input IVA flow are not a closed legal pair")
     if rate_kind.value == _required_declaration(declarations, "rate.rectification_forbidden"):
@@ -288,6 +289,44 @@ def deduction_evidence_authority_for_row(
     return next(iter(authorities)) if len(authorities) == 1 else None
 
 
+def is_rectification_deduction_kind(kind: IvaDeductionFactKind, *, effective_date: date) -> bool:
+    """Whether fact 0085 counts ``kind`` among its rectification kinds."""
+    return kind.value in _declared_values(_registry_iva_deduction_declarations(effective_date), "kind.rectification")
+
+
+def rectification_settlement_flow(
+    *,
+    category: IvaCategory,
+    effective_date: date,
+) -> IvaFlowDirection | None:
+    """Return the side fact 0085 settles a rectification of ``category`` on, or ``None``.
+
+    A rectificacion de deducciones is an input-side fact whatever way the money
+    moved: LIVA art. 114 rectifies "las deducciones practicadas", so the
+    registry's ``rectification_flow.<category>`` declaration -- soportado for a
+    domestic or import row, inversion del sujeto pasivo for a reverse-charge one
+    -- is the settlement side, and the cash direction says only whether the
+    earlier deduction grows or shrinks.
+
+    Deriving the side from the cash direction instead read a supplier's refund as
+    an output operation and then refused it against this very declaration, which
+    left the art. 114.Uno reduction ("La rectificacion de las deducciones sera
+    obligatoria cuando implique una minoracion del importe inicialmente
+    deducido") expressible on no row at all.
+
+    ``None`` where the registry declares no rectification flow for the category,
+    so the caller keeps its ordinary derivation and the admissibility gate
+    reports the pairing rather than raising here. A declaration that IS present
+    and names a flow the dated vocabulary does not hold is a registry defect and
+    still raises, because an absent declaration and a wrong one are different
+    answers.
+    """
+    declared = _registry_iva_deduction_declarations(effective_date).get(f"rectification_flow.{category.value}")
+    if declared is None:
+        return None
+    return require_iva_flow_direction(declared, effective_date=effective_date)
+
+
 def _validate_non_rectification_category(
     *,
     kind: IvaDeductionFactKind,
@@ -365,6 +404,8 @@ __all__ = [
     "IvaDeductionClassificationProvenance",
     "admits_iva_deduction_classification",
     "deduction_evidence_authority_for_row",
+    "is_rectification_deduction_kind",
+    "rectification_settlement_flow",
     "required_deduction_evidence_authority",
     "supplier_invoice_deduction_authority",
     "validate_iva_deduction_fact",

@@ -36,6 +36,7 @@ from .action_errors import (
     ModeloApplicabilityFilterError,
     ModeloVerificationPredicateMalformedError,
 )
+from .finding_message_text import BOX_LIST_SEPARATOR
 from .refusal_door_verdicts import caller_defect_verdict, registry_defect_verdict
 from .verification_predicate_advisory import ADVISORY_PREDICATE_EVALUATORS
 from .verification_predicate_operands import (
@@ -857,7 +858,7 @@ def _floor_subtraction_finding(
         message_facts={
             "predicate_id": predicate.predicate_id,
             "box": reading.unresolved_ids[0],
-            "boxes": ",".join(reading.unresolved_ids),
+            "boxes": BOX_LIST_SEPARATOR.join(reading.unresolved_ids),
             "floor_box": reading.floor_id,
         },
         legal_refs=legal_refs,

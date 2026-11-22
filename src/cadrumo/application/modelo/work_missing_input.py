@@ -18,10 +18,12 @@ from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.modelo_localization import binding_label_text
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.renta_inmueble_findings import RentaInmuebleDoor
+from ..operations.error_detail import served_words_language
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from .calculation_input_refusal_doors import missing_input_listing_verdict
 from .edit_admission import permitted_binding_entry
@@ -482,12 +484,20 @@ def override_admitted(
 def _input_words(
     missing: ModeloWorkMissingInputError, *, work_unit: WorkUnit, box: str | None
 ) -> tuple[str, dict[str, object]]:
-    """The message key and context that say which input has no value and why."""
+    """The message key and context that say which input has no value and why.
+
+    The input is named by its binding's declared label, as the form names it,
+    in the language served; the binding itself travels as its public
+    coordinate, so the words can be worded again from it wherever the refusal
+    settles.
+    """
+    modelo = str(work_unit.modelo)
     context: dict[str, object] = {
-        "modelo": str(work_unit.modelo),
+        "modelo": modelo,
         "filing_year": work_unit.filing_year,
         "period": work_unit.period.registry_token,
-        "binding": missing.binding_id,
+        "binding_id": missing.binding_id,
+        "binding": binding_label_text(modelo, missing.binding_id, locale=served_words_language().value),
     }
     if box is not None:
         context["boxes"] = box

@@ -398,11 +398,12 @@ def _fx_stamp_fields(fx_stamp: FxConversionStamp) -> dict[str, object]:
     }
 
 
-def declared_fx_conversion_fields(*, currency: str, issued_at: date, declared_fx_rate: Decimal) -> dict[str, object]:
+def declared_fx_conversion_fields(*, currency: str, devengo_date: date, declared_fx_rate: Decimal) -> dict[str, object]:
     """Return the invoice fields that stamp an operator-declared exchange rate.
 
-    The rate is taken at the invoice's own date, the date the provider policy
-    reads a published rate at, and names the operator as its source. Every
+    ``devengo_date`` is the date the operator's statement answers for -- the
+    LIVA art. 75 devengo date, which is the date the provider policy reads a
+    published rate at -- and the stamp names the operator as its source. Every
     stamp field is returned, the empty observation date included, so applying
     them to a stored record replaces any earlier stamp whole.
 
@@ -410,14 +411,14 @@ def declared_fx_conversion_fields(*, currency: str, issued_at: date, declared_fx
         InvoiceValidationError: For a euro invoice or a rate that is not above zero.
     """
     require_declarable_fx_rate(currency=currency, declared_fx_rate=declared_fx_rate)
-    return _fx_stamp_fields(declared_fx_conversion_stamp(rate=declared_fx_rate, on_date=issued_at))
+    return _fx_stamp_fields(declared_fx_conversion_stamp(rate=declared_fx_rate, on_date=devengo_date))
 
 
 def _apply_fx_conversion_stamp(
     invoice_payload: dict[str, object],
     *,
     currency: str,
-    issued_at: date,
+    devengo_date: date,
     rate_provider: CatalogueInvoiceRateProviderPort,
     declared_fx_rate: Decimal | None,
 ) -> None:
@@ -425,7 +426,7 @@ def _apply_fx_conversion_stamp(
         require_declarable_fx_rate(currency=currency, declared_fx_rate=declared_fx_rate)
     fx_stamp = resolve_fx_conversion_stamp(
         currency=currency,
-        on_date=issued_at,
+        on_date=devengo_date,
         rate_provider=rate_provider,
         declared_rate=declared_fx_rate,
     )
@@ -513,10 +514,12 @@ def build_catalogue_invoice(
     in its own declarado and inmueble records.
 
     ``declared_fx_rate`` is the euro value of one unit of a foreign
-    ``currency`` that the operator states was in force at the invoice date
-    (LIVA art. 79.Once). It wins over ``rate_provider`` and is stamped with the
-    operator-declared source; it is refused for a euro invoice and for a rate
-    that is not above zero.
+    ``currency`` that the operator states was in force at the devengo -- the
+    ``operation_date`` where one is recorded and ``issued_at`` otherwise, since
+    LIVA art. 79.Once applies the rate "vigente en el momento del devengo". It
+    wins over ``rate_provider`` and is stamped with the operator-declared
+    source; it is refused for a euro invoice and for a rate that is not above
+    zero.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
@@ -686,15 +689,18 @@ def _build_pinned_catalogue_invoice(
             operation=operation,
         )
         invoice_payload["business_premises_lease"] = business_premises_lease
-        # The euro-conversion stamp. ``currency`` is already the canonical uppercase
+        # The euro-conversion stamp, taken at the devengo date resolved above --
+        # the same date this construction already reads every other dated
+        # authority fact at, because LIVA art. 79.Once reads the rate "vigente en
+        # el momento del devengo". ``currency`` is already the canonical uppercase
         # ISO 4217 token (normalised once above), so the provider is queried with the
-        # same token the record stores. WHICH date the rate is taken at, and when a
-        # record is deliberately left unstamped, are resolve_fx_conversion_stamp's to
-        # answer -- this only writes the result into the payload shape.
+        # same token the record stores. Whether a record is deliberately left
+        # unstamped is resolve_fx_conversion_stamp's to answer -- this only writes
+        # the result into the payload shape.
         _apply_fx_conversion_stamp(
             invoice_payload,
             currency=currency,
-            issued_at=issued_at,
+            devengo_date=devengo_date,
             rate_provider=rate_provider,
             declared_fx_rate=declared_fx_rate,
         )

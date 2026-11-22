@@ -6,11 +6,12 @@ idle deadline passes, so the deadline has to follow the leases: sooner than a
 live lease, and an admitted request is refused by storage; later than the last
 lease, and key material outlives every authority to use it.
 
-Lease admission reads the wall clock in production and storage freshness reads
-the clock seam. Custody is therefore handed the seam clock here and every step
-runs inside one frozen instant, so both readers observe the same controlled
-time; the monotonic half of a lease lifetime is injected too. Storage is read through the real
-secure-object repository, whose freshness check is the reader that refuses.
+Lease admission and storage freshness both read the wall clock in production.
+Custody is handed the seam clock here, every step runs inside one frozen
+instant, and the storage judges' wall-clock reading moves to that same instant,
+so both readers observe one controlled timeline; the monotonic half of a lease
+lifetime is injected too. Storage is read through the real secure-object
+repository, whose freshness check is the reader that refuses.
 """
 
 from __future__ import annotations
@@ -42,14 +43,16 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
+from ... import runtime as storage_runtime
 from ...bucket.errors import BucketLockedError
 from ...custody.paths import profile_custody_path
 from ...errors import SessionExpiredError
 from ...profile_persistence_composition import composed_profile_persistence_ports
 from ...runtime_repository import secure_object_repository_for_active_bucket
+from ...sql import secure_objects
 from ...tests.profile_capsule_runtime import derive_test_bucket_key, publish_test_profile_capsule
 from ...tests.secure_sql import isolated_profile_storage_root
-from .. import bucket_session, idle_timeout, profile_worker_custody
+from .. import active_session, bucket_session, idle_timeout, profile_worker_custody
 from ..active_session import bind_active_bucket_session, current_active_bucket_session, get_active_master_key
 from ..bucket_session import BucketSession
 from ..idle_timeout import IdleEvaluation
@@ -77,7 +80,12 @@ class _Clock:
     @contextmanager
     def at(self, *, minutes: float) -> Generator[None]:
         self._elapsed = timedelta(minutes=minutes)
-        with frozen_clock(self._start + self._elapsed):
+        instant = self._start + self._elapsed
+        with frozen_clock(instant), pytest.MonkeyPatch.context() as patch:
+            # The storage judges expire the key session on real time; only their
+            # reading moves, to the instant the leases are judged at.
+            for judge in (storage_runtime, secure_objects, active_session):
+                patch.setattr(judge, "wall_now", lambda: instant)
             yield
 
 

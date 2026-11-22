@@ -64,7 +64,7 @@ from ....core.hashing import prefixed_digest
 from ....core.profile_publication import ProfilePublicationKindValue
 from ....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
 from ....core.storage_taxonomy_locations import storage_location
-from ....core.time.clock import now
+from ....core.time.clock import wall_now
 from .bucket.directory_layout import bucket_paths
 from .bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from .bucket.lockfile import acquire_lock, release_lock
@@ -971,7 +971,7 @@ class _PersistenceProfileCustody:
 
     @contextmanager
     def _temporary_session(self, *, profile_id: UUID, dek: bytes, root: Path) -> Generator[None]:
-        instant = now()
+        instant = wall_now()
         bridge = BucketSession.open_resumed(
             bucket_id=str(profile_id),
             dek=dek,

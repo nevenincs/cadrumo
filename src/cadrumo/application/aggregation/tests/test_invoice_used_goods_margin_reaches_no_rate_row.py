@@ -24,6 +24,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.operator_action_enums import OperatorActionAxis
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
@@ -35,7 +36,7 @@ from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_add_operation import declared_invoice_category
 from ...ledger.preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason
-from ...state_projection_models import OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE, OperatorActionAxis
+from ...state_projection_models import OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE
 from ..invoice_iva_source import InvoiceIvaFinding, InvoiceIvaFindingReason, period_invoice_iva_side
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from ..modelo_bindings_invoice_iva import ScreenedInvoiceIva, screened_invoice_iva_observations

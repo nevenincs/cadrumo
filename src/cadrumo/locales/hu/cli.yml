@@ -470,10 +470,11 @@ cli:
           az eurós összesítésekből, amíg árfolyam nem kerül hozzá. Add meg az árfolyamot
           az app ledger invoice update --fx-rate paranccsal.
         fx_rate_help: 'Devizás számla árfolyama: a pénzneme egy egységének euróértéke
-          a számla keltének napján, például 0.9250 (LIVA 79.Once cikk: a Banco de
-          España hatályos árfolyama vagy az EKB legutóbbi árfolyama). A közzétett
-          árfolyam helyébe lép, és általad megadottként rögzül. Euróban kiállított
-          számlánál elutasításra kerül.'
+          a teljesítés napján, vagyis a művelet napján, ha megadod, egyébként a számla
+          keltének napján, például 0.9250 (LIVA 79.Once cikk: a Banco de España a
+          teljesítés napján hatályos árfolyama vagy az EKB legutóbbi árfolyama). A
+          közzétett árfolyam helyébe lép, és általad megadottként rögzül. Euróban
+          kiállított számlánál elutasításra kerül.'
         group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
         import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
           elutasításra került; nem jött létre számla'

@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import date
 from functools import cache
 from itertools import pairwise
@@ -23,11 +24,12 @@ from ..authority import bundled_indexed_authority
 from ..authority_artifact import AuthorityComponentKind, ReferenceComponentQuery
 from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
+from ..errors import RegistrySnapshotError
 from ..schema import ModeloRevision
-from ..schema_references import SourceReference
+from ..schema_references import SourceReference, TemporalProjectionDirection
 from ..schema_surfaces import CasillaEvolutionKind
 from ..snapshot_globals import SupportedFilingYearsCatalogue
-from ..temporal import RevisionSelectionMetadata
+from ..temporal import RevisionSelectionMetadata, revision_temporal_resolution
 
 
 @cache
@@ -116,6 +118,49 @@ def filing_grade_exercises(modelo_id: str) -> tuple[int, ...]:
         for exercise in supported_authored_exercises(modelo_id)
         if str(revision_covering(modelo_id, exercise).id) in filing
     )
+
+
+@dataclass(frozen=True, slots=True)
+class EditionBelowFilingGrade:
+    """One exercise of the support envelope whose own authored edition the authority serves below filing grade."""
+
+    modelo: str
+    filing_year: int
+    period: str
+    revision_id: str
+    grade: RegistryAuthorityGrade
+
+
+def authored_editions_below_filing_grade(period: str) -> tuple[EditionBelowFilingGrade, ...]:
+    """Return every exercise of the envelope whose edition, authored for that year, is below filing grade, newest first.
+
+    Editions rise to filing grade as their evidence lands, so a test that needs
+    one held below it reads the modelo and year here rather than naming them.
+    A projected year is left out: it is refused as projected, not under its
+    edition's own declared grade. Within a year, modelos come in identifier
+    order. The tuple is empty when every authored edition reaches filing grade.
+    """
+    found: list[EditionBelowFilingGrade] = []
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        for year in sorted(support.years, reverse=True):
+            for modelo in sorted(operation.modelo_ids()):
+                try:
+                    revision = operation.revision_for_context(modelo, filing_year=year, period=period)
+                except RegistrySnapshotError:
+                    # The modelo serves no declaration for this period of the year.
+                    continue
+                resolution = revision_temporal_resolution(revision, filing_year=year, period=period, support=support)
+                if resolution.projection_direction is not TemporalProjectionDirection.AUTHORED:
+                    continue
+                grade = operation.reachable_authority_grade(modelo, filing_year=year, period=period)
+                if grade is not RegistryAuthorityGrade.FILING:
+                    found.append(
+                        EditionBelowFilingGrade(
+                            modelo=modelo, filing_year=year, period=period, revision_id=str(revision.id), grade=grade
+                        )
+                    )
+    return tuple(found)
 
 
 def single_exercise_editions(modelo_id: str) -> tuple[int, ...]:

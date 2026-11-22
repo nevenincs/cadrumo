@@ -103,6 +103,8 @@ _LOCAL_READS: Final = (
     "ledger.rule.list",
     "ledger.status",
     "ledger.track",
+    # A preview runs the batch plan against the stored rows and commits nothing.
+    "ledger.update.batch.preview",
     "ledger.view",
     # A capture reads the tax agency through a browser and stores what it saw.
     # The live operations listed here read what earlier captures stored.
@@ -296,6 +298,7 @@ _LOCAL_WRITES: Final = (
     "ledger.stash",
     "ledger.unlink",
     "ledger.update",
+    "ledger.update.batch",
     "live.borrador.100.import",
     "modelo.036.record",
     "modelo.aggregate.capture_received_invoice_retencion",

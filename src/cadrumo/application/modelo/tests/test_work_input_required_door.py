@@ -16,6 +16,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.binding_targets import sole_bound_casilla
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.modelo_localization import binding_label_text
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
@@ -105,7 +106,9 @@ def test_the_refusal_names_the_binding_and_box_and_opens_the_work_and_its_bindin
     assert detail.message_key == "application.modelo.errors.input_required"
     assert detail.refusal_words is not None
     assert "%{" not in detail.refusal_words
-    assert binding_id in detail.refusal_words
+    assert detail.refusal_words_language is not None
+    label = binding_label_text(_MODELO, binding_id, locale=detail.refusal_words_language.value)
+    assert label in detail.refusal_words
     assert box in detail.refusal_words
     assert str(_YEAR) in detail.refusal_words
     assert isinstance(detail.next_step, OperationOpenWorkStepV1)
@@ -186,7 +189,10 @@ def test_every_carry_kind_the_operator_may_state_opens_the_override_bound_to_the
         assert detail.error_code == "REFUSED_MODELO_WORK_INPUT_REQUIRED"
         assert detail.refusal_words is not None
         assert "%{" not in detail.refusal_words
-        assert binding_id in detail.refusal_words
+        assert detail.refusal_words_language is not None
+        assert (
+            binding_label_text(modelo, binding_id, locale=detail.refusal_words_language.value) in detail.refusal_words
+        )
         assert detail.precondition_verdict_json is not None
         verdict = json.loads(detail.precondition_verdict_json)
         assert verdict["action"]["action_id"] == "operator.modelo.work.override", kind
