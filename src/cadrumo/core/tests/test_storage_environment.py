@@ -118,11 +118,27 @@ def test_the_only_location_setting_is_the_root() -> None:
     assert "CADRUMO_AUTH_PROVIDER" not in controls
 
 
-def test_the_relayed_settings_are_the_root_the_authority_and_the_proxy() -> None:
+def test_the_relayed_settings_are_the_root_the_authority_the_proxy_and_the_evidence_posture() -> None:
     product = Settings.storage_env_var_names()
     assert product == {STORAGE_ROOT.variable}
     proxy = {"CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"}
-    assert relayed_setting_names() == product | {"CADRUMO_AUTHORITY_ROOT"} | proxy
+    posture = {"CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED", "CADRUMO_EVIDENCE_GESTOR_MODE"}
+    assert relayed_setting_names() == product | {"CADRUMO_AUTHORITY_ROOT"} | proxy | posture
+
+
+def test_a_profile_worker_reads_the_evidence_posture_its_runtime_was_started_under(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    posture = {"CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED": "true", "CADRUMO_EVIDENCE_GESTOR_MODE": "true"}
+    received = {**_received(tmp_path), **posture}
+    operator = child_environment(ChildEnvironmentProfile.OPERATOR, root, received=received, sys_platform="win32")
+    assert {name: operator.get(name) for name in posture} == posture
+    # The worker's own settings read the relayed posture: the opt-in and the absolute gestor bar both hold there.
+    relayed = {name: operator[name] for name in Settings.evidence_posture_env_var_names()}
+    with isolated_aeat_env(**relayed):
+        worker = Settings()
+    assert (worker.cadrumo_evidence_cloud_upload_permitted, worker.cadrumo_evidence_gestor_mode) == (True, True)
+    strict = child_environment(ChildEnvironmentProfile.STRICT, root, received=received, sys_platform="win32")
+    assert not any(name.startswith("CADRUMO_EVIDENCE_") for name in strict)
 
 
 def _received(tmp_path: Path) -> dict[str, str]:

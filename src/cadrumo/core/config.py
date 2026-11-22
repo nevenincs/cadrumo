@@ -787,6 +787,20 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         return frozenset({STORAGE_ROOT.variable})
 
     @classmethod
+    def evidence_posture_env_var_names(cls) -> frozenset[str]:
+        """Return the deployment's evidence posture: its off-host opt-in and its gestor bar.
+
+        The posture is a property of the deployment, and a profile worker decides every off-host read, so the
+        worker must see the posture its runtime was started under: an opt-in it never received would refuse
+        every read, and a gestor bar it never received would leave the deployment's absolute bar unchecked.
+        """
+        return frozenset(
+            environment_name
+            for field_name in ("cadrumo_evidence_cloud_upload_permitted", "cadrumo_evidence_gestor_mode")
+            for environment_name in cls.environment_names_for_field(field_name)
+        )
+
+    @classmethod
     def proxy_env_var_names(cls, *, secret_fields: bool = True) -> frozenset[str]:
         """Return the proxy settings the browser and network requests Cadrumo starts follow.
 
