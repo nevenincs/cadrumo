@@ -12,6 +12,14 @@ export function failureCode(error: unknown): string {
   return "unknown";
 }
 
+/** The finished sentence the product served for a refusal, which the host
+ * passes on as served; null where it served none. */
+export function failureWords(error: unknown): string | null {
+  if (typeof error !== "object" || error === null) return null;
+  const words = (error as { refusal_words?: unknown }).refusal_words;
+  return typeof words === "string" && words.trim() !== "" ? words : null;
+}
+
 /** The context sizes a refusal states for a model that does not fit, as the
  * agent counted them; each only where the refusal knows it. */
 export type ContextFit = {

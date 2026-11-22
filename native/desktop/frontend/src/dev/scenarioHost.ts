@@ -66,6 +66,7 @@ import { agentAccessFixture } from "./agentAccessFixture";
 import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
+import { UNANSWERED_IVA_CALENDAR } from "./fixtures/calendarSuppressed";
 import {
   providerSettingsFixture,
   type ProviderSignInFixtureControls,
@@ -212,6 +213,8 @@ export const CALENDAR_SHAPES = {
   busy: BUSY_CALENDAR,
   evidence: EVIDENCE_CALENDAR,
   close_unknown: CLOSE_UNKNOWN_CALENDAR,
+  // The IVA block claimed with its four yes/no questions unanswered.
+  unanswered_iva: UNANSWERED_IVA_CALENDAR,
   // The filing-year envelope the read was served under, in each state.
   support_supported: SUPPORTED_CALENDAR,
   support_bounded: BOUNDED_CALENDAR,
@@ -268,6 +271,9 @@ declare global {
     __scenarioWindow?: ScenarioWindowControls;
     /** The filing calendar read is refused while this is true. */
     __scenarioCalendarRefused?: boolean;
+    /** The filing calendar read is refused with these served words while
+     * they are set, as the product's refusal of the read would be. */
+    __scenarioCalendarRefusalWords?: string;
     /** The Home read is refused while this is true. */
     __scenarioHomeRefused?: boolean;
     /** The Reference search is refused while this is true. */
@@ -655,6 +661,12 @@ export function scenarioHost(
       await wait(options.latencyMs);
       if (!readable() || window.__scenarioCalendarRefused)
         throw failure("timed_out", "cli");
+      if (window.__scenarioCalendarRefusalWords)
+        return Promise.reject({
+          code: "refused",
+          operation_id: null,
+          refusal_words: window.__scenarioCalendarRefusalWords,
+        });
       if (scenario.views === "empty") return EMPTY_CALENDAR;
       return options.calendar
         ? CALENDAR_SHAPES[options.calendar]

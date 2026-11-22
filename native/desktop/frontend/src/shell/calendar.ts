@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { failureCode } from "../errors";
+import { failureCode, failureWords } from "../errors";
 import type { OverviewCalendarSupport } from "./calendarContract";
 import { facts } from "./compose";
 import type { Translate } from "./strings";
@@ -17,11 +17,12 @@ import type { ProfileViews } from "./views";
 
 /** What the calendar page has to show: the read in flight, that the account
  * withholds it, why it failed, or the calendar. A failed read is never drawn
- * as an empty calendar. */
+ * as an empty calendar; it carries the sentence the product served for its
+ * refusal, or null where it served none. */
 export type CalendarState =
   | { kind: "loading" }
   | { kind: "withheld" }
-  | { kind: "failed"; code: string }
+  | { kind: "failed"; code: string; words: string | null }
   | { kind: "ready"; calendar: FilingCalendarServed };
 
 type Read = Exclude<CalendarState, { kind: "withheld" }>;
@@ -217,6 +218,7 @@ export function useFilingCalendar(
           (error: unknown): Read => ({
             kind: "failed",
             code: failureCode(error),
+            words: failureWords(error),
           }),
         )
         .then((next) => {
