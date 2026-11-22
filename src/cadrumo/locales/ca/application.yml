@@ -3219,6 +3219,10 @@ application:
           no es declara en cap fila de tipus d''IVA: indica''n la base i la quota
           amb el signe que correspongui a les caselles 14 i 15 del Model 303 si la
           vas emetre, o a les caselles 40 i 41 si la vas rebre'
+        invoice_used_goods_margin_unmodelled: 'la base del marge d''una venda en el
+          règim especial dels béns usats (art. 137) no es calcula: indica tu mateix
+          la base del marge i la seva quota a les caselles d''IVA meritat del Model
+          303 del seu tipus'
         linked_movement_contradicts_invoice: la seva base o la seva quota no coincideixen
           amb les de la factura que paga
         missing_business_classification: falta classificar-lo com a professional,

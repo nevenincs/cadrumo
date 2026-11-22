@@ -737,6 +737,12 @@ class ScreenedInvoiceIva:
             the modification they make belongs in the operator-entered
             casillas 14/15 or 40/41 rather than on a rate row, so they are
             declared on none and the period is blocked until it is stated.
+        used_goods_margin_unmodelled: issued invoices under the régimen
+            especial de los bienes usados. LIVA art. 137 taxes the margin de
+            beneficio, IVA included, not the invoiced price, and art. 138
+            forbids stating the cuota, so no line carries what the return
+            declares. They are declared on no rate row and the period is
+            blocked until the operator enters the margin base and its cuota.
     """
 
     observations: tuple[IvaLedgerObservation, ...] = ()
@@ -749,6 +755,7 @@ class ScreenedInvoiceIva:
     recargo_split_unresolved: tuple[Invoice, ...] = ()
     recargo_not_declarable: tuple[Invoice, ...] = ()
     rectificativa_modification_unmodelled: tuple[Invoice, ...] = ()
+    used_goods_margin_unmodelled: tuple[Invoice, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -763,6 +770,7 @@ class _ScreenedInvoiceIvaResult:
     deduction_authority_missing: bool
     category_counterparty_mismatch: bool
     rectificativa_modification_unmodelled: bool = False
+    used_goods_margin_unmodelled: bool = False
 
 
 def invoice_screen_of(aggregation: IvaLedgerAggregation) -> ScreenedInvoiceIva:
@@ -814,10 +822,13 @@ class _FlaggedInvoices:
     recargo_split_unresolved: list[Invoice] = field(default_factory=list)
     recargo_not_declarable: list[Invoice] = field(default_factory=list)
     rectificativa_modification_unmodelled: list[Invoice] = field(default_factory=list)
+    used_goods_margin_unmodelled: list[Invoice] = field(default_factory=list)
 
     def record(self, invoice: Invoice, screened: _ScreenedInvoiceIvaResult) -> None:
         if screened.rectificativa_modification_unmodelled:
             self.rectificativa_modification_unmodelled.append(invoice)
+        if screened.used_goods_margin_unmodelled:
+            self.used_goods_margin_unmodelled.append(invoice)
         if screened.reverse_charge_underivable:
             self.reverse_charge_underivable.append(invoice)
         if screened.recargo_rate_divergence is not None:
@@ -871,6 +882,7 @@ def _collect_screened_invoice_results(
         recargo_split_unresolved=tuple(flagged.recargo_split_unresolved),
         recargo_not_declarable=tuple(flagged.recargo_not_declarable),
         rectificativa_modification_unmodelled=tuple(flagged.rectificativa_modification_unmodelled),
+        used_goods_margin_unmodelled=tuple(flagged.used_goods_margin_unmodelled),
     )
 
 
@@ -926,10 +938,26 @@ def screened_invoice_iva_result(
             category_counterparty_mismatch=False,
             rectificativa_modification_unmodelled=True,
         )
-    reverse_charge_underivable = reverse_charge_cuota_not_derivable(invoice)
     # The date the observation carries must be the date it was SELECTED on,
     # or the record would state one quarter while being declared in another.
     devengo = resolve_invoice_devengo(invoice)
+    if _taxed_on_its_margin(invoice, devengo_date=devengo.devengo_date, operation=operation):
+        # No line states what the return declares: the base is the margin de
+        # beneficio, IVA included (LIVA art. 137), and the cuota is never on
+        # the invoice (art. 138). An issued one blocks until the operator
+        # enters the margin; a received one carries no deductible cuota at all
+        # (art. 138, second paragraph), so it declares nothing and finds nothing.
+        return _ScreenedInvoiceIvaResult(
+            observations=(),
+            reverse_charge_underivable=False,
+            recargo_rate_divergence=None,
+            recargo_split_unresolved=False,
+            recargo_not_declarable=False,
+            deduction_authority_missing=False,
+            category_counterparty_mismatch=False,
+            used_goods_margin_unmodelled=invoice.kind is InvoiceKind.ISSUED,
+        )
+    reverse_charge_underivable = reverse_charge_cuota_not_derivable(invoice)
     recargo_rate_divergence = modelo_bindings_invoice_iva_recargo_rate_divergence(
         invoice,
         devengo_date=devengo.devengo_date,
@@ -977,6 +1005,14 @@ def screened_invoice_iva_result(
         deduction_authority_missing=deduction_authority_missing,
         category_counterparty_mismatch=category_counterparty_mismatch,
     )
+
+
+def _taxed_on_its_margin(invoice: Invoice, *, devengo_date: date, operation: PinnedAuthorityOperation) -> bool:
+    """Whether the invoice's declared category takes its taxable base from a margin, not its lines."""
+    if invoice.iva_category is None:
+        return False
+    catalogue = resolve_iva_category_catalogue(effective_date=devengo_date, authority=operation)
+    return catalogue.require(invoice.iva_category) in catalogue.projection("margin_taxable_base")
 
 
 def line_eur_amounts_or_refuse(invoice: Invoice, line_index: int, line: InvoiceLine) -> tuple[Decimal, Decimal]:

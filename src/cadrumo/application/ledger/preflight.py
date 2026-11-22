@@ -150,6 +150,7 @@ class LedgerPreflightIssueReason(StrEnum):
     INVOICE_RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
     INVOICE_RECARGO_NOT_DECLARABLE = "invoice_recargo_not_declarable"
     INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
+    INVOICE_USED_GOODS_MARGIN_UNMODELLED = "invoice_used_goods_margin_unmodelled"
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -430,6 +431,11 @@ _INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
             "invoice {number} is a factura rectificativa, which no IVA rate row declares; enter its base and "
             "cuota with their sign in Modelo 303 casillas 14 and 15 if you issued it, or in casillas 40 and 41 "
             "if you received it"
+        ),
+        LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED.value: (
+            "issued invoice {number} is under the régimen especial de los bienes usados, whose taxable base is "
+            "the margin de beneficio (art. 137), which is not computed; enter the margin base and its cuota in "
+            "the Modelo 303 devengado casillas for its rate"
         ),
     }
 )

@@ -169,3 +169,22 @@ def test_a_row_without_the_new_columns_imports_as_before(tmp_path: Path, operati
         Decimal("21.00"),
         Decimal("121.00"),
     )
+
+
+def test_a_used_goods_margin_row_keeps_its_stated_category(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
+    """LIVA art. 135.Dos lets the reseller apply the régimen especial de los bienes usados row by row."""
+    issued = _issue_date().isoformat()
+    result, stored = _import(
+        f"{_HEADER},iva_category\n"
+        f"{_SPANISH_CIF},Ferreteria Norte SL,REBU-0001,{issued},1500.00,,ES,special_regime_used_goods\n"
+        f"{_SPANISH_CIF},Ferreteria Norte SL,ES-0002,{issued},100.00,21,ES,\n",
+        tmp_path,
+        kind=InvoiceKind.ISSUED,
+        operation=operation,
+    )
+
+    assert (result.created, result.refused) == (2, ())
+    rebu = stored["REBU-0001"]
+    assert rebu.iva_category == IvaCategory("special_regime_used_goods")
+    assert (rebu.base_total, rebu.iva_total) == (Decimal("1500.00"), Decimal("0.00")), "art. 138: no separate cuota"
+    assert stored["ES-0002"].iva_category is None

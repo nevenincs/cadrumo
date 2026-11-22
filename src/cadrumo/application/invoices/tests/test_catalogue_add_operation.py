@@ -25,10 +25,11 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from ....domain.currency.service import OPERATOR_DECLARED_RATE_SOURCE
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
-from ....domain.iva.schema import InvoiceKind
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -804,3 +805,25 @@ def test_a_rate_that_cannot_be_declared_is_an_invalid_invoice_refusal_with_no_wr
     assert (result.outcome, result.validation_code) == ("validation_error", "invalid_invoice")
     assert result.refusal_words is not None
     assert len(ports.invoice_repository.load()) == 0
+
+
+def test_an_issued_used_goods_margin_invoice_is_stored_under_its_stated_category(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The add operation admits the régimen especial de los bienes usados as the invoice's IVA category."""
+    context, ports = _execute_add(
+        _request(
+            kind=InvoiceKind.ISSUED,
+            issued_at=date(filing_year_envelope().horizon, 4, 15),
+            taxable_base=PublicDecimal(decimal="1500.00"),
+            iva_rate=None,
+            iva_category="special_regime_used_goods",
+        ),
+        monkeypatch,
+    )
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.outcome == "created"
+    (stored,) = ports.invoice_repository.load().values()
+    assert stored.iva_category == IvaCategory("special_regime_used_goods")
+    assert (stored.base_total, stored.iva_total) == (Decimal("1500.00"), Decimal("0.00"))

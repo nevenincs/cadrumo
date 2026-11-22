@@ -401,6 +401,7 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         "invoice_recargo_split_unresolved",
         "invoice_recargo_not_declarable",
         "invoice_rectificativa_modification_unmodelled",
+        "invoice_used_goods_margin_unmodelled",
     },
 )
 _M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "DP200012:00501"

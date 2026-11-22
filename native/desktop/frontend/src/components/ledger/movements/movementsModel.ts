@@ -397,6 +397,10 @@ const REASON_FIXES: Record<LedgerPreflightReason, ReasonFix> = {
     preset: "review",
     column: "invoice",
   },
+  invoice_used_goods_margin_unmodelled: {
+    preset: "review",
+    column: "invoice",
+  },
 };
 
 /** A reason's fix by the reason a check names: a reason the window was not

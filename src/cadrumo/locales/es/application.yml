@@ -3223,6 +3223,10 @@ application:
           no se declara en ninguna fila de tipo de IVA: indica su base y su cuota
           con el signo que corresponda en las casillas 14 y 15 del Modelo 303 si la
           emitiste, o en las casillas 40 y 41 si la recibiste'
+        invoice_used_goods_margin_unmodelled: 'la base del margen de una venta en
+          el régimen especial de los bienes usados (art. 137) no se calcula: indica
+          tú mismo la base del margen y su cuota en las casillas de IVA devengado
+          del Modelo 303 de su tipo'
         linked_movement_contradicts_invoice: su base o su cuota no coinciden con las
           de la factura que paga
         missing_business_classification: falta clasificarlo como profesional, personal

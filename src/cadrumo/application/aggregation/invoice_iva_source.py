@@ -87,6 +87,11 @@ class InvoiceIvaFindingReason(StrEnum):
     #: with its sign in the operator-entered Modelo 303 casillas 14/15 (LIVA
     #: art. 80) or 40/41.
     RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
+    #: An issued invoice under the régimen especial de los bienes usados. Its
+    #: taxable base is the margin de beneficio, IVA included (LIVA art. 137),
+    #: and its cuota is never stated on the invoice (art. 138), so no rate row
+    #: declares it; the operator enters the margin base and its cuota.
+    USED_GOODS_MARGIN_UNMODELLED = "invoice_used_goods_margin_unmodelled"
 
 
 class InvoiceIvaFinding(BaseModel):
@@ -429,6 +434,10 @@ def _screen_findings(screen: ScreenedInvoiceIva) -> list[InvoiceIvaFinding]:
             reason=InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED, invoice_id=invoice.invoice_id
         )
         for invoice in screen.rectificativa_modification_unmodelled
+    )
+    findings.extend(
+        InvoiceIvaFinding(reason=InvoiceIvaFindingReason.USED_GOODS_MARGIN_UNMODELLED, invoice_id=invoice.invoice_id)
+        for invoice in screen.used_goods_margin_unmodelled
     )
     return findings
 

@@ -3071,6 +3071,10 @@ application:
           declared on no VAT rate row: enter its base and cuota with their sign in
           Modelo 303 casillas 14 and 15 if you issued it, or in casillas 40 and 41
           if you received it'
+        invoice_used_goods_margin_unmodelled: 'the margin base of a sale under the
+          régimen especial de los bienes usados (art. 137) is not computed: enter
+          the margin base and its cuota in the Modelo 303 devengado casillas for its
+          rate yourself'
         linked_movement_contradicts_invoice: its base or IVA amount differs from the
           invoice it pays
         missing_business_classification: it is not yet classified as business, personal

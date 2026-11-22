@@ -3176,6 +3176,10 @@ application:
           rectificativa) egyik áfakulcs-sorban sem szerepel: add meg az adóalapját
           és az adóját a megfelelő előjellel a Modelo 303 14. és 15. mezőjében, ha
           te állítottad ki, vagy a 40. és 41. mezőjében, ha te kaptad'
+        invoice_used_goods_margin_unmodelled: 'a használt cikkek különleges rendszerében
+          (régimen especial de los bienes usados) végzett értékesítés árrésalapját
+          (art. 137) a program nem számítja ki: add meg magad az árrés adóalapját
+          és adóját a Modelo 303 kulcsához tartozó fizetendő áfa (devengado) mezőiben'
         linked_movement_contradicts_invoice: az adóalapja vagy az IVA-összege eltér
           a kifizetett számláétól
         missing_business_classification: még nincs besorolva üzleti, magán vagy vegyes

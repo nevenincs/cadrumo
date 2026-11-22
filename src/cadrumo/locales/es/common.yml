@@ -4028,6 +4028,7 @@ desktop:
       reagp_compensation: Compensación REAGP
       recargo_equivalencia: Recargo de equivalencia
       regimen_simplificado: Régimen simplificado
+      special_regime_used_goods: Régimen especial de los bienes usados (REBU)
       unknown: Desconocida
     leave:
       cancel: Cancelar
@@ -4329,6 +4330,7 @@ desktop:
       invoice_recargo_not_declarable: Recargo
       invoice_recargo_split_unresolved: Recargo
       invoice_rectificativa_modification_unmodelled: Rectificativa
+      invoice_used_goods_margin_unmodelled: Bienes usados
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Clasificación
       missing_category: Categoría
@@ -4360,6 +4362,8 @@ desktop:
         IVA
       invoice_rectificativa_modification_unmodelled: Indica la rectificación con su
         signo en las casillas 14/15 o 40/41
+      invoice_used_goods_margin_unmodelled: Indica la base del margen y su cuota en
+        las casillas de IVA devengado de su tipo
       linked_movement_contradicts_invoice: No coincide con su factura
       missing_business_classification: Falta la clasificación
       missing_category: Falta la categoría

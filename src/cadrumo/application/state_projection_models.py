@@ -356,6 +356,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED: (
             OperatorActionAxis.SUPPLY_MANUAL_INPUT
         ),
+        LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },
 )
 """Total action spine for readiness ``ledger_issues`` reasons."""

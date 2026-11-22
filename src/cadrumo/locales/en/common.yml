@@ -3947,6 +3947,7 @@ desktop:
       reagp_compensation: REAGP compensation
       recargo_equivalencia: Equivalence surcharge
       regimen_simplificado: Régimen simplificado
+      special_regime_used_goods: Used goods margin scheme (REBU)
       unknown: Unknown
     leave:
       cancel: Cancel
@@ -4244,6 +4245,7 @@ desktop:
       invoice_recargo_not_declarable: Surcharge
       invoice_recargo_split_unresolved: Surcharge
       invoice_rectificativa_modification_unmodelled: Rectificativa
+      invoice_used_goods_margin_unmodelled: Used goods
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
       missing_category: Category
@@ -4276,6 +4278,8 @@ desktop:
         VAT rates
       invoice_rectificativa_modification_unmodelled: Enter the correction with its
         sign in casillas 14/15 or 40/41
+      invoice_used_goods_margin_unmodelled: Enter the margin base and its cuota in
+        the devengado casillas for its rate
       linked_movement_contradicts_invoice: Differs from its invoice
       missing_business_classification: Classification missing
       missing_category: Category missing
