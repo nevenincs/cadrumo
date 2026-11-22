@@ -1,7 +1,7 @@
 """Modelo 303's internal carriers keep a grounded claim on the edge after the edition that states them.
 
-The intracomunitaria acquisitions base carrier and the promotor's autoconsumo
-base are stated once, at the edition covering the support floor, where each
+The intracomunitaria acquisitions base carrier, the domestic reverse-charge
+base carrier and the promotor's autoconsumo base are stated once, at the edition covering the support floor, where each
 declares that no official form prints it. A row's claim speaks only about the
 edge into the edition that states it, so the next edition's row needs its own:
 each 2023 row continues its 2022 counterpart, grounded in the two record designs
@@ -39,6 +39,7 @@ _CONTINUING_EDITION = _AUTHORED_EDITIONS[_AUTHORED_EDITIONS.index(_STATING_EDITI
 # Carrier casilla -> the printed boxes its grounding must find on each cited design line.
 _CARRIER_BOXES = {
     "iva.autorepercutido.intracomunitaria.devengado.base": ("[10]",),
+    "iva.autorepercutido.interior.devengado.base": ("[12]",),
     "iva.autoconsumo.promotor.base": ("[01]", "[09]"),
 }
 _CITATION = re.compile(r"(corpus/\S+?\.extracted\.md):(\d+)")
