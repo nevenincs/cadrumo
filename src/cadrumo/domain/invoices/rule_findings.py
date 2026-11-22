@@ -39,6 +39,7 @@ class InvoiceRuleFindingCode(StrEnum):
     IVA_CATEGORY_UNDECLARED = "iva_category_undeclared"
     INTRA_COMMUNITY_SPANISH_IDENTIFICATION = "intra_community_spanish_identification"
     OPERATION_TYPE_REQUIRED = "operation_type_required"
+    M349_CLAVE_CATEGORY_MISMATCH = "m349_clave_category_mismatch"
     OPERATION_DATE_ROLE_MISMATCH = "operation_date_role_mismatch"
     ADVANCE_PAYMENT_NOT_FULLY_COLLECTED = "advance_payment_not_fully_collected"
     LEASE_ONLY_ON_ISSUED = "lease_only_on_issued"
