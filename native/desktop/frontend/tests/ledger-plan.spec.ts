@@ -171,27 +171,35 @@ test("every field routes by the operation that accepts it, and by set or clear",
   }
 });
 
-test("the bulk never carries a clear: a cleared category goes through a masked single classification", () => {
+test("a cleared property travels in the batch edit as an explicit null, never as a bulk blank", () => {
   const A = hexId("a");
   const plan = planRecorded(
     staged({ [A]: { category_id: clear, notes: set("Revisado") } }),
     contextOf(business(A)),
   );
-  expect(stepKinds(plan)).toEqual(["bulk", "classify"]);
-  const bulk = plan.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
-  expect(bulk.request.csv_text).toBe(
-    `transaction_id,classification,notes\n${A},BUSINESS,Revisado\n`,
-  );
-  const single = plan.steps[1] as Extract<PlanStep, { kind: "classify" }>;
-  expect(single.request).toEqual({
-    transaction_id: A,
-    patch: { business_classification: "BUSINESS", category_id: null },
-    patch_fields: ["business_classification", "category_id"],
-  });
-  for (const step of plan.steps)
-    if (step.kind === "bulk")
-      for (const row of step.rows)
-        for (const cell of Object.values(row.cells)) expect(cell).not.toBe("");
+  expect(stepKinds(plan)).toEqual(["batch"]);
+  const batch = plan.steps[0] as Extract<PlanStep, { kind: "batch" }>;
+  expect(batch.request.rows).toEqual([
+    {
+      transaction_id: A,
+      expected_modified_at: business(A).transaction.modified_at,
+      properties: {
+        fields: ["category_id", "notes"],
+        business_classification: null,
+        business_pct: null,
+        category_id: null,
+        usage_ratio_id: null,
+        iva_category: null,
+        iva_rate: null,
+        irpf_category: null,
+        deduction_fact_kind: null,
+        exemption_article: null,
+        counterparty: null,
+        notes: "Revisado",
+        group_label: null,
+      },
+    },
+  ]);
 });
 
 test("each bulk row names its classification, and a mixed row its share", () => {
@@ -210,14 +218,16 @@ test("each bulk row names its classification, and a mixed row its share", () => 
     }),
     contextOf(business(A), mixed(M), movement(U)),
   );
-  expect(stepKinds(plan)).toEqual(["bulk"]);
-  const bulk = plan.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
+  // A base is no property a batch edit writes: that row keeps the CSV, the
+  // others go together in the batch.
+  expect(stepKinds(plan)).toEqual(["batch", "bulk"]);
+  const batch = plan.steps[0] as Extract<PlanStep, { kind: "batch" }>;
+  expect(batch.rows.map((row) => row.transactionId)).toEqual([A, U]);
+  const bulk = plan.steps[1] as Extract<PlanStep, { kind: "bulk" }>;
   expect(bulk.request.csv_text).toBe(
     [
-      "transaction_id,classification,category_id,business_pct,taxable_base,iva_rate",
-      `${A},BUSINESS,telefono,,,`,
-      `${M},MIXED,,0.6,30,0.21`,
-      `${U},MIXED,suministros,0.5,,`,
+      "transaction_id,classification,business_pct,taxable_base,iva_rate",
+      `${M},MIXED,0.6,30,0.21`,
       "",
     ].join("\n"),
   );
@@ -421,7 +431,7 @@ test("a transfer takes no tax field and no business classification", () => {
   expect(blockersOf(plan, T)).toEqual(["transfer_with_tax"]);
   // Personal is what a transfer may be.
   expect(blockersOf(plan, P)).toEqual([]);
-  expect(stepKinds(plan)).toEqual(["bulk"]);
+  expect(stepKinds(plan)).toEqual(["batch"]);
 });
 
 test("an action and an edit on the same row hold the row; exclude names the classification", () => {
@@ -661,7 +671,7 @@ test("reclassifying Mixed movements saves them together: the classification clea
     ).toHaveLength(120);
     const content = reduceStage(EMPTY_STAGE, outcome.event).content;
     const plan = planRecorded(content, rows);
-    expect(stepKinds(plan)).toEqual(["bulk"]);
+    expect(stepKinds(plan)).toEqual(["batch"]);
     expect(plan.summary).toMatchObject({
       together: 120,
       parts: 1,
@@ -669,14 +679,13 @@ test("reclassifying Mixed movements saves them together: the classification clea
       oneAtATime: 0,
       held: 0,
     });
-    const bulk = plan.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
-    // The row carries the clear as one of the fields it saves, with no
-    // cell of its own: a blank cell would mean unchanged.
-    expect(bulk.rows[0]!.fields).toContain("business_pct");
-    expect(bulk.request.csv_text.split("\n")[0]).toBe(
-      kind === "business"
-        ? "transaction_id,classification,category_id"
-        : "transaction_id,classification",
+    const batch = plan.steps[0] as Extract<PlanStep, { kind: "batch" }>;
+    // The share's clear is one of the properties the row writes, as a null.
+    expect(batch.rows[0]!.fields).toContain("business_pct");
+    const properties = batch.request.rows[0]!.properties;
+    expect(properties.business_pct).toBeNull();
+    expect(properties.business_classification).toBe(
+      kind === "business" ? "BUSINESS" : "PERSONAL",
     );
   }
   // A share cleared on a movement that stays Mixed still needs its own
@@ -712,15 +721,15 @@ test("making a Mixed movement Personal stages the category clear and the plan sa
   // Review lists the category clear on its own.
   expect(plan.entries[0]!.clears.sort()).toEqual(cleared);
   expect(plan.entries[0]!.routes.category_id).toBe("bulk");
-  expect(stepKinds(plan)).toEqual(["bulk"]);
-  const bulk = plan.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
-  // The bulk's blank means unchanged and carries no clear; the write of
-  // Personal is what drops the category, so the row names the field it
-  // drops and no column.
-  expect(bulk.rows[0]!.fields).toContain("category_id");
-  expect(bulk.request.csv_text.split("\n")[0]).toBe(
-    "transaction_id,classification",
-  );
+  expect(stepKinds(plan)).toEqual(["batch"]);
+  const batch = plan.steps[0] as Extract<PlanStep, { kind: "batch" }>;
+  // The batch names each cleared property with a null beside Personal.
+  expect(batch.rows[0]!.fields).toContain("category_id");
+  expect(batch.request.rows[0]!.properties).toMatchObject({
+    business_classification: "PERSONAL",
+    business_pct: null,
+    category_id: null,
+  });
 });
 
 test("the classification write also carries the clears of what it drops on a Personal movement", () => {
@@ -736,8 +745,8 @@ test("the classification write also carries the clears of what it drops on a Per
     }),
     contextOf(business(A, { usage_ratio_id: "ratio-1", iva_category: "x" })),
   );
-  // The IVA category is not dropped by the classification: it goes alone.
-  expect(stepKinds(plan)).toEqual(["bulk", "classify"]);
+  // Each staged field is a property, so one batch row carries them all.
+  expect(stepKinds(plan)).toEqual(["batch"]);
   expect(plan.entries[0]!.routes).toEqual({
     business_classification: "bulk",
     category_id: "bulk",
@@ -746,19 +755,19 @@ test("the classification write also carries the clears of what it drops on a Per
   });
 });
 
-test("bulk requests carry the window's language for their row refusals", () => {
+test("batch requests carry the window's language for their row refusals", () => {
   const A = hexId("a");
   const content = staged({ [A]: { notes: set("Revisado") } });
   const worded = planRecorded(content, {
     ...contextOf(business(A)),
     outputLanguage: "hu",
   });
-  const bulk = worded.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
-  expect(bulk.request.output_language).toBe("hu");
+  const batch = worded.steps[0] as Extract<PlanStep, { kind: "batch" }>;
+  expect(batch.request.output_language).toBe("hu");
   const plain = planRecorded(content, contextOf(business(A)));
   expect(
     "output_language" in
-      (plain.steps[0] as Extract<PlanStep, { kind: "bulk" }>).request,
+      (plain.steps[0] as Extract<PlanStep, { kind: "batch" }>).request,
   ).toBe(false);
 });
 
@@ -938,7 +947,7 @@ test("the CSV quotes what the CSV reader would split", () => {
   );
 });
 
-test("the bulk is cut into parts that each fit the host's bound, in order", () => {
+test("the batch is cut into parts that each fit the host's bound with the digest its write adds, in order", () => {
   const ids = Array.from({ length: 300 }, (_, at) => hexId(`row${at}`));
   const content = staged(
     Object.fromEntries(
@@ -952,31 +961,31 @@ test("the bulk is cut into parts that each fit the host's bound, in order", () =
     ),
   );
   const rows = contextOf(...ids.map((id) => business(id)));
-  const bulkOf = (plan: LedgerPlan) =>
+  const batchOf = (plan: LedgerPlan) =>
     plan.steps.filter(
-      (step): step is Extract<PlanStep, { kind: "bulk" }> =>
-        step.kind === "bulk",
+      (step): step is Extract<PlanStep, { kind: "batch" }> =>
+        step.kind === "batch",
     );
-  // At the relay's own bound the whole bulk is one request.
-  const whole = bulkOf(planRecorded(content, rows));
+  const written = (request: Extract<PlanStep, { kind: "batch" }>["request"]) =>
+    payloadSize({ ...request, reviewed_plan_digest: "0".repeat(64) });
+  // At the relay's own bound the whole batch is one request.
+  const whole = batchOf(planRecorded(content, rows));
   expect(whole).toHaveLength(1);
-  expect(payloadSize(whole[0]!.request)).toBeLessThanOrEqual(
-    RELAY_PAYLOAD_LIMIT,
-  );
+  expect(written(whole[0]!.request)).toBeLessThanOrEqual(RELAY_PAYLOAD_LIMIT);
   // At a bound a fraction of it, the parts each fit, in order.
   const limit = 8 * 1024;
   const plan = planRecorded(content, { ...rows, payloadLimit: limit });
-  const parts = bulkOf(plan);
+  const parts = batchOf(plan);
   expect(parts.length).toBeGreaterThan(1);
   for (const part of parts) {
-    expect(payloadSize(part.request)).toBeLessThanOrEqual(limit);
+    expect(written(part.request)).toBeLessThanOrEqual(limit);
     expect(part.parts).toBe(parts.length);
   }
   // Each part is as full as the bound allows: one more row would not fit.
   const first = parts[0]!;
-  const next = parts[1]!.rows[0]!;
+  const next = parts[1]!.request.rows[0]!;
   expect(
-    payloadSize({ csv_text: bulkCsv([...first.rows, next]) }),
+    written({ ...first.request, rows: [...first.request.rows, next] }),
   ).toBeGreaterThan(limit);
   expect(
     parts.flatMap((part) => part.rows.map((row) => row.transactionId)),
@@ -1003,21 +1012,21 @@ test("the bound counts bytes, and a row too large to send alone is held", () => 
   ]);
   expect(split.tooLarge.map((r) => r.transactionId)).toEqual(["b"]);
 
-  // Quotes are doubled in the CSV and escaped again in its JSON: 4,000 of
-  // them are over 16,000 bytes.
+  // Quotes are escaped in the batch's JSON: 4,000 of them are over 8,000
+  // bytes.
   const A = hexId("a");
   const plan = planRecorded(
     staged({ [A]: { notes: set('"'.repeat(4_000)) } }),
     {
       ...contextOf(business(A)),
-      payloadLimit: 16_000,
+      payloadLimit: 8_000,
     },
   );
   expect(blockersOf(plan, A)).toEqual(["too_large"]);
   expect(plan.steps).toEqual([]);
 });
 
-test("Mixed names the category's configured usage ratio, through the bulk, and says where none is configured", () => {
+test("Mixed names the category's configured usage ratio, through the batch, and says where none is configured", () => {
   // Three filing years, newest first: one with a ratio for fixed lines, one
   // with none, one not read.
   const [configured, unconfigured, notRead] = servedFilingYears
@@ -1072,21 +1081,18 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
   expect(ratioCells.map((cell) => [cell.id, cell.value])).toEqual([
     [phone.transaction.transaction_id, set("telefonia_fija")],
   ]);
-  // The usage ratio goes in the bulk, beside the classification it needs.
+  // The usage ratio goes in the batch, beside the classification it needs.
   const plan = planRecorded(
     reduceStage(EMPTY_STAGE, outcome.event).content,
     rows,
   );
-  const bulk = plan.steps.find(
-    (step): step is Extract<PlanStep, { kind: "bulk" }> => step.kind === "bulk",
+  const batch = plan.steps.find(
+    (step): step is Extract<PlanStep, { kind: "batch" }> =>
+      step.kind === "batch",
   )!;
-  const [header, ...lines] = bulk.request.csv_text.trim().split("\n");
-  const column = header!.split(",").indexOf("usage_ratio_id");
-  expect(column).toBeGreaterThan(0);
-  const named = lines
-    .map((line) => line.split(","))
-    .filter((cells) => cells[column] !== "")
-    .map((cells) => [cells[0], cells[column]]);
+  const named = batch.request.rows
+    .filter((row) => row.properties.usage_ratio_id != null)
+    .map((row) => [row.transaction_id, row.properties.usage_ratio_id]);
   expect(named).toEqual([[phone.transaction.transaction_id, "telefonia_fija"]]);
   // Without the ratios read, Mixed names none and stages the rest.
   const unseen = classifyCells(

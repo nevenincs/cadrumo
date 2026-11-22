@@ -211,6 +211,8 @@ const ADMITTED: [(&str, Kind); 149] = [
     ("ledger.track", Read),
     ("ledger.unlink", Write),
     ("ledger.update", Write),
+    ("ledger.update.batch", Write),
+    ("ledger.update.batch.preview", Read),
     ("ledger.view", Read),
 ];
 

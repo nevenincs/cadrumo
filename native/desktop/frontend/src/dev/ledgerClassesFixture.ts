@@ -89,6 +89,7 @@ export const LEDGER_WRITES: readonly string[] = [
   "ledger.stash",
   "ledger.unlink",
   "ledger.update",
+  "ledger.update.batch",
 ];
 
 export const LEDGER_REVIEWS: readonly string[] = [

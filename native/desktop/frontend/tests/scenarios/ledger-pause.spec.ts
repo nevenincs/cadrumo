@@ -249,6 +249,10 @@ test("a staged save with an unknown outcome holds an invoice removal elsewhere o
   );
   await openReview(target);
   await ledgerControls.nextWrites(target, ["unknown"]);
+  // Saving waits until the ledger has said what a batch edit would do.
+  await expect(
+    review(target).locator(".ledger-apply-save"),
+  ).not.toHaveAttribute("aria-disabled", "true");
   await review(target).locator(".ledger-apply-save").click();
   await expect(review(target).locator(".ledger-apply-done")).toBeVisible({
     timeout: 20_000,
@@ -557,6 +561,10 @@ test("a change staged again while writes were paused survives the re-read that f
   await typeInto(target, counterparty(), "Trazo Papelería SL");
   await openReview(target);
   await ledgerControls.nextWrites(target, ["unknown"]);
+  // Saving waits until the ledger has said what a batch edit would do.
+  await expect(
+    review(target).locator(".ledger-apply-save"),
+  ).not.toHaveAttribute("aria-disabled", "true");
   await review(target).locator(".ledger-apply-save").click();
   await expect(review(target).locator(".ledger-apply-done")).toBeVisible({
     timeout: 20_000,
@@ -683,6 +691,10 @@ test("a bulk save with an unknown outcome is counted, not listed by name, and it
   await personalForAll(target);
   await openReview(target);
   await ledgerControls.nextWrites(target, ["unknown"]);
+  // Saving waits until the ledger has said what a batch edit would do.
+  await expect(
+    review(target).locator(".ledger-apply-save"),
+  ).not.toHaveAttribute("aria-disabled", "true");
   await review(target).locator(".ledger-apply-save").click();
   await expect(review(target).locator(".ledger-apply-done")).toBeVisible({
     timeout: 20_000,

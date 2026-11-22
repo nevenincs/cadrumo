@@ -1874,6 +1874,8 @@ desktop:
           confirmar-ne un d''anterior. Continua als teus canvis.'
         not_sent_stopped: 'No enviat: la teva sessió ha acabat. Continua als teus
           canvis.'
+        not_sent_unreviewed: 'No enviat: el llibre no havia dit què faria. Revisa
+          de nou.'
         refused: 'No desat: {reason} · continua als teus canvis'
         saved_unread: Desat, però encara no el podem mostrar. Actualitza per veure'l.
         settled: Desat o ja era així
@@ -1894,7 +1896,11 @@ desktop:
       reading: Actualitzant el llibre…
       refusal:
         changed_elsewhere: canviat en un altre lloc
+        changed_since_seen: canviat des que el vas veure
+        not_found: ja no existeix
         other: el llibre no ho ha acceptat
+        plan_changed: el que faria el llibre ha canviat des que el vas revisar; revisa'l
+          de nou
       reject: 'rebutjat: {reason}'
       rows: Canvis per moviment
       save: Desa {count}
@@ -1906,6 +1912,7 @@ desktop:
       shown: '{shown} de {total}'
       step:
         add: Moviment nou · {movement}
+        batch: 'Part {part} de {parts} · editats junts: {count}'
         bulk: 'Part {part} de {parts} · desats junts: {count}'
       stopped: 'La teva sessió ha acabat: el que no s''ha enviat continua als teus
         canvis'
@@ -2227,6 +2234,33 @@ desktop:
       year_estimated: '{year} (estimat)'
       year_estimated_note: 'Aquestes xifres són estimacions: encara no hi ha taules
         oficials per a aquest any.'
+    batch:
+      cause:
+        invalid: el llibre no accepta aquest valor
+        not_active: només es pot canviar un moviment actiu
+        sealed: el cita una declaració presentada
+      count:
+        applied: 'Per canviar: {count}'
+        conflict: 'Canviats des que els vas veure: {count}'
+        refused: 'Rebutjats: {count}'
+        unchanged: 'Ja és així: {count}'
+      preview_failed: El llibre no ha dit què faria, així que encara no es pot desar
+        res en conjunt
+      preview_title: El que farà el llibre
+      previewing: Preguntant al llibre què farà…
+      row:
+        applied: Canviarà
+        unchanged: Ja té aquests valors
+      save_waits: Desar espera que el llibre digui què farà
+      undo: Desfés
+      undo_nothing: Res del que s'ha desat aquí es pot tornar a escriure
+      undo_unread: 'No és al llibre actualitzat, així que no es desfà: {count}'
+      unwritten: Moviments que no canviaran
+      written:
+        applied: 'Canviats: {count}'
+        conflict: 'Canviats des que els vas veure: {count}'
+        refused: 'Rebutjats: {count}'
+        unchanged: 'Ja és així: {count}'
     capital:
       art108: Acollit a l'art. 108
       column:
@@ -4165,6 +4199,34 @@ desktop:
       years_supported: Exercicis que pots consultar
       years_with_movements_or_invoices: Anys amb moviments o factures
     position: Fila {row} de {count}
+    properties:
+      changes_on: canvia en {count}
+      cleared: buidat
+      copied: 'Propietats copiades: {count}'
+      copy: Copia ({count})
+      copy_description: Tria què vols copiar de {movement}. Res no canvia fins que
+        enganxis.
+      copy_first: Copia primer les propietats d'un moviment
+      copy_open: Copia les propietats
+      copy_title: Copia les propietats
+      first_refusal: 'Primer sense canviar: {movement} · {cause}'
+      group:
+        classification: Classificació
+        counterparty: Contrapart
+        group: Grup
+        irpf: IRPF
+        iva: IVA
+        notes: Notes
+      held: 'Propietats copiades: {count}'
+      none_shown: No es mostra cap dels moviments seleccionats
+      none_ticked: Marca almenys una propietat
+      nothing_to_paste: Enganxar no canviaria cap d'aquests moviments
+      paste: Enganxa ({count})
+      paste_description: El llibre diu què faria enganxar a cada moviment. Enganxar
+        ho afegeix als teus canvis; no es desa res fins que revisis i desis.
+      paste_open: Enganxa les propietats ({count})
+      paste_title: 'Enganxa les propietats · moviments: {count}'
+      unread: 'No llegits en aquesta pàgina, així que es deixen fora: {count}'
     prorrata:
       action:
         declare_gross: Declara una quota bruta
