@@ -263,7 +263,7 @@ entries = [
   { key = "rule.R23_ioss_distance_sale_low_value.label", value = "IOSS low-value distance sale" },
   { key = "rule.R23_ioss_distance_sale_low_value.legal_refs", value = "ley-37-1992:art-163" },
   { key = "rule.R30_canarias_ceuta_melilla.priority", value = "21" },
-  { key = "rule.R30_canarias_ceuta_melilla.predicate", value = "issuer=canarias,ceuta_melilla" },
+  { key = "rule.R30_canarias_ceuta_melilla.predicate", value = "issuer=canarias,ceuta_melilla;status=b2b_registered,b2b_not_registered,b2c_consumer,public_administration" },
   { key = "rule.R30_canarias_ceuta_melilla.category", value = "domestic_not_subject" },
   { key = "rule.R30_canarias_ceuta_melilla.consumes", value = "territorial_establishment" },
   { key = "rule.R30_canarias_ceuta_melilla.label", value = "Issuer outside TAI" },
