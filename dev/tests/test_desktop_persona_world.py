@@ -20,8 +20,10 @@ from cadrumo.application.user_profile.profile_record_repository import ProfileRe
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
+from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.entrypoints.tests.persona_world import PERSONA_PROFILE_CREDENTIAL, year_envelope
 
 from .. import desktop_persona_world
@@ -160,6 +162,73 @@ def test_world_holds_the_rows_the_table_plans_and_a_profile_that_signs_in(
     assert any(row["driver_calculate"] == desktop_persona_world.NOT_RUN for row in prepared)
     for row in prepared:
         assert held[row["work_unit_id"]] is (row["driver_calculate"] != desktop_persona_world.NOT_RUN), row
+
+
+def _stored_movements(storage_root: Path, profile_id: str) -> dict[str, BusinessClassification]:
+    """Sign in to the stored profile and read each movement's description with its classification."""
+    with (
+        bundled_indexed_authority().operation() as operation,
+        profile_adapter_composition(),
+        isolated_profile_storage_root(tmp_path=storage_root.parent),
+        portable_password_custody(),
+    ):
+        try:
+            authenticate_profile_for_invocation(
+                name=profile_id,
+                passphrase_callback=lambda: PERSONA_PROFILE_CREDENTIAL,
+                profile_decode_context=operation.profile_decode_context(),
+            )
+            ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
+            stored = ports.transaction_repository.load()
+        finally:
+            close_active_bucket_session()
+            reset_test_profile_session()
+    return {
+        transaction.raw.description: transaction.business_classification for transaction in stored.transactions.values()
+    }
+
+
+def test_extra_movements_are_imported_unclassified_beside_the_persona_s_own(
+    disposable_root: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    status = desktop_persona_world.main(
+        [
+            "--persona",
+            PERSONA,
+            "--horizon",
+            str(_registry_horizon()),
+            "--storage-root",
+            str(disposable_root / "world"),
+            "--extra-movements",
+            "3",
+        ]
+    )
+
+    assert status == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["extra_movements"] == 3
+    movements = _stored_movements(Path(report["storage_root"]), report["profile_id"])
+    extra = {description: state for description, state in movements.items() if "SINTETICO" in description}
+    assert len(extra) == 3
+    assert all(state is BusinessClassification.NOT_YET_PROCESSED for state in extra.values()), extra
+    assert len(movements) > len(extra)
+
+
+def test_a_negative_count_of_extra_movements_is_refused(disposable_root: Path) -> None:
+    with pytest.raises(SystemExit) as refusal:
+        desktop_persona_world.main(
+            [
+                "--persona",
+                PERSONA,
+                "--horizon",
+                "1",
+                "--storage-root",
+                str(disposable_root / "world"),
+                "--extra-movements",
+                "-1",
+            ]
+        )
+    assert refusal.value.code == 2
 
 
 def test_a_root_that_holds_files_is_refused(tmp_path: Path) -> None:
