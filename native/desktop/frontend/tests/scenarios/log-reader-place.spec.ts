@@ -562,6 +562,87 @@ test("under a fast feed, every key from a record the log has passed takes the vi
   }
 });
 
+test("an arrow up to a record already in view leaves the end by the key alone, with no scroll to say so", async ({
+  page: target,
+}) => {
+  // The record above the newest is in view, so moving to it scrolls nothing
+  // and the scroll handler never hears of it: only the key can stop the
+  // following. The page's clock is held, so no batch lands until the test
+  // lets one in.
+  await target.clock.install();
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=30",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await target.clock.pauseAt((await target.evaluate(() => Date.now())) + 5_000);
+  // The batches the jump let in are drawn before the newest is chosen, so no
+  // later one carries it out of view.
+  const newest = () =>
+    list
+      .locator(".record")
+      .last()
+      .getAttribute("data-seq")
+      .then((at) => Number(at));
+  let settled = await newest();
+  await expect
+    .poll(async () => {
+      const was = settled;
+      settled = await newest();
+      return settled === was;
+    })
+    .toBe(true);
+  const seq = await focusNewest(target);
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  // The record drawn above it: sequence numbers a filter hides are skipped.
+  const { above, before } = await list.evaluate((element, on) => {
+    const counted = window as { __logScrolls?: number };
+    counted.__logScrolls = 0;
+    element.addEventListener("scroll", () => {
+      counted.__logScrolls = (counted.__logScrolls ?? 0) + 1;
+    });
+    const row = element.querySelector<HTMLElement>(
+      `:scope > .record[data-seq="${on}"]`,
+    );
+    return {
+      above: Number(
+        (row?.previousElementSibling as HTMLElement | null)?.dataset.seq,
+      ),
+      before: Math.round(element.scrollTop),
+    };
+  }, seq);
+  expect(above).toBeLessThan(seq);
+  await target.keyboard.press("ArrowUp");
+  await expect(list.locator(`.record[data-seq="${above}"]`)).toBeFocused();
+  // The view did not move: no scroll was fired, given the frames a scroll
+  // would be fired in (the browser's own, which the held clock does not hold).
+  await target.waitForTimeout(300);
+  expect(
+    await list.evaluate((element) => ({
+      scrolls: (window as { __logScrolls?: number }).__logScrolls,
+      scrollTop: Math.round(element.scrollTop),
+    })),
+  ).toEqual({ scrolls: 0, scrollTop: before });
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // And the place holds while batches arrive: the record stays in view.
+  await target.clock.runFor(30 * 20);
+  await expect
+    .poll(async () =>
+      Number(await list.locator(".record").last().getAttribute("data-seq")),
+    )
+    .toBeGreaterThan(seq);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  expect(
+    await list.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const rect = (
+        document.activeElement as HTMLElement
+      ).getBoundingClientRect();
+      return rect.top >= box.top - 1 && rect.bottom <= box.bottom + 1;
+    }),
+  ).toBe(true);
+});
+
 test("Space on a record with no detail does not scroll the log", async ({
   page: target,
 }) => {
