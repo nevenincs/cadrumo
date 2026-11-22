@@ -179,6 +179,7 @@ def build_obligation_coverage(
     *,
     today: date,
     operation: PinnedAuthorityOperation | None = None,
+    undetermined_modelos: Iterable[str] = (),
 ) -> ObligationCoverageReport:
     """Reconcile surfaced obligations against the full registry modelo set.
 
@@ -202,6 +203,10 @@ def build_obligation_coverage(
             caller that already holds one passes it, so every modelo is
             judged against that generation without leasing it again per
             modelo; without one, the bundled authority is leased once.
+        undetermined_modelos: Modelos whose filing windows an unanswered
+            profile fact leaves undecided. One not surfaced is advised as
+            undetermined whatever its applicability rule says, because the
+            rule cannot tell whether a window is owed.
 
     Returns:
         The :class:`ObligationCoverageReport` partition.
@@ -210,8 +215,12 @@ def build_obligation_coverage(
 
     if operation is None:
         with bundled_indexed_authority().operation() as leased:
-            return _build_obligation_coverage(profile, surfaced_modelos, today=today, operation=leased)
-    return _build_obligation_coverage(profile, surfaced_modelos, today=today, operation=operation)
+            return _build_obligation_coverage(
+                profile, surfaced_modelos, today=today, operation=leased, undetermined_modelos=undetermined_modelos
+            )
+    return _build_obligation_coverage(
+        profile, surfaced_modelos, today=today, operation=operation, undetermined_modelos=undetermined_modelos
+    )
 
 
 def _build_obligation_coverage(
@@ -220,6 +229,7 @@ def _build_obligation_coverage(
     *,
     today: date,
     operation: PinnedAuthorityOperation,
+    undetermined_modelos: Iterable[str],
 ) -> ObligationCoverageReport:
     # Deferred to break a module-load cycle: application.modelo is a heavier
     # sibling package and importing it at module scope would couple overview's
@@ -227,6 +237,7 @@ def _build_obligation_coverage(
     from ..modelo.registry_discovery import registry_modelo_codes
 
     surfaced_set = frozenset(surfaced_modelos)
+    undetermined_set = frozenset(undetermined_modelos)
     registry_codes = frozenset(registry_modelo_codes(operation=operation))
     unmodeled_codes = {str(code) for code in UNMODELED_OBLIGATIONS}
     out_of_scope_codes = {str(code) for code in OUT_OF_SCOPE_OBLIGATIONS}
@@ -253,6 +264,9 @@ def _build_obligation_coverage(
             # A recognized AEAT obligation the registry does not model: no window
             # and no applicability rule exist, so it cannot be positively scoped.
             advised.append(AdvisedObligation(modelo=modelo, reason=CoverageAdviceReason.REGISTRY_UNMODELED))
+            continue
+        if modelo in undetermined_set:
+            advised.append(AdvisedObligation(modelo=modelo, reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED))
             continue
         verdict = derive_modelo_applicability(
             profile,

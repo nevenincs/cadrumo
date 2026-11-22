@@ -24,7 +24,7 @@ from ...domain.contribuyente.entity_type import (
 )
 from ...domain.contribuyente.renta_codes import RentaDeclaracionType
 from ...domain.deadlines.models import irnr_representante_fiscal_required_on_every_date
-from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
+from ...domain.deadlines.profiles import modelo_iva_profile_required_paths, modelo_iva_unanswered_paths
 
 if TYPE_CHECKING:
     from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition
@@ -177,7 +177,7 @@ def modelo_iva_block_missing_paths(values: Mapping[str, object]) -> tuple[str, .
     projection.
     """
     with pinned_registry_scope():
-        return tuple(path for path in modelo_iva_profile_required_paths(values) if not _has_value(values, path))
+        return modelo_iva_unanswered_paths(values)
 
 
 def _socio_row_indices(values: Mapping[str, object]) -> tuple[str, ...]:

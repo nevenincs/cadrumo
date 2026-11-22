@@ -62,10 +62,10 @@ test("a sign-in lane whose methods are still being read says it is checking, the
   await expect(lane.getByRole("note")).toHaveCount(0);
   await expect(lane.getByText(unavailable())).toHaveCount(0);
 
-  // The next read serves the methods and says the answer is complete.
-  await expect(lane).toHaveAttribute("data-sign-in", "offered", {
-    timeout: 6_000,
-  });
+  // The service's read of the methods ends and it cues the window: the next
+  // read serves them and says the answer is complete.
+  await target.evaluate(() => window.__scenarioProviderSignIn!.settleReads());
+  await expect(lane).toHaveAttribute("data-sign-in", "offered");
   await expect(
     lane.getByRole("button", {
       name: label("desktop.providers.sign_in_action"),

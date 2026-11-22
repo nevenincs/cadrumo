@@ -107,12 +107,17 @@ test("a settled connected status is not unsaid while a later answer is still bei
   );
   // The pending answer has been served; only now does the app report again.
   await expect.poll(resolvedReads).toBe(before + 1);
+  // The app reports again, and the service cues the window that its reads
+  // behind the pending answer have ended.
   await target.evaluate(
-    ([id, state]) =>
-      window.__scenarioProviderSignIn!.leaveLaneUnconfirmed(id, state),
+    ([id, state]) => {
+      const controls = window.__scenarioProviderSignIn!;
+      controls.leaveLaneUnconfirmed(id, state);
+      controls.settleReads();
+    },
     [SIGN_OUT_LANE.id, SIGNED_IN] as const,
   );
-  await target.waitForTimeout(2_500);
+  await expect.poll(resolvedReads).toBe(before + 2);
   await expect(
     lane(target, SIGN_OUT_LANE.id).locator("[data-slot=provider-status]"),
   ).toHaveAttribute("data-status", "ready");

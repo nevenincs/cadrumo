@@ -45,6 +45,7 @@ from ...domain.calculations.registry.applicability_payer_facts import (
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.deadlines.errors import ProfileError
 from ...domain.deadlines.models import TaxpayerProfile
 from ..aggregation.m232_related_party_obligation import StatedRecordsDerivation, stated_records_derivation
 from ..aggregation.m232_related_party_repository import Modelo232RelatedPartyReader
@@ -188,7 +189,9 @@ def bind_filing_year_applicability_evidence(
     ports = InvoiceSourceResolverPorts(catalogue_reader=_CatalogueReadOnce(invoice_source_ports.catalogue_reader))
 
     def profile_for_year(filing_year: int) -> TaxpayerProfile:
-        return projection_for_taxpayer(record, schema=schema, as_of=date(filing_year, 12, 31))
+        return projection_for_taxpayer(
+            record, schema=schema, as_of=date(filing_year, 12, 31), withhold_unanswered_iva_block=True
+        )
 
     def ledger_for_year(filing_year: int) -> tuple[Mapping[str, LedgerPayerFactDerivation], Mapping[str, str]]:
         records_notes: dict[str, str] = {}
@@ -337,16 +340,26 @@ def _ledger_source_derivation(
             f"payer fact {fact.token!r} ledger source names binding {source.record_count_binding!r}, which "
             f"modelo {source.modelo.value!r} revision {revision.id!r} does not declare",
         )
-    resolution = resolver.resolve(
-        CalculationSourceContext(
-            bucket_id=bucket_id,
-            modelo=source.modelo.value,
-            filing_year=filing_year,
-            period=Period.from_year_and_code(filing_year, source.period),
-            revision=revision,
-            operation=operation,
-        ),
-    )
+    try:
+        resolution = resolver.resolve(
+            CalculationSourceContext(
+                bucket_id=bucket_id,
+                modelo=source.modelo.value,
+                filing_year=filing_year,
+                period=Period.from_year_and_code(filing_year, source.period),
+                revision=revision,
+                operation=operation,
+            ),
+        )
+    except ProfileError:
+        # The source modelo's own calculation will not read a profile that leaves
+        # a question it depends on unanswered, so the ledger shows nothing yet; the
+        # profile answer still decides the fact, and the read names the question.
+        _LOGGER.info(
+            "ledger payer fact left unknown: its source modelo refuses the profile",
+            extra={"payer_fact": fact.token, "modelo": source.modelo.value, "filing_year": filing_year},
+        )
+        return LedgerPayerFactDerivation.UNKNOWN
     return declared_record_count_derivation(
         resolution,
         record_count_binding=source.record_count_binding,
