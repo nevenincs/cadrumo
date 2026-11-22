@@ -2272,6 +2272,11 @@ application:
         and recording wait until this year''s texts confirm it.'
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
         for {year}.
+      prize_payment_withholding_uncaptured: A movement of {row_date} paid {amount}
+        as a prize and no captured withholding declares it. Capture the prize's base,
+        its withholding and the winner with `aeat app modelo aggregate --modelo 111
+        --ledger-payment-withholding`, or change the movement's IRPF category if it
+        paid no prize.
       profile_fact_unrecorded: 'To calculate box {box}, record in your profile: {field}.'
       register_cost_exceeds_paid: '{elements}: these assets state a cost of {cost},
         and the ledger entries they name paid {paid}.'

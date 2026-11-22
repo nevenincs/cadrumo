@@ -296,6 +296,8 @@ class CalculationNoteSentence(StrEnum):
     """A received invoice states a retención on rent at a rate matching neither art. 100.2 rate."""
     WITHHOLDING_INVOICE_INCOMPLETE = "withholding_invoice_incomplete"
     """A received invoice states a retención and lacks the supplier's NIF or a euro value."""
+    PRIZE_PAYMENT_WITHHOLDING_UNCAPTURED = "prize_payment_withholding_uncaptured"
+    """A paid prize the ledger records bears retención, and no captured allocation declares it."""
     M347_PROVINCIA_UNRECORDED = "m347_provincia_unrecorded"
     """Modelo 347 records of Spanish counterparts whose provincia code no record states, listed together.
 
