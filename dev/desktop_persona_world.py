@@ -42,12 +42,19 @@ import sys
 import tempfile
 from collections.abc import Sequence
 from contextlib import ExitStack
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+from cadrumo.application.ledger.actions_import import LedgerProviderID
+from cadrumo.application.ledger.import_operation import (
+    LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+    LedgerImportRequest,
+    LedgerImportResultProjection,
+)
 from cadrumo.application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 from cadrumo.core.absence_attestation_family import AbsenceAttestationFamily
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -55,6 +62,8 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tests.persona_materialisation import materialised_persona
+from cadrumo.entrypoints.tests.persona_operations import run_operation
+from cadrumo.entrypoints.tests.persona_replay_requests import bank_statement
 from cadrumo.entrypoints.tests.persona_world import PersonaMaterialisationError, year_envelope
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.persona_types import PersonaCatalogueError
@@ -389,10 +398,48 @@ def _prepared_rows(materialised: MaterialisedPersona, plans: Sequence[PlannedRow
     return rows
 
 
-def prepare_world(persona_id: str, horizon: int, root: Path) -> dict[str, Any]:
+def import_extra_movements(materialised: MaterialisedPersona, count: int) -> int:
+    """Import ``count`` unclassified synthetic bank movements into the persona's ledger; returns how many were imported.
+
+    They give a window a ledger of the size a person edits in bulk. Each is a small spending dated in the
+    persona's first ledger month, through the ledger import operation a statement file takes.
+    """
+    template = materialised.persona.ledger[0]
+    rows = [
+        replace(
+            template,
+            ref=f"{materialised.persona.id}-extra-{index:04d}",
+            day=1 + index % 28,
+            description=f"MOVIMIENTO SINTETICO {index:04d}",
+            amount=-Decimal(10 + index % 90),
+            counterparty=None,
+            category_id=None,
+            accrual=None,
+        )
+        for index in range(count)
+    ]
+    world = materialised.world
+    statement = world.workdir / f"{materialised.persona.id}-extra-statement.csv"
+    statement.write_text(bank_statement(rows, world.envelope), encoding="utf-8", newline="\n")
+    result = run_operation(
+        world,
+        LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+        LedgerImportRequest(profile_id=world.profile_id, files=(statement,), provider=LedgerProviderID.CSV),
+        LedgerImportResultProjection,
+    )
+    if result.imported != count or result.refused_files:
+        raise PersonaMaterialisationError(
+            f"{materialised.persona.id}: imported {result.imported} of {count} extra movements,"
+            f" refused {result.refused_files}"
+        )
+    return result.imported
+
+
+def prepare_world(persona_id: str, horizon: int, root: Path, extra_movements: int = 0) -> dict[str, Any]:
     """Materialise ``persona_id`` under ``horizon`` into ``root``, prepare its rows and return the report.
 
     ``root`` is a checked, absent or empty directory; the profile stays in it when this returns.
+    ``extra_movements`` unclassified synthetic movements are imported after the persona's own.
     """
     with ExitStack() as scope:
         # Settings are read outside the isolated storage root while the world is registered; point that
@@ -420,6 +467,7 @@ def prepare_world(persona_id: str, horizon: int, root: Path) -> dict[str, Any]:
         ) as materialised:
             world = materialised.world
             rows = _prepared_rows(materialised, plans)
+            extra = import_extra_movements(materialised, extra_movements) if extra_movements else 0
             report: dict[str, Any] = {
                 "persona": persona_id,
                 "horizon": horizon,
@@ -430,6 +478,7 @@ def prepare_world(persona_id: str, horizon: int, root: Path) -> dict[str, Any]:
                 "authority_generation": world.operation.generation.logical_generation,
                 "scope": materialised.scope.value,
                 "rows": rows,
+                "extra_movements": extra,
             }
     return report
 
@@ -440,7 +489,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--persona", required=True, help="a catalogue persona id")
     parser.add_argument("--horizon", required=True, type=int, help="a supported filing year the replay is run under")
     parser.add_argument("--storage-root", required=True, type=Path, help="an absolute, absent or empty directory")
+    parser.add_argument(
+        "--extra-movements",
+        type=int,
+        default=0,
+        help="import this many unclassified synthetic movements after the persona's own (default 0)",
+    )
     args = parser.parse_args(argv)
+    if args.extra_movements < 0:
+        parser.error("--extra-movements must not be negative")
     if args.persona not in persona_ids():
         parser.error(f"unknown persona {args.persona!r}")
     refusal = refuse_storage_root(args.storage_root)
@@ -449,7 +506,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         # Operations may print; standard output carries the report alone.
         with contextlib.redirect_stdout(sys.stderr):
-            report = prepare_world(args.persona, args.horizon, args.storage_root.resolve())
+            report = prepare_world(args.persona, args.horizon, args.storage_root.resolve(), args.extra_movements)
     except (PersonaMaterialisationError, PersonaCatalogueError) as error:
         sys.stderr.write(f"persona world not prepared: {error}\n")
         return FAILED
