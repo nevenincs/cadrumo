@@ -3,6 +3,8 @@
 The journal belongs to the whole installation; the encrypted admission records
 that say whose a run is live in each profile's own secure objects, opened
 lazily for the exact bucket the read is bound to.
+
+Core types: :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 """
 
 from __future__ import annotations

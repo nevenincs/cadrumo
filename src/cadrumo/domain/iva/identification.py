@@ -66,7 +66,7 @@ from .schema import EUMemberState
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
-__all__ = ["identification_state_for_printed_tax_identifier", "vat_number_issuing_country"]
+__all__ = ["identification_state_for_printed_tax_identifier", "nif_iva_issuing_country"]
 
 
 def identification_state_for_printed_tax_identifier(
@@ -155,17 +155,18 @@ def _spanish_identification(
     return require_eu_member_state("ES", authority=operation)
 
 
-def vat_number_issuing_country(
+def nif_iva_issuing_country(
     printed_identifier: str | None,
     *,
     operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Return the ISO 3166-1 alpha-2 country whose IVA prefix a printed number carries, or ``None``.
 
-    A VAT identification number leads with the prefix of the Member State that
-    issued it: "an individual VAT identification number ... shall have a prefix
-    in accordance with the ISO 3166 alpha 2 code to identify the Member State by
-    which it was issued", Greece using ``EL`` (Directive 2006/112/EC art. 215).
+    A NIF-IVA leads with the prefix of the Member State that issued it: "El
+    número de identificación individual del IVA debe llevar un prefijo conforme
+    al código ISO–3166 alfa 2 — que permita identificar al Estado miembro
+    que lo haya atribuido. No obstante, se autoriza a Grecia a emplear el prefijo
+    «EL»." (Directiva 2006/112/CE, art. 215, DO L 347 de 11.12.2006, p. 1.)
     This is the issuing State and nothing more: a registration is not an
     establishment (see the module note), so the answer is a suggestion for a
     person to accept as the counterparty's country, never an establishment fact.
@@ -187,7 +188,7 @@ def vat_number_issuing_country(
     if state is None:
         return None
     code = country_code_for_stated_country_code(str(state).upper(), operation=operation)
-    # The member-state catalogue carries Northern Ireland's VAT jurisdiction
+    # The member-state catalogue carries Northern Ireland's IVA jurisdiction
     # ``XI`` for the goods rules; it is inside ISO 3166's private-use range, so
     # it names no country a person could accept as the counterparty's.
     if code is None or is_iso_3166_user_assigned_alpha2(code):

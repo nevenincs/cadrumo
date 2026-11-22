@@ -16,6 +16,8 @@ transition tables: a cancel cancels the movements not yet asked and leaves an
 in-flight movement to settle first, a retry asks again for the failed and
 interrupted movements, and a dismiss puts away a finished job without applying
 anything it proposed.
+
+Core types: :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations

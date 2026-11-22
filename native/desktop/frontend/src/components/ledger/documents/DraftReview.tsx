@@ -83,7 +83,7 @@ import {
   referenceFields,
   resolutionOf,
   seeded,
-  vatPrefixCountryOf,
+  nifIvaPrefixCountryOf,
   sameAsRead,
   changedReadingFields,
   sameReading,
@@ -255,9 +255,9 @@ export function DraftReview({
   const kind = chosenKind ?? preselected;
   const readCountry = draft ? readCountryOf(draft, kind) : null;
   // Only when the document states no country: the State that issued the
-  // counterparty's VAT number, offered as a suggestion and said to be one.
-  const prefixCountry = vatPrefixCountryOf(
-    view?.counterparty_vat_prefix_country ?? null,
+  // counterparty's NIF-IVA, offered as a suggestion and said to be one.
+  const prefixCountry = nifIvaPrefixCountryOf(
+    view?.counterparty_nif_iva_prefix_country ?? null,
     kind,
   );
   const fromPrefix =
