@@ -416,13 +416,13 @@ _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
 
 _LEDGER_PREFLIGHT_NEED_KEY = "application.modelo.errors.ledger_preflight_need"
 #: The sentence that lists the fields a ledger hold says the record is missing.
-_LEDGER_PREFLIGHT_MISSING_FACTS_KEY = "application.modelo.errors.ledger_preflight_missing_facts"
+_LEDGER_PREFLIGHT_MISSING_FACTS_LOCALE_KEY = "application.modelo.errors.ledger_preflight_missing_facts"
 #: One key per field a ledger hold can name as missing, keyed on the field name.
 _LEDGER_PREFLIGHT_MISSING_FACT_KEY = "application.modelo.errors.ledger_preflight_missing_fact"
 #: The clause that states the signed modification a held rectificativa makes.
-_LEDGER_PREFLIGHT_DERIVED_MODIFICATION_KEY = "application.modelo.errors.ledger_preflight_derived_modification"
+_LEDGER_PREFLIGHT_DERIVED_MODIFICATION_LOCALE_KEY = "application.modelo.errors.ledger_preflight_derived_modification"
 #: The clause appended when that modification also carries a recargo de equivalencia.
-_LEDGER_PREFLIGHT_DERIVED_RECARGO_KEY = "application.modelo.errors.ledger_preflight_derived_recargo"
+_LEDGER_PREFLIGHT_DERIVED_RECARGO_LOCALE_KEY = "application.modelo.errors.ledger_preflight_derived_recargo"
 
 
 def _movement_words(movement: Transaction, language: OutputLanguage) -> dict[str, str]:
@@ -526,7 +526,7 @@ def _hold_need_words(issue: LedgerPreflightIssue, language: OutputLanguage) -> s
     facts = ", ".join(
         tr(f"{_LEDGER_PREFLIGHT_MISSING_FACT_KEY}.{fact}", locale=language.value) for fact in issue.missing_facts
     )
-    clause = tr(_LEDGER_PREFLIGHT_MISSING_FACTS_KEY, locale=language.value, facts=facts)
+    clause = tr(_LEDGER_PREFLIGHT_MISSING_FACTS_LOCALE_KEY, locale=language.value, facts=facts)
     # Joined with a semicolon, not a full stop: the need sentence is itself
     # embedded in the ledger-hold line, which supplies the terminal period, so
     # the clause continues that one sentence rather than starting a second one
@@ -547,7 +547,7 @@ def _derived_modification_clause(
     hold was asked in, so no surface computes or words a tax figure.
     """
     clause = tr(
-        _LEDGER_PREFLIGHT_DERIVED_MODIFICATION_KEY,
+        _LEDGER_PREFLIGHT_DERIVED_MODIFICATION_LOCALE_KEY,
         locale=language.value,
         base=format_casilla_value(base, data_type="money", language=language),
         cuota=format_casilla_value(cuota, data_type="money", language=language),
@@ -555,7 +555,7 @@ def _derived_modification_clause(
     if recargo is None:
         return clause
     recargo_clause = tr(
-        _LEDGER_PREFLIGHT_DERIVED_RECARGO_KEY,
+        _LEDGER_PREFLIGHT_DERIVED_RECARGO_LOCALE_KEY,
         locale=language.value,
         recargo=format_casilla_value(recargo, data_type="money", language=language),
     )
