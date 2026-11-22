@@ -356,6 +356,10 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED: (
             OperatorActionAxis.SUPPLY_MANUAL_INPUT
         ),
+        # Nothing is missing from the record and nothing contradicts: the
+        # modification is derived and waits on the period its side and cause
+        # place it in, which is a review, not a field to fill.
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED: OperatorActionAxis.REVIEW_ADVISORY,
         LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },
 )

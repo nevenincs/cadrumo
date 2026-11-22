@@ -4319,6 +4319,7 @@ desktop:
       invoice_recargo_not_declarable: Surcharge
       invoice_recargo_split_unresolved: Surcharge
       invoice_rectificativa_modification_unmodelled: Rectificativa
+      invoice_rectificativa_period_undecided: Rectificativa period
       invoice_used_goods_margin_unmodelled: Used goods
       linked_movement_contradicts_invoice: Invoice
       missing_business_classification: Classification
@@ -4350,8 +4351,10 @@ desktop:
       invoice_recargo_not_declarable: The surcharge is not the legal rate on its base
       invoice_recargo_split_unresolved: The surcharge does not divide between its
         VAT rates
-      invoice_rectificativa_modification_unmodelled: Enter the correction with its
-        sign in casillas 14/15 or 40/41
+      invoice_rectificativa_modification_unmodelled: State how it expresses its figures,
+        and which invoice it replaces
+      invoice_rectificativa_period_undecided: The correction is derived; its period
+        depends on the cause and on your choice
       invoice_used_goods_margin_unmodelled: Enter the margin base and its cuota in
         the devengado casillas for its rate
       linked_movement_contradicts_invoice: Differs from its invoice

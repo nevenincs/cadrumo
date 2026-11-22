@@ -3210,6 +3210,9 @@ application:
         No se ha guardado nada.'
       ledger_preflight_blocked_period: 'No se puede calcular %{period}: %{need}. No
         se ha guardado nada.'
+      ledger_preflight_derived_modification: modifica la base en %{base} y la cuota
+        en %{cuota}
+      ledger_preflight_derived_recargo: y el recargo de equivalencia en %{recargo}
       ledger_preflight_missing_fact:
         document_received_on: cuándo la recibiste
         rectification_cause: por qué rectifica la operación
@@ -3242,10 +3245,12 @@ application:
         invoice_recargo_split_unresolved: 'una factura emitida lleva un único recargo
           de equivalencia sobre varios tipos de IVA que no coincide con la suma del
           recargo de cada tipo: corrige el recargo de la factura'
-        invoice_rectificativa_modification_unmodelled: 'una factura rectificativa
-          no se declara en ninguna fila de tipo de IVA: indica su base y su cuota
-          con el signo que corresponda en las casillas 14 y 15 del Modelo 303 si la
-          emitiste, o en las casillas 40 y 41 si la recibiste'
+        invoice_rectificativa_modification_unmodelled: 'el registro de una factura
+          rectificativa no indica la modificación que hace: cómo expresa sus importes
+          y, si los sustituye, la única factura a la que sustituye'
+        invoice_rectificativa_period_undecided: la modificación que hace una factura
+          rectificativa ya se conoce, pero el periodo al que corresponde depende de
+          su causa y de la opción que la ley te deja
         invoice_used_goods_margin_unmodelled: 'la base del margen de una venta en
           el régimen especial de los bienes usados (art. 137) no se calcula: indica
           tú mismo la base del margen y su cuota en las casillas de IVA devengado

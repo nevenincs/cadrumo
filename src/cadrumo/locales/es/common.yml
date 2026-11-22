@@ -4403,6 +4403,7 @@ desktop:
       invoice_recargo_not_declarable: Recargo
       invoice_recargo_split_unresolved: Recargo
       invoice_rectificativa_modification_unmodelled: Rectificativa
+      invoice_rectificativa_period_undecided: Periodo rectificativa
       invoice_used_goods_margin_unmodelled: Bienes usados
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Clasificación
@@ -4433,8 +4434,10 @@ desktop:
       invoice_recargo_not_declarable: El recargo no es el tipo legal sobre su base
       invoice_recargo_split_unresolved: El recargo no se reparte entre sus tipos de
         IVA
-      invoice_rectificativa_modification_unmodelled: Indica la rectificación con su
-        signo en las casillas 14/15 o 40/41
+      invoice_rectificativa_modification_unmodelled: Indica cómo expresa sus importes
+        y a qué factura sustituye
+      invoice_rectificativa_period_undecided: La rectificación ya está derivada; su
+        periodo depende de la causa y de tu elección
       invoice_used_goods_margin_unmodelled: Indica la base del margen y su cuota en
         las casillas de IVA devengado de su tipo
       linked_movement_contradicts_invoice: No coincide con su factura

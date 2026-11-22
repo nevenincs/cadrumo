@@ -4379,6 +4379,7 @@ desktop:
       invoice_recargo_not_declarable: Pótlék
       invoice_recargo_split_unresolved: Pótlék
       invoice_rectificativa_modification_unmodelled: Helyesbítő
+      invoice_rectificativa_period_undecided: Helyesbítő időszak
       invoice_used_goods_margin_unmodelled: Használt cikkek
       linked_movement_contradicts_invoice: Számla
       missing_business_classification: Besorolás
@@ -4409,8 +4410,10 @@ desktop:
         illeti meg
       invoice_recargo_not_declarable: A pótlék nem a törvényes kulcs az adóalapján
       invoice_recargo_split_unresolved: A pótlék nem osztható fel az áfakulcsai között
-      invoice_rectificativa_modification_unmodelled: Add meg a helyesbítést előjellel
-        a 14/15. vagy a 40/41. mezőben
+      invoice_rectificativa_modification_unmodelled: Add meg, hogyan adja meg az összegeit,
+        és melyik számlát váltja fel
+      invoice_rectificativa_period_undecided: A helyesbítés már levezetve; az időszaka
+        a jogcímtől és a te választásodtól függ
       invoice_used_goods_margin_unmodelled: Add meg az árrés adóalapját és adóját
         a kulcsához tartozó fizetendő áfa mezőkben
       linked_movement_contradicts_invoice: Eltér a számlájától

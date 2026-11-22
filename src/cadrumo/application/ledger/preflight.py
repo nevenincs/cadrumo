@@ -48,6 +48,7 @@ from ...domain.categories.spending_category import (
     home_office_categories,
 )
 from ...domain.categories.spending_category_catalogue import require_spending_category
+from ...domain.invoices.rectification_modification import RectificationModification
 from ...domain.transactions.classification_effects import takes_expense_category
 from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.enums import (
@@ -150,6 +151,7 @@ class LedgerPreflightIssueReason(StrEnum):
     INVOICE_RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
     INVOICE_RECARGO_NOT_DECLARABLE = "invoice_recargo_not_declarable"
     INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
+    INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED = "invoice_rectificativa_period_undecided"
     INVOICE_USED_GOODS_MARGIN_UNMODELLED = "invoice_used_goods_margin_unmodelled"
 
 
@@ -167,6 +169,17 @@ class LedgerPreflightIssue(BaseModel):
     #: the fields the person opens, rather than the detail prose above being
     #: the only place they appear.
     missing_facts: tuple[str, ...] = ()
+    #: The signed modification a factura rectificativa makes, as the document's
+    #: own method reads it (RD 1619/2012 art. 15.5). Carried so a hold on a
+    #: complete rectificativa shows the person the figures rather than only the
+    #: fact that it is held. ``None`` on every other reason, and on a
+    #: rectificativa whose record supports no modification at all. The sign is
+    #: the modification's; the invoice keeps its non-negative magnitudes.
+    derived_modification_base: Decimal | None = None
+    derived_modification_cuota: Decimal | None = None
+    #: The recargo de equivalencia the same modification carries, ``None`` when
+    #: neither the document nor the invoice it replaces states one.
+    derived_modification_recargo: Decimal | None = None
 
 
 class LedgerPreflightReport(BaseModel):
@@ -434,9 +447,14 @@ _INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
             "art. 161 rate for its IVA rate and date; correct the invoice or issue a rectificativa"
         ),
         LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED.value: (
-            "invoice {number} is a factura rectificativa, which no IVA rate row declares; enter its base and "
-            "cuota with their sign in Modelo 303 casillas 14 and 15 if you issued it, or in casillas 40 and 41 "
-            "if you received it{missing}"
+            "invoice {number} is a factura rectificativa whose record states no modification: RD 1619/2012 "
+            "art. 15.5 reads its figures through the method it records, and a substitution also needs the one "
+            "invoice it replaces{refusal}{missing}"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED.value: (
+            "invoice {number} is a factura rectificativa whose modification is {derived}; which period it "
+            "belongs to comes from the side, the cause and the election LIVA art. 89.Cinco and art. 114.Dos "
+            "give, which is not decided yet, so it declares nothing here"
         ),
         LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED.value: (
             "issued invoice {number} is under the régimen especial de los bienes usados, whose taxable base is "
@@ -453,6 +471,8 @@ def _invoice_issue(
     invoice: Invoice | None,
     transaction_id: str | None,
     missing_facts: tuple[str, ...] = (),
+    rectification_refusal: str | None = None,
+    modification: RectificationModification | None = None,
 ) -> LedgerPreflightIssue:
     """Key an invoice-side issue on the movement the person can open, else on the period."""
     anchor = transaction_id
@@ -464,9 +484,26 @@ def _invoice_issue(
         detail=_INVOICE_FINDING_DETAIL[reason.value].format(
             number=repr(invoice.invoice_number) if invoice is not None else "",
             missing=("" if not missing_facts else f"; the invoice does not state {', '.join(missing_facts)}"),
+            refusal="" if rectification_refusal is None else f"; {rectification_refusal}",
+            derived=_derived_modification_words(modification),
         ),
         missing_facts=missing_facts,
+        derived_modification_base=None if modification is None else modification.base,
+        derived_modification_cuota=None if modification is None else modification.cuota,
+        derived_modification_recargo=None if modification is None else modification.recargo,
     )
+
+
+def _derived_modification_words(modification: RectificationModification | None) -> str:
+    """The signed figures a derived modification carries, for the diagnostic sentence.
+
+    The person's own sentence is served translated from the typed amounts on
+    the issue; this is the untranslated diagnostic beside it.
+    """
+    if modification is None:
+        return ""
+    recargo = "" if modification.recargo is None else f" and a recargo of {modification.recargo:f}"
+    return f"a base of {modification.base:f} and a cuota of {modification.cuota:f}{recargo} {modification.currency}"
 
 
 def invoice_side_preflight_issues(
@@ -487,6 +524,10 @@ def invoice_side_preflight_issues(
             invoice=by_id.get(finding.invoice_id) if finding.invoice_id is not None else None,
             transaction_id=finding.transaction_id,
             missing_facts=tuple(fact.value for fact in finding.missing_rectification_facts),
+            rectification_refusal=None
+            if finding.rectification_refusal is None
+            else finding.rectification_refusal.value,
+            modification=finding.rectification_modification,
         )
         for finding in findings
     ]

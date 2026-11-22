@@ -3058,6 +3058,9 @@ application:
         Nothing was saved.'
       ledger_preflight_blocked_period: '%{period} cannot be calculated: %{need}. Nothing
         was saved.'
+      ledger_preflight_derived_modification: it modifies the base by %{base} and the
+        cuota by %{cuota}
+      ledger_preflight_derived_recargo: and the recargo de equivalencia by %{recargo}
       ledger_preflight_missing_fact:
         document_received_on: when you received it
         rectification_cause: why it corrects the operation
@@ -3090,10 +3093,12 @@ application:
         invoice_recargo_split_unresolved: 'an issued invoice carries one recargo de
           equivalencia over several VAT rates that differs from the sum of each rate''s
           recargo de equivalencia: correct the invoice''s recargo de equivalencia'
-        invoice_rectificativa_modification_unmodelled: 'a factura rectificativa is
-          declared on no VAT rate row: enter its base and cuota with their sign in
-          Modelo 303 casillas 14 and 15 if you issued it, or in casillas 40 and 41
-          if you received it'
+        invoice_rectificativa_modification_unmodelled: 'the record of a factura rectificativa
+          does not state the modification it makes: how it states its figures, and,
+          where it substitutes them, the single invoice it replaces'
+        invoice_rectificativa_period_undecided: the modification a factura rectificativa
+          makes is known, but the period it belongs to depends on its cause and on
+          the choice the law leaves you
         invoice_used_goods_margin_unmodelled: 'the margin base of a sale under the
           régimen especial de los bienes usados (art. 137) is not computed: enter
           the margin base and its cuota in the Modelo 303 devengado casillas for its
