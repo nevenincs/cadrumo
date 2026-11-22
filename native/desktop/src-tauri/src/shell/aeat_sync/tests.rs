@@ -57,7 +57,7 @@ fn the_admitted_list_is_sorted_and_names_each_definition_once() {
 #[test]
 fn every_admitted_definition_is_a_shipped_contract() {
     let contracts = contracts();
-    for (id, _) in ADMITTED {
+    for (id, _) in ADMITTED.iter().copied() {
         assert!(contracts.contains_key(id), "{id} is not in the manifest");
     }
 }
@@ -65,7 +65,7 @@ fn every_admitted_definition_is_a_shipped_contract() {
 #[test]
 fn a_read_declares_no_effect_that_changes_records() {
     let contracts = contracts();
-    for (id, kind) in ADMITTED {
+    for (id, kind) in ADMITTED.iter().copied() {
         let effects = strings(&contracts[id]["permitted_effects"]);
         let changes = effects.iter().any(|e| matches!(*e, "updated" | "partial"));
         assert_eq!(changes, kind != Kind::Read, "{id}: {effects:?}");
@@ -75,7 +75,7 @@ fn a_read_declares_no_effect_that_changes_records() {
 #[test]
 fn no_admitted_definition_pauses_for_the_person_or_can_be_cancelled() {
     let contracts = contracts();
-    for (id, _) in ADMITTED {
+    for (id, _) in ADMITTED.iter().copied() {
         assert_eq!(contracts[id]["cancellation"], "unsupported", "{id}");
         assert_eq!(contracts[id]["interaction_kinds"], json!([]), "{id}");
     }
@@ -85,7 +85,7 @@ fn no_admitted_definition_pauses_for_the_person_or_can_be_cancelled() {
 fn the_list_holds_only_reads_of_aeat_or_the_profile() {
     for (id, _) in ADMITTED {
         assert!(
-            id.starts_with("live.") || ["auth.local-read", "auth.session.acquire"].contains(&id),
+            id.starts_with("live.") || ["auth.local-read", "auth.session.acquire"].contains(id),
             "{id} is outside the live reads"
         );
         assert!(
