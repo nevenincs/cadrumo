@@ -294,6 +294,7 @@ def agent_service_session(
     *,
     external_bin_dirs: tuple[Path, ...] = (),
     owned: bool = False,
+    deployment_settings: Mapping[str, str] | None = None,
 ) -> Generator[AgentServiceSession]:
     """Start the runtime first, then create one profile, holder and admitted service.
 
@@ -301,7 +302,8 @@ def agent_service_session(
     for the suite. A provider refusal is observable and does not prevent
     structural service tests from using catalog or status administration.
     ``owned`` marks a session one caller alone uses, which may then store the
-    window's local-model settings as the service's parent.
+    window's local-model settings as the service's parent. ``deployment_settings`` are product settings the
+    runtime is started under, as a deployment sets them in the environment it starts the runtime in.
     """
     package = package.resolve(strict=True)
     scratch.mkdir(parents=True, exist_ok=True)
@@ -309,6 +311,9 @@ def agent_service_session(
     root.mkdir(parents=True, exist_ok=True)
     environment = consumer_environment(root)
     environment["CADRUMO_LOG_STDERR_LEVEL"] = "WARNING"
+    for name, value in (deployment_settings or {}).items():
+        require(name.upper().startswith("CADRUMO_"), "a deployment setting is a product setting")
+        environment[name.upper()] = value
     if external_bin_dirs:
         normalized = tuple(str(path.resolve(strict=True)) for path in external_bin_dirs)
         environment["CADRUMO_EXTERNAL_BIN_DIRS"] = os.pathsep.join(normalized)

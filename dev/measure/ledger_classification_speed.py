@@ -69,7 +69,9 @@ stored sign-in. It first asks ``classify ID --llm`` once, which carries no
 consent, and records its refusal on an off-host lane (a proposal there is
 recorded as a finding); switches the profile's ``cloud_evidence_upload``
 capability on with its command, since each off-host read's consent is minted
-only then; enqueues one job over every imported movement with a ``once``
+only then (the deployment's own opt-in, ``CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED``,
+is set on the runtime only with ``--deployment-permits-off-host``, and the
+JSON names it under ``deployment_settings``); enqueues one job over every imported movement with a ``once``
 consent grant naming the lane and model; runs it once (every pending
 movement, batch by batch, nothing applied), timing the run; reads it, recording
 each movement's state with its typed failure cause or proposal and the
@@ -188,6 +190,8 @@ _HEALTH_SECONDS: Final = 120.0
 _ADMIN_SECONDS: Final = 120.0
 _CLI_SECONDS: Final = 600.0
 _CATALOG_ATTEMPTS: Final = 3
+_DEPLOYMENT_OFF_HOST: Final = "CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED"
+"""The deployment's off-host opt-in, which every off-host grant needs besides the profile's capability."""
 _CATALOG_PAUSE_SECONDS: Final = 15.0
 """How long one ``aeat`` command may take before it is ended: a profile write admitted minutes late on a loaded
 machine is still running, and ending it mid-way leaves its effect unknown."""
@@ -2003,7 +2007,11 @@ def _measure_on(
     phase = time.perf_counter()
     document["phase"] = "session_setup"
     with ExitStack() as stack:
-        session = stack.enter_context(agent_service_session(package, root / "session", owned=True))
+        deployment = {_DEPLOYMENT_OFF_HOST: "true"} if arguments.deployment_permits_off_host else {}
+        document["deployment_settings"] = sorted(deployment)
+        session = stack.enter_context(
+            agent_service_session(package, root / "session", owned=True, deployment_settings=deployment)
+        )
         timings["session_setup_seconds"] = time.perf_counter() - phase
         document["session_timings"] = session.timings
         document["agent_event"] = {
@@ -2273,6 +2281,7 @@ class _Arguments(argparse.Namespace):
     base_url: str | None
     base_url_variable: str | None
     hostile: bool
+    deployment_permits_off_host: bool
     apply_count: int
 
     @property
@@ -2320,6 +2329,11 @@ def parse_arguments(argv: Sequence[str] | None = None) -> _Arguments:
     url.add_argument("--base-url", default=None, help="base URL stored with the credential; default: the lane's")
     url.add_argument("--base-url-variable", default=None, help="the credential file's variable holding the base URL")
     parser.add_argument("--hostile", action="store_true", help="add synthetic prompt-injection movements")
+    parser.add_argument(
+        "--deployment-permits-off-host",
+        action="store_true",
+        help=f"start the runtime with {_DEPLOYMENT_OFF_HOST}=true, the deployment's off-host opt-in",
+    )
     parser.add_argument("--apply-count", type=int, default=_APPLY_DEFAULT, help="job proposals to apply")
     arguments = parser.parse_args(argv, namespace=_Arguments())
     if arguments.mode is None:
