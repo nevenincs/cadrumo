@@ -138,7 +138,7 @@ import sys
 import tempfile
 import time
 from collections import Counter
-from collections.abc import Callable, Collection, Generator, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Collection, Generator, Iterable, Mapping, MutableMapping, Sequence
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
@@ -219,8 +219,9 @@ _TERMINAL_CONTROL: Final = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 """The colour sequences the server writes (the router starts its instances with ``--log-colors on``)."""
 _RUN_RECORD: Final = re.compile(r"llm request completed provider=(\S+) model=(\S+)")
 _RUN_TOKENS: Final = re.compile(
-    r"llm request completed provider=(\S+) model=(\S+) input_tokens=(\d+) output_tokens=(\d+)"
+    r"llm request completed provider=(\S+) model=(\S+)(?: input_tokens=(\S+) output_tokens=(\S+))?"
 )
+"""A completed model run; the product log redacts the token counts (``<redacted>``), which then count as unknown."""
 _RUN_FAILED: Final = re.compile(r"llm request failed provider=(\S+) model=(\S+)")
 _JOB_BATCH: Final = re.compile(
     r"ledger classification batch job=\S+ revision=(\d+) proposed=(\d+) stale=(\d+) failed=(\d+) causes=(.*?)"
@@ -228,8 +229,8 @@ _JOB_BATCH: Final = re.compile(
 )
 """The line a classification job's run logs for each batch it commits, with what the batch came to."""
 _JOB_RUN_END: Final = re.compile(r"ledger classification run (ended|refused) job=\S+ (?:cause=(\S+) )?status=(\S+)")
-_LOG_INSTANT: Final = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),(\d{3}) ")
-"""The product log's ``asctime`` at the start of each line, to the millisecond."""
+_LOG_INSTANT: Final = re.compile(r"^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})[,.](\d{3})Z? ")
+"""The product log's instant at the start of each line, to the millisecond: ISO ``...T...Z`` or ``asctime``."""
 _JOB_CALL_SECONDS: Final = 120.0
 """How long one job enqueue, read or apply exchange may take; the run takes ``--budget-seconds``."""
 _APPLY_DEFAULT: Final = 5
@@ -1719,11 +1720,17 @@ def _log_instant(line: str) -> datetime | None:
     match = _LOG_INSTANT.match(line)
     if match is None:
         return None
-    return datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S") + timedelta(milliseconds=int(match.group(2)))
+    stamp = datetime.strptime(f"{match.group(1)} {match.group(2)}", "%Y-%m-%d %H:%M:%S")
+    return stamp + timedelta(milliseconds=int(match.group(3)))
 
 
 def _gaps(instants: Sequence[datetime]) -> list[float]:
     return [(later - earlier).total_seconds() for earlier, later in itertools.pairwise(instants)]
+
+
+def _counted(values: Iterable[str | None]) -> list[float]:
+    """The token counts a log stated as numbers; a redacted or absent count is unknown, never zero."""
+    return [float(value) for value in values if value is not None and value.isdigit()]
 
 
 def job_log_facts(lines: Sequence[str]) -> dict[str, Any]:
@@ -1744,8 +1751,8 @@ def job_log_facts(lines: Sequence[str]) -> dict[str, Any]:
         "model_runs": len(completed),
         "model_run_failures": sum(1 for line in plain if _RUN_FAILED.search(line)),
         "lanes": dict(Counter(f"{match.group(1)}/{match.group(2)}" for _, match in completed)),
-        "input_tokens": distribution([float(match.group(3)) for _, match in completed]),
-        "output_tokens": distribution([float(match.group(4)) for _, match in completed]),
+        "input_tokens": distribution(_counted(match.group(3) for _, match in completed)),
+        "output_tokens": distribution(_counted(match.group(4) for _, match in completed)),
         "request_gap_seconds": distribution(_gaps(request_instants)),
         "batches": [
             {

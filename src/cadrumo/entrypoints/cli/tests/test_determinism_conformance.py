@@ -39,6 +39,7 @@ from ....adapters.persistence.profile.tests.ledger_action_create_support import 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
+from ....application.ledger.evidence_read_operation import LedgerEvidenceRecordProjection
 from ....application.ledger.manual_read import ledger_transaction_payload
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.review_projection import ledger_transaction_review_status
@@ -152,8 +153,9 @@ def _emit_ledger_add(profile: TestRuntimeProfile) -> dict[str, object]:
 def _emit_evidence_add(storage_root: Path, pdf: Path) -> dict[str, object]:
     """Drive one real ``ledger evidence add`` in a fresh bucket and capture its envelope.
 
-    Builds the ``EvidenceAddResult`` exactly as the CLI leaf does (record dump plus
-    the ``bucket_event_ids`` appended at the emit site) and emits it through the
+    Builds the ``EvidenceAddResult`` exactly as the CLI leaf does (the worker's
+    record projection dumped, plus the ``bucket_event_ids`` appended at the emit
+    site) and emits it through the
     real success-envelope path under a capture sink. All storage ops stay inside one
     ``frozen_clock`` block.
     """
@@ -170,7 +172,7 @@ def _emit_evidence_add(storage_root: Path, pdf: Path) -> dict[str, object]:
             iva_amount=Decimal("21.00"),
             notes="office supplies",
         )
-        payload = result.record.model_dump(mode="json")
+        payload = LedgerEvidenceRecordProjection.from_record(result.record).model_dump(mode="json")
         payload["bucket_event_ids"] = list(result.bucket_event_ids)
         with capture_envelopes() as sink:
             emit_json_success("ledger.evidence.add", EvidenceAddResult.model_validate(payload), stream=io.StringIO())
