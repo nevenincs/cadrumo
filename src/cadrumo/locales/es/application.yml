@@ -2390,6 +2390,11 @@ application:
         esperan a que los textos de este ejercicio lo confirmen.'
       prior_filing_unrecorded: Para calcular la casilla {box}, registra tu Modelo
         {modelo} de {year}.
+      prize_payment_withholding_uncaptured: Un movimiento del {row_date} pagó {amount}
+        como premio y ninguna retención capturada lo declara. Captura la base del
+        premio, su retención y quien lo ganó con `aeat app modelo aggregate --modelo
+        111 --ledger-payment-withholding`, o cambia la categoría de IRPF del movimiento
+        si no pagó ningún premio.
       profile_fact_unrecorded: 'Para calcular la casilla {box}, registra en tu perfil:
         {field}.'
       register_cost_exceeds_paid: '{elements}: estos elementos indican un coste de

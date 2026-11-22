@@ -420,6 +420,7 @@ export type CalculationNoteSentence =
   | "withholding_invoice_rate_unrecognised"
   | "withholding_invoice_rent_rate_unrecognised"
   | "withholding_invoice_incomplete"
+  | "prize_payment_withholding_uncaptured"
   | "m347_provincia_unrecorded"
   | "m347_provincia_unstated"
   | "declared_party_name_missing"
