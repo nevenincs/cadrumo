@@ -167,7 +167,7 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
     binding_selector = (tmp_path / "api" / "cadrumo.domain.calculations.registry.binding_selector_utils.rst").read_text(
         encoding="utf-8"
     )
-    calc_sheet_records = (tmp_path / "api" / "cadrumo.application.storage.calc_sheets.records.rst").read_text(
+    registry_scalars = (tmp_path / "api" / "cadrumo.domain.calculations.registry.schema_scalars.rst").read_text(
         encoding="utf-8"
     )
     m145_records = (tmp_path / "api" / "cadrumo.application.modelo.m145_communication_records.rst").read_text(
@@ -181,9 +181,9 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
     binding_alias = (
         ".. py:type:: BindingExportDataType\n   :module: cadrumo.domain.calculations.registry.binding_selector_utils"
     )
-    decimal_alias = ".. py:type:: DecimalValue\n   :module: cadrumo.application.storage.calc_sheets.records"
+    decimal_alias = ".. py:type:: DecimalValue\n   :module: cadrumo.domain.calculations.registry.schema_scalars"
     assert binding_alias in binding_selector
-    assert decimal_alias in calc_sheet_records
+    assert decimal_alias in registry_scalars
     assert ".. py:type:: M145CommunicationRecordId" in m145_records
     assert ".. py:type:: ModeloDraftContentAddress" in filing_schema
     assert ".. py:type:: SecureObjectListItem" in secure_object_records
