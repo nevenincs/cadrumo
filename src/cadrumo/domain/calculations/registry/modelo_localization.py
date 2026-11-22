@@ -62,6 +62,16 @@ def binding_locale_key(modelo_id: str, binding_id: str, field: Literal["label", 
     )
 
 
+def binding_label_text(modelo_id: str, binding_id: str, *, locale: str) -> str:
+    """The binding's own declared label in ``locale``, or Spanish where only that is declared, else its identifier.
+
+    A refusal that names an input reads it as the form does, so the filer sees
+    the same words beside the field they fill in.
+    """
+    served = served_modelo_localization_text((binding_locale_key(modelo_id, binding_id, "label"),), locale=locale)
+    return binding_id if served is None or not served[1] else served[1]
+
+
 def revision_locale_key(
     modelo_id: str,
     revision_id: RevisionId,

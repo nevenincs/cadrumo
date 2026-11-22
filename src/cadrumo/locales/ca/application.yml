@@ -3138,6 +3138,9 @@ application:
       input_required: 'Encara no es pot calcular el Model %{modelo} %{period} %{filing_year}:
         falta la dada %{binding} (casella %{boxes}). Indica-la i torna a calcular.
         No s''ha desat res.'
+      input_required_profile_fact: 'Encara no es pot calcular el Model %{modelo} %{period}
+        %{filing_year} perquè el teu perfil no indica aquesta dada: %{binding_label}.
+        Indica-la al teu perfil i torna a calcular. No s''ha desat res.'
       input_required_unprinted: 'Encara no es pot calcular el Model %{modelo} %{period}
         %{filing_year}: falta la dada %{binding}. Indica-la i torna a calcular. No
         s''ha desat res.'

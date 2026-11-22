@@ -3142,6 +3142,9 @@ application:
       input_required: 'Todavía no se puede calcular el Modelo %{modelo} %{period}
         %{filing_year}: falta el dato %{binding} (casilla %{boxes}). Indícalo y vuelve
         a calcular. No se ha guardado nada.'
+      input_required_profile_fact: 'Todavía no se puede calcular el Modelo %{modelo}
+        %{period} %{filing_year} porque tu perfil no indica este dato: %{binding_label}.
+        Indícalo en tu perfil y vuelve a calcular. No se ha guardado nada.'
       input_required_unprinted: 'Todavía no se puede calcular el Modelo %{modelo}
         %{period} %{filing_year}: falta el dato %{binding}. Indícalo y vuelve a calcular.
         No se ha guardado nada.'

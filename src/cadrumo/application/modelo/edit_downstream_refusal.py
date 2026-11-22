@@ -7,12 +7,17 @@ code, words and door. This module keeps exactly those, value-free, across the
 edit contract and turns them back into the registered error the edit settles
 under. The words keep only the public registry coordinates their sentence
 names -- a modelo, an ejercicio, a period, a casilla, a binding -- and a
-sentence that needs anything else is not served.
+sentence that needs anything else is not served. A sentence may also name
+words derived from those coordinates alone, such as a binding's declared
+label: the coordinates travel and the words are worded again where the edit
+settles, so no free text crosses the edit contract.
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Mapping
+from types import MappingProxyType
 from typing import Final
 
 from ...core.errors.error_codes import ErrorCode, get_registered_error_code, public_error_context
@@ -24,8 +29,9 @@ from ...core.operator_action_enums import (
     ActionConditionality,
     ActionEvidenceProvenance,
 )
+from ...domain.calculations.registry.modelo_localization import binding_label_text
 from ..cli_exception_preconditions import nested_terminal_precondition_verdict
-from ..operations.error_detail import UNWORDED_REGISTERED_ERROR_LOCALE_KEY
+from ..operations.error_detail import UNWORDED_REGISTERED_ERROR_LOCALE_KEY, served_words_language
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from .edit_downstream_models import (
     MODELO_EDIT_MESSAGE_KEY_PATTERN,
@@ -36,6 +42,21 @@ from .edit_downstream_models import (
 
 #: The one evidence a value-free door states: the edit's values were admitted before the stage refused.
 _DOOR_EVIDENCE_ID: Final[str] = "modelo.work.edit.downstream_refusal"
+
+type _DerivedWords = Callable[[Mapping[str, str], OutputLanguage], str]
+
+#: Words a sentence may name that are worded from public coordinates alone: each name, the coordinates it reads,
+#: and how it is worded. Only the coordinates are kept; the words are worded again in the language served.
+_DERIVED_WORDS: Final[Mapping[str, tuple[tuple[str, ...], _DerivedWords]]] = MappingProxyType(
+    {
+        "binding_label": (
+            ("binding_id", "modelo"),
+            lambda coordinates, language: binding_label_text(
+                coordinates["modelo"], coordinates["binding_id"], locale=language.value
+            ),
+        ),
+    }
+)
 
 
 def _placeholders_in_every_language(key: str) -> frozenset[str] | None:
@@ -67,7 +88,7 @@ def _worded(
     catalogue key. A cause's key that needs a value other than a public
     coordinate is not swapped for the code's broader sentence, which can state
     another cause: none is chosen, and the sentence then names the code. Only
-    the coordinates the sentence names travel.
+    the coordinates the sentence names, or derives its words from, travel.
     """
     own = error.translated_message
     registry_owned = registered.public_message_from_registry or ".canonical_" in registered.message_key
@@ -75,10 +96,12 @@ def _worded(
     names = _placeholders_in_every_language(key)
     if names is None:
         return None, ()
-    public = _public_context(error) if names else {}
-    if not names <= public.keys():
+    derived = names & _DERIVED_WORDS.keys()
+    carried = (names - derived) | {coordinate for name in derived for coordinate in _DERIVED_WORDS[name][0]}
+    public = _public_context(error) if carried else {}
+    if not carried <= public.keys():
         return None, ()
-    return key, tuple(ModeloEditDownstreamContextEntryV1(key=name, value=public[name]) for name in sorted(names))
+    return key, tuple(ModeloEditDownstreamContextEntryV1(key=name, value=public[name]) for name in sorted(carried))
 
 
 def downstream_refusal(error: CadrumoError) -> ModeloEditDownstreamRefusalV1:
@@ -139,8 +162,9 @@ def _door(refusal: ModeloEditDownstreamRefusalV1) -> PreconditionVerdict | None:
 def downstream_refusal_error(refusal: ModeloEditDownstreamRefusalV1) -> RecordedRegisteredError:
     """The registered error an edit settles under when a stage after value admission refused it.
 
-    Its key is completed by the public coordinates it carries; without a key,
-    the sentence names the refusal's code.
+    Its key is completed by the public coordinates it carries and the words
+    derived from them, worded in the language served; without a key, the
+    sentence names the refusal's code.
     """
     if refusal.message_key is None:
         return RecordedRegisteredError(
@@ -149,10 +173,18 @@ def downstream_refusal_error(refusal: ModeloEditDownstreamRefusalV1) -> Recorded
             context={"error_code": refusal.error_code},
             precondition_verdict=_door(refusal),
         )
+    coordinates = {entry.key: entry.value for entry in refusal.context}
+    names = _placeholders_in_every_language(refusal.message_key) or frozenset()
+    language = served_words_language()
+    derived = {
+        name: words(coordinates, language)
+        for name, (sources, words) in _DERIVED_WORDS.items()
+        if name in names and all(source in coordinates for source in sources)
+    }
     return RecordedRegisteredError(
         refusal.error_code,
         translated_message=refusal.message_key,
-        context={entry.key: entry.value for entry in refusal.context} or None,
+        context={**coordinates, **derived} or None,
         precondition_verdict=_door(refusal),
     )
 
