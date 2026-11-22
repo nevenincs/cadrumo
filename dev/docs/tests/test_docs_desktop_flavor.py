@@ -25,7 +25,7 @@ from ..desktop_palette import theme_variables
 from ..shared_page_assets import CHROME_STRINGS_GLOBAL, CHROME_STRINGS_SCRIPT, THEME_VARIABLES_STYLESHEET
 from ..site_chrome import site_chrome
 from .docs_desktop_support import DOCS, build_fixture_site, built_site
-from .http_serve_support import serve_directory
+from .http_serve_support import serve_built_page_assets_locally, serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -147,6 +147,7 @@ def test_cross_document_transition_policy(
         browser = playwright.chromium.launch()
         try:
             page = browser.new_page()
+            serve_built_page_assets_locally(page)
             page.emulate_media(reduced_motion=reduced_motion)
             page.goto(f"http://127.0.0.1:{port}/fixture.html", wait_until="load")
             policies = page.evaluate(
@@ -328,6 +329,7 @@ def _load_under_script_policy(
         browser = playwright.chromium.launch()
         try:
             page = browser.new_page()
+            serve_built_page_assets_locally(page)
             errors: list[str] = []
             page.on("pageerror", lambda error: errors.append(error.message))
 

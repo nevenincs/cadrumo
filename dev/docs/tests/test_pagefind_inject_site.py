@@ -28,7 +28,7 @@ from ..pagefind_inject import (
 )
 from ..terminology.concept_card_projection import project_concept_cards
 from .built_site import built_documentation_site
-from .http_serve_support import serve_directory
+from .http_serve_support import serve_built_page_assets_locally, serve_directory
 from .pagefind_inject_support import concept_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -126,6 +126,7 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             page = browser.new_page()
+            serve_built_page_assets_locally(page)
             page.goto(f"http://127.0.0.1:{port}/{page_name}", wait_until="networkidle")
             result = page.evaluate(
                 """async () => {
