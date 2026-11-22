@@ -48,6 +48,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo_client.commands.errors.CliOperationContractStaleError",
+        ErrorCode(
+            code="REFUSED_CLI_OPERATION_CONTRACT_STALE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_operation_contract_stale",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo_client.commands.errors.CliOutboundPayloadBoundaryError",
         ErrorCode(
             code="INTERNAL_CLI_OUTBOUND_PAYLOAD_BOUNDARY",

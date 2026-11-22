@@ -1662,6 +1662,10 @@ errors:
       Csak egyiket használd: --quiet, --verbose vagy --debug.'
     refused_cli_non_tty: Ez a parancs interaktív bemenetet igényel, de a szabványos
       bemenet csőbe van irányítva. Futtasd interaktív terminálban.
+    refused_cli_operation_contract_stale: A háttérszolgáltatás más szerződést kínál
+      ehhez a művelethez, mint amit ez a parancs vár, ezért semmi sem lett elküldve.
+      Frissítsd vagy telepítsd újra a Cadrumót, hogy a parancs és a háttérszolgáltatás
+      ugyanabból a verzióból származzon.
     refused_cli_validation_boundary: A parancs bemenete nem ment át az érvényesítésen.
       Ellenőrizd az argumentumokat, vagy futtasd a `aeat --help` parancsot.
     refused_config_reset_unconfirmed: A konfigurációs visszaállítást nem erősítette
