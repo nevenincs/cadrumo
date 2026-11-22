@@ -376,7 +376,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca"
+          "value": "24a16e998dc5f902dce56cfc0a0037ff21573b87380677153cb3921a753cb88f"
         }
       ],
       "envelope": {
@@ -460,7 +460,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca",
+          "calculation_revision_id": "24a16e998dc5f902dce56cfc0a0037ff21573b87380677153cb3921a753cb88f",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1027,7 +1027,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 24a16e998dc5f902dce56cfc0a0037ff21573b87380677153cb3921a753cb88f (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1088,7 +1088,7 @@
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
+              "fingerprint": "sha256:09e755549c76025b79a7acd4844b529886a8de9d61ea57a610d9facfe8cdd990",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -1124,7 +1124,7 @@
         "modelo",
         "work",
         "verify",
-        "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca"
+        "24a16e998dc5f902dce56cfc0a0037ff21573b87380677153cb3921a753cb88f"
       ],
       "captures": [],
       "envelope": {
@@ -1173,7 +1173,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca",
+          "calculation_revision_id": "24a16e998dc5f902dce56cfc0a0037ff21573b87380677153cb3921a753cb88f",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1217,7 +1217,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "181a518e124da2eb8daf68b4ce060e4c9adc5600c1f61eb7750ff9c0d2877ece",
+          "verification_report_id": "f283ef3a348b1b3b48fb97cda272b1d95d6a417da6e811ac184d1f66f94e7b5e",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1249,7 +1249,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\t3a6841972b6ed529f512fb84b73c5dd4ab540cbf925cf0f3aa1705c702595e8c\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t1db8d98f0467f31c664e76475bb32882aee9de3101b14ec22128eca2406b8ef4\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t24a16e998dc5f902dce56cfc0a0037ff21573b87380677153cb3921a753cb88f\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -1306,10 +1306,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "bf816c1dd71ce19c32f470e95ec9da744fa3a364be237c1e48655879750ba968",
+          "bucket_event_id": "e20b71a5dce69441711b2767dd88ed8d648cd6aeba92018ed67de6768fcc8435",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca",
+          "calculation_revision_id": "24a16e998dc5f902dce56cfc0a0037ff21573b87380677153cb3921a753cb88f",
           "file_sha256": "172aa359db8236b841ea0f48c4f9b9425d0138a191b62f1887ab797c6d6bf97a",
           "filing_year": 2026,
           "format": "fichero-boe",
