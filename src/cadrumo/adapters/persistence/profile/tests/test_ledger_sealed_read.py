@@ -10,7 +10,11 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.batch_update import plan_batch_update
-from cadrumo.application.ledger.batch_update_contracts import LedgerBatchUpdateRow, LedgerPropertySet
+from cadrumo.application.ledger.batch_update_contracts import (
+    LEDGER_BATCH_UPDATE_MAX_ROWS,
+    LedgerBatchUpdateRow,
+    LedgerPropertySet,
+)
 from cadrumo.application.ledger.sealed_read_operation import LedgerSealedReadRequest, read_sealed_rows
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -88,4 +92,6 @@ def test_a_read_names_each_movement_once_and_within_the_batch_bound() -> None:
     with pytest.raises(ValidationError):
         LedgerSealedReadRequest(profile_id=uuid4(), transaction_ids=())
     with pytest.raises(ValidationError):
-        LedgerSealedReadRequest(profile_id=uuid4(), transaction_ids=tuple(f"{n:x}" for n in range(2001)))
+        LedgerSealedReadRequest(
+            profile_id=uuid4(), transaction_ids=tuple(f"{n:x}" for n in range(LEDGER_BATCH_UPDATE_MAX_ROWS + 1))
+        )
