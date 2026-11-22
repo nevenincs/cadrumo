@@ -203,6 +203,85 @@ INVOICE_LIFECYCLE_METADATA_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     ),
 )
 
+INVOICE_RECTIFICATION_OPTIONS: Final[tuple[OptionSpec, ...]] = (
+    OptionSpec(
+        name="rectification_method",
+        declarations=("--rectification-method",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.rectification_method_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="rectification_cause",
+        declarations=("--rectification-cause",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.rectification_cause_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="rectification_direction",
+        declarations=("--rectification-direction",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.rectification_direction_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="document_received_on",
+        declarations=("--document-received-on",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.document_received_on_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+)
+"""The facts a factura rectificativa states (RD 1619/2012 art. 15.5, LIVA art. 80 and art. 89).
+
+Declared as their own tuple rather than appended to
+:data:`INVOICE_LIFECYCLE_METADATA_OPTIONS` because only the verbs that WRITE an
+invoice take them. The preview verb reuses that tuple whole and computes
+figures, and none of these four facts changes a figure: the modification they
+describe is derived where the Modelo 303 declares it, not on this record.
+
+Each value is a stable untranslated token the served vocabulary declares, so
+the verb accepts whatever fact 0141 carries for the invoice's date and holds no
+list of its own.
+"""
+
 INVOICE_INTAKE_WIZARD_CORE_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
         name="kind",
@@ -285,5 +364,6 @@ __all__ = [
     "INVOICE_INTAKE_WIZARD_CORE_OPTIONS",
     "INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS",
     "INVOICE_LIFECYCLE_METADATA_OPTIONS",
+    "INVOICE_RECTIFICATION_OPTIONS",
     "OPTIONAL_IVA_CATEGORY_OPTION",
 ]

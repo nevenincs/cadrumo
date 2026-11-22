@@ -12,7 +12,7 @@ import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts } from "../../../shell/compose";
 import type { LedgerPort, PickedFile } from "../../../shell/ledger";
 import type { LedgerImportResultProjection } from "../../../shell/ledgerTransferContract";
-import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceContract";
+import type { InvoiceImportProjection } from "../../../shell/ledgerInvoiceImportContract";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";

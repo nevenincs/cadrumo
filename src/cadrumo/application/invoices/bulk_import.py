@@ -61,7 +61,12 @@ from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 from ...core.xls_workbook import read_xls_workbook
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.invoice_legal_classification import (
+    resolve_invoice_legal_classification_catalogue,
+)
+from ...domain.invoices.enums import InvoiceClass, require_invoice_class
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
@@ -190,6 +195,19 @@ class BulkInvoiceImportRow(BaseModel):
     # The recargo de equivalencia the invoice charged (LIVA art. 161). It rides
     # inside the total, so the invoice checks it against the cuota.
     recargo_amount: Decimal | None = None
+    # The RD 1619/2012 class axis and the facts a factura rectificativa states.
+    # They arrive together because they are refused apart: the rectification
+    # facts only apply to a rectificativa, and a rectificativa needs its own
+    # series (art. 6.1.a.2.º) and the number it corrects (LIVA art. 89). A row
+    # stating only some of the facts imports and is blocked where the Modelo
+    # 303 would declare it, which is the point: nothing is defaulted.
+    invoice_class: InvoiceClass | None = None
+    series: str | None = None
+    rectifies_invoice_number: str | None = None
+    rectification_method: str | None = None
+    rectification_cause: str | None = None
+    rectification_direction: str | None = None
+    document_received_on: date | None = None
 
 
 class BulkInvoiceImportRowFailure(BaseModel):
@@ -493,6 +511,90 @@ def _parse_bulk_row_iva_treatment(
     return category, operation_type
 
 
+def _parse_bulk_row_invoice_class(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    operation: PinnedAuthorityOperation,
+) -> InvoiceClass | None:
+    """Return the RD 1619/2012 class a row states, or ``None`` when it states none.
+
+    A blank cell leaves the class to the record's own default, exactly as an
+    omitted column does. A stated class must be one fact 0141 declares for the
+    invoice's date, so a book cannot import a class the registry does not carry.
+    """
+    text = coerce_cell_text(raw_row.get("invoice_class")).strip()
+    if not text:
+        return None
+    with validating_governed_facts(operation):
+        try:
+            return require_invoice_class(text, effective_date=invoice_date)
+        except (RegistryValidationError, InvoiceValidationError, ValueError) as exc:
+            raise RowParseError(
+                row_number=row_number,
+                field="invoice_class",
+                reason=f"invoice class {text!r} is not declared by the registry for {invoice_date.isoformat()}",
+            ) from exc
+
+
+def _parse_bulk_row_rectification_facts(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str | None, str | None, str | None, date | None]:
+    """Return the rectification facts a row states, each admitted by the served vocabulary.
+
+    The three token facts are checked against fact 0141's own choices for the
+    invoice's date, so the importer holds no method, cause or direction list
+    and a refusal names what the registry does accept. They are returned as
+    text because the record projects them again on its own ``issued_at``.
+    """
+    with validating_governed_facts(operation):
+        catalogue = resolve_invoice_legal_classification_catalogue(effective_date=invoice_date)
+        method = _bulk_row_declared_token(
+            raw_row,
+            field="rectification_method",
+            row_number=row_number,
+            choices=catalogue.rectification_method_choices,
+        )
+        cause = _bulk_row_declared_token(
+            raw_row,
+            field="rectification_cause",
+            row_number=row_number,
+            choices=catalogue.rectification_cause_choices,
+        )
+        direction = _bulk_row_declared_token(
+            raw_row,
+            field="rectification_direction",
+            row_number=row_number,
+            choices=catalogue.rectification_direction_choices,
+        )
+    received_raw = coerce_cell_text(raw_row.get("document_received_on")).strip()
+    received_on = (
+        None if not received_raw else _parse_row_date(received_raw, row_number=row_number, field="document_received_on")
+    )
+    return method, cause, direction, received_on
+
+
+def _bulk_row_declared_token(
+    raw_row: Mapping[str, object],
+    *,
+    field: str,
+    row_number: int,
+    choices: tuple[str, ...],
+) -> str | None:
+    text = coerce_cell_text(raw_row.get(field)).strip()
+    if not text:
+        return None
+    if text not in {str(choice) for choice in choices}:
+        accepted = ", ".join(str(choice) for choice in choices)
+        raise RowParseError(row_number=row_number, field=field, reason=f"must be one of: {accepted}")
+    return text
+
+
 def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
     country_code = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
     if not country_code:
@@ -518,6 +620,11 @@ def _build_bulk_invoice_row(
     iva_category: IvaCategory | None,
     operation_type: IntracomOperationType | None,
     recargo_amount: Decimal | None,
+    invoice_class: InvoiceClass | None,
+    rectification_method: str | None,
+    rectification_cause: str | None,
+    rectification_direction: str | None,
+    document_received_on: date | None,
 ) -> BulkInvoiceImportRow:
     try:
         return BulkInvoiceImportRow(
@@ -536,6 +643,13 @@ def _build_bulk_invoice_row(
             iva_category=iva_category,
             operation_type=operation_type,
             recargo_amount=recargo_amount,
+            invoice_class=invoice_class,
+            series=coerce_cell_text(raw_row.get("series")).strip() or None,
+            rectifies_invoice_number=coerce_cell_text(raw_row.get("rectifies_invoice_number")).strip() or None,
+            rectification_method=rectification_method,
+            rectification_cause=rectification_cause,
+            rectification_direction=rectification_direction,
+            document_received_on=document_received_on,
         )
     except ValidationError as exc:
         first = exc.errors()[0] if exc.errors() else {"loc": ("row",), "msg": "invalid row"}
@@ -596,6 +710,18 @@ def _parse_bulk_invoice_row(
         invoice_date=invoice_date,
         operation=operation,
     )
+    invoice_class = _parse_bulk_row_invoice_class(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        operation=operation,
+    )
+    method, cause, direction, received_on = _parse_bulk_row_rectification_facts(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        operation=operation,
+    )
     return _build_bulk_invoice_row(
         raw_row,
         row_number=row_number,
@@ -609,6 +735,11 @@ def _parse_bulk_invoice_row(
         iva_category=iva_category,
         operation_type=operation_type,
         recargo_amount=recargo_amount,
+        invoice_class=invoice_class,
+        rectification_method=method,
+        rectification_cause=cause,
+        rectification_direction=direction,
+        document_received_on=received_on,
     )
 
 
@@ -1105,6 +1236,13 @@ def import_invoices_from_rows(
                 iva_category=parsed.iva_category,
                 operation_type=parsed.operation_type,
                 recargo_amount=parsed.recargo_amount,
+                invoice_class=parsed.invoice_class,
+                series=parsed.series,
+                rectifies_invoice_number=parsed.rectifies_invoice_number,
+                rectification_method=parsed.rectification_method,
+                rectification_cause=parsed.rectification_cause,
+                rectification_direction=parsed.rectification_direction,
+                document_received_on=parsed.document_received_on,
                 declared_fx_rate=parsed.fx_rate,
                 rate_provider=ports.rate_provider,
                 operation=operation,

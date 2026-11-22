@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Final
@@ -26,6 +27,9 @@ class InvoiceRuleFindingCode(StrEnum):
     SERIES_REQUIRED_FOR_RECTIFICATIVA = "series_required_for_rectificativa"
     RECTIFIED_INVOICE_REQUIRED = "rectified_invoice_required"
     RECTIFIED_INVOICE_NOT_ALLOWED = "rectified_invoice_not_allowed"
+    RECTIFICATION_FACT_NOT_ALLOWED = "rectification_fact_not_allowed"
+    DOCUMENT_RECEIVED_ON_ONLY_ON_RECEIVED = "document_received_on_only_on_received"
+    DOCUMENT_RECEIVED_BEFORE_ISSUED = "document_received_before_issued"
     SIMPLIFICADA_NOT_FOR_INTRA_COMMUNITY = "simplificada_not_for_intra_community"
     COUNTERPARTY_TAX_ID_REQUIRED = "counterparty_tax_id_required"
     COUNTERPARTY_TAX_ID_REQUIRED_BY_CATEGORY = "counterparty_tax_id_required_by_category"
@@ -222,6 +226,74 @@ def advance_payment_collection_finding(*, advance_role: bool, fully_collected: b
     return None
 
 
+def rectification_fact_rule_findings(
+    *,
+    rectificativa: bool,
+    issued: bool | None,
+    stated_facts: tuple[str, ...],
+    issued_at: date | None,
+    document_received_on: date | None,
+) -> tuple[InvoiceRuleFinding, ...]:
+    """Answer the coherence of the rectification facts, in the order the rules are refused.
+
+    ``stated_facts`` names the rectification fields this invoice actually
+    carries, in the order they are declared on the record, so a refusal can
+    name the first one rather than the family. A rectificativa that states
+    none of them is NOT refused here: the document's facts are supplied over
+    time and the declaration refuses later, naming what is missing.
+
+    ``issued`` is ``None`` while a draft has no kind yet, which leaves the
+    reception-date rule unasked for the same reason the simplificada relief
+    stays unasked above: on a received invoice the date is the fact a period
+    rule consumes, on an issued one it names nothing at all.
+    """
+    findings = (
+        _rectification_fact_not_allowed_finding(rectificativa=rectificativa, stated_facts=stated_facts),
+        _document_received_on_kind_finding(issued=issued, document_received_on=document_received_on),
+        _document_received_before_issued_finding(issued_at=issued_at, document_received_on=document_received_on),
+    )
+    return tuple(finding for finding in findings if finding is not None)
+
+
+def _rectification_fact_not_allowed_finding(
+    *, rectificativa: bool, stated_facts: tuple[str, ...]
+) -> InvoiceRuleFinding | None:
+    if rectificativa or not stated_facts:
+        return None
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.RECTIFICATION_FACT_NOT_ALLOWED,
+        f"{stated_facts[0]} only applies to a factura rectificativa",
+        (stated_facts[0], "invoice_class"),
+        {"rectification_fact": stated_facts[0]},
+    )
+
+
+def _document_received_on_kind_finding(
+    *, issued: bool | None, document_received_on: date | None
+) -> InvoiceRuleFinding | None:
+    if document_received_on is None or issued is not True:
+        return None
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.DOCUMENT_RECEIVED_ON_ONLY_ON_RECEIVED,
+        "document_received_on records when the recipient received the rectificativa, so it only applies to a "
+        "received invoice",
+        ("document_received_on", "kind"),
+    )
+
+
+def _document_received_before_issued_finding(
+    *, issued_at: date | None, document_received_on: date | None
+) -> InvoiceRuleFinding | None:
+    if document_received_on is None or issued_at is None or document_received_on >= issued_at:
+        return None
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.DOCUMENT_RECEIVED_BEFORE_ISSUED,
+        "a rectificativa cannot be received before it was issued",
+        ("document_received_on", "issued_at"),
+        {"document_received_on": document_received_on.isoformat(), "issued_at": issued_at.isoformat()},
+    )
+
+
 def lease_kind_finding(*, lease_stated: bool, issued: bool) -> InvoiceRuleFinding | None:
     """The lessor records a business-premises lease, so only an issued invoice carries one."""
     if lease_stated and not issued:
@@ -242,5 +314,6 @@ __all__ = [
     "lease_kind_finding",
     "operation_date_role_finding",
     "raise_first_rule_finding",
+    "rectification_fact_rule_findings",
     "rule_finding_words_key",
 ]

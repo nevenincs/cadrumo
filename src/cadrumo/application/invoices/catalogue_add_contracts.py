@@ -195,6 +195,18 @@ class InvoiceAddRequest(BaseModel):
     invoice_class: str | None = Field(default=None, min_length=1, max_length=64)
     series: str | None = None
     rectifies_invoice_number: str | None = None
+    #: The facts a factura rectificativa states, as the stable tokens fact 0141
+    #: declares and the invoice's own boundary projects. The request carries
+    #: text rather than a projected token because the worker owns the dated
+    #: authority this profile is pinned to, and it carries each fact
+    #: independently because a rectificativa may reach the catalogue stating
+    #: only some of them.
+    rectification_method: str | None = Field(default=None, min_length=1, max_length=128)
+    rectification_cause: str | None = Field(default=None, min_length=1, max_length=128)
+    rectification_direction: str | None = Field(default=None, min_length=1, max_length=128)
+    #: When the recipient received the rectificativa (LIVA art. 114.Dos); a
+    #: received-side fact the invoice refuses on an issued one.
+    document_received_on: date | None = None
     recargo_amount: PublicDecimal | None = None
     business_premises_lease: InvoiceAddBusinessPremisesLease | None = None
     lines: tuple[InvoiceAddLine, ...] = ()

@@ -3274,7 +3274,9 @@ desktop:
         counterparty_nif: Tax ID of the other party
         country_code: Country
         currency: Currency
+        document_received_on: Received on
         fx_rate: Exchange rate
+        invoice_class: Invoice class
         invoice_date: Invoice date
         invoice_number: Invoice number
         iva_category: IVA category
@@ -3282,8 +3284,13 @@ desktop:
         notes: Notes
         operation_type: Modelo 349 key
         recargo_amount: Equivalence surcharge
+        rectification_cause: Correction cause
+        rectification_direction: Correction direction
+        rectification_method: Correction method
+        rectifies_invoice_number: Corrected invoice
         retencion_amount: Withholding amount
         retencion_rate: Withholding rate
+        series: Series
         taxable_base: Taxable base
         unmapped: Not used
       role_source:
@@ -3774,6 +3781,7 @@ desktop:
         counterparty_name: Counterparty
         counterparty_tax_id: Tax ID (NIF)
         currency: Currency
+        document_received_on: Date you received the document
         fx_rate: Exchange rate
         invoice_class: Class
         invoice_number: Number
@@ -3788,6 +3796,9 @@ desktop:
         payment_status: Payment
         printed_total: Printed total
         recargo: Equivalence surcharge
+        rectification_cause: Correction cause
+        rectification_direction: Correction direction
+        rectification_method: Correction method
         rectifies_invoice_number: Rectifies invoice
         referencia: Cadastral reference
         retention_amount: Withholding tax amount

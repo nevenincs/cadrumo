@@ -468,6 +468,9 @@ cli:
         country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
           determina l''encaminament de totes dues informatives, per això mai no es
           dóna per suposat.'
+        document_received_on_help: Data en què vas rebre la factura rectificativa
+          (ISO AAAA-MM-DD). Només s'aplica a una factura rebuda i no pot ser anterior
+          a la data d'expedició.
         duplicate_help: Respon quina factura desada pot ser ja un document, sense
           escriure res.
         duplicate_invalid: El tipus de factura i les dades del document han de tenir
@@ -493,15 +496,16 @@ cli:
           s'ignora a les files que indiquen el seu. Declara aquest país per a TOTES
           aquestes files, així que un llibre que barregi contraparts nacionals i estrangeres
           necessita la columna.
-        import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
+        import_file_help: Ruta a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
-          iva_rate/iva_category/operation_type/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
-          Un retencion_rate només s'accepta juntament amb el seu retencion_amount.
-          Un fx_rate és el valor en euros d'una unitat de la moneda de la fila i es
-          rebutja en una fila en EUR. Un iva_category ha de ser una categoria que
-          el registre declari per a la data de la factura; un operation_type és la
-          clau del model 349, i una fila que només indiqui la clau pren la categoria
-          que aquesta declara.
+          iva_rate/iva_category/operation_type/invoice_class/series/rectifies_invoice_number/rectification_method/rectification_cause/rectification_direction/document_received_on/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
+          Un retencion_rate només s'accepta al costat del seu retencion_amount. Un
+          fx_rate és el valor en euros d'una unitat de la moneda de la fila i es rebutja
+          en una fila en EUR. Un iva_category ha de ser una categoria que el registre
+          declari per a la data de la factura; un operation_type és la clau del model
+          349, i una fila que només indiqui la clau pren la categoria que aquesta
+          declara. Les columnes de rectificació només s'apliquen a una fila rectificativa,
+          que també necessita la seva pròpia sèrie i el número que rectifica.
         import_help: Crea factures del catàleg en lot des d'un fitxer CSV o XLSX.
         import_unmapped_columns: 'columnes no importades perquè cap camp de factura
           hi va coincidir: {columns}'
@@ -554,6 +558,15 @@ cli:
           amb ell, el veredicte cobreix només les dades indicades.
         recargo_help: Recàrrec d'equivalència repercutit sobre la quota (LIVA art.
           161). Va inclòs en el total de la factura, a diferència d'una retenció.
+        rectification_cause_help: Per què la rectificativa modifica la base i la quota,
+          amb una de les causes que el registre declara per a la data de la factura
+          (els apartats de l'art. 80 de la LIVA, error_fundado_de_derecho o otra_modificacion).
+        rectification_direction_help: Si la rectificació minora (minoracion) o augmenta
+          (aumento) la base i la quota originals. Els totals continuen sent positius;
+          aquesta dada indica el sentit.
+        rectification_method_help: 'Com expressa els seus imports la factura rectificativa
+          (RD 1619/2012 art. 15.5): diferencia si són la rectificació mateixa, sustitucion
+          si són els imports tal com queden després d''ella.'
         rectifies_help: Número de la factura que corregeix aquesta rectificativa.
         referencia_catastral_help: Referència cadastral de l'immoble. És pertinent
           per a les situacions 1 i 2; no la indiquis per a les situacions 3 o 4.

@@ -50,8 +50,6 @@ import type {
   InvoiceAddResult,
   InvoiceDocumentAttachWindowRequest,
   InvoiceDocumentAttachProjection,
-  InvoiceImportWindowRequest,
-  InvoiceImportProjection,
   InvoiceListWindowRequest,
   InvoiceListProjection,
   InvoiceFiguresPreviewWindowRequest,
@@ -76,6 +74,10 @@ import type {
   LedgerPurchaseEvidenceReleaseWindowRequest,
   LedgerPurchaseEvidenceReleaseResult,
 } from "./ledgerInvoiceContract";
+import type {
+  InvoiceImportWindowRequest,
+  InvoiceImportProjection,
+} from "./ledgerInvoiceImportContract";
 import type {
   LedgerUpdateWindowRequest,
   LedgerUpdateOperationResult,

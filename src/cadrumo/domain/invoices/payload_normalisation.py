@@ -36,8 +36,14 @@ from .enums import (
     InvoiceLegalMention,
     InvoiceOperationDateRole,
     PaymentStatus,
+    RectificationCause,
+    RectificationDirection,
+    RectificationMethod,
     require_invoice_class,
     require_invoice_operation_date_role,
+    require_rectification_cause,
+    require_rectification_direction,
+    require_rectification_method,
     resolve_invoice_legal_mention,
 )
 from .errors import InvoiceValidationError
@@ -120,6 +126,27 @@ _ENUM_FIELD_RULES: Final[tuple[_EnumFieldRule, ...]] = (
         absent_when_blank=True,
         normalise=str.strip,
     ),
+    _EnumFieldRule(
+        "rectification_method",
+        RectificationMethod,
+        "rectification_method must be a RectificationMethod",
+        absent_when_blank=True,
+        normalise=str.strip,
+    ),
+    _EnumFieldRule(
+        "rectification_cause",
+        RectificationCause,
+        "rectification_cause must be a RectificationCause",
+        absent_when_blank=True,
+        normalise=str.strip,
+    ),
+    _EnumFieldRule(
+        "rectification_direction",
+        RectificationDirection,
+        "rectification_direction must be a RectificationDirection",
+        absent_when_blank=True,
+        normalise=str.strip,
+    ),
 )
 
 _STRING_FIELD_RULES: Final[tuple[_StringFieldRule, ...]] = (
@@ -168,10 +195,24 @@ def _coerce_enum_value(rule: _EnumFieldRule, text: str, *, effective_date: date 
         return require_iva_category(text, effective_date=effective_date)
     if rule.enum is InvoiceClass:
         return require_invoice_class(text, effective_date=effective_date)
+    if rule.enum is RectificationMethod:
+        return require_rectification_method(text, effective_date=effective_date)
+    if rule.enum is RectificationCause:
+        return require_rectification_cause(text, effective_date=effective_date)
+    if rule.enum is RectificationDirection:
+        return require_rectification_direction(text, effective_date=effective_date)
     return require_invoice_operation_date_role(text, effective_date=effective_date)
 
 
-_DATED_ENUMS: Final = (OssIossRegime, IvaCategory, InvoiceClass, InvoiceOperationDateRole)
+_DATED_ENUMS: Final = (
+    OssIossRegime,
+    IvaCategory,
+    InvoiceClass,
+    InvoiceOperationDateRole,
+    RectificationMethod,
+    RectificationCause,
+    RectificationDirection,
+)
 
 
 def _coerce_legal_mentions(payload: dict[str, object]) -> None:

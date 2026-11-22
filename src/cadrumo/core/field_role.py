@@ -105,6 +105,27 @@ class FieldRole(StrEnum):
     OPERATION_TYPE = "operation_type"
     """The Modelo 349 clave of an intra-community operation, as the book states it."""
 
+    INVOICE_CLASS = "invoice_class"
+    """Which RD 1619/2012 class the document is: ordinaria, simplificada or rectificativa."""
+
+    SERIES = "series"
+    """The issuing series the document carries, obligatoria for a rectificativa."""
+
+    RECTIFIES_INVOICE_NUMBER = "rectifies_invoice_number"
+    """The number of the invoice a rectificativa corrects (LIVA art. 89)."""
+
+    RECTIFICATION_METHOD = "rectification_method"
+    """How a factura rectificativa states its figures (RD 1619/2012 art. 15.5)."""
+
+    RECTIFICATION_CAUSE = "rectification_cause"
+    """The ground on which a rectificativa modifies base and cuota."""
+
+    RECTIFICATION_DIRECTION = "rectification_direction"
+    """Whether a rectification reduces or increases the original base and cuota."""
+
+    DOCUMENT_RECEIVED_ON = "document_received_on"
+    """When the recipient received a factura rectificativa (LIVA art. 114.Dos)."""
+
     IRPF_CATEGORY = "irpf_category"
     """The IRPF treatment the row falls under."""
 

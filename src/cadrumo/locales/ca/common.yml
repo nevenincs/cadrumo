@@ -3342,7 +3342,9 @@ desktop:
         counterparty_nif: NIF de l'altra part
         country_code: País
         currency: Moneda
+        document_received_on: Data de recepció
         fx_rate: Tipus de canvi
+        invoice_class: Classe de factura
         invoice_date: Data de la factura
         invoice_number: Número de factura
         iva_category: Categoria d'IVA
@@ -3350,8 +3352,13 @@ desktop:
         notes: Notes
         operation_type: Clau del model 349
         recargo_amount: Recàrrec d'equivalència
+        rectification_cause: Causa de rectificació
+        rectification_direction: Sentit de la rectificació
+        rectification_method: Mètode de rectificació
+        rectifies_invoice_number: Factura rectificada
         retencion_amount: Import de la retenció
         retencion_rate: Tipus de retenció
+        series: Sèrie
         taxable_base: Base imposable
         unmapped: Sense usar
       role_source:
@@ -3848,6 +3855,7 @@ desktop:
         counterparty_name: Contrapart
         counterparty_tax_id: NIF
         currency: Moneda
+        document_received_on: Data de recepció del document
         fx_rate: Tipus de canvi
         invoice_class: Classe
         invoice_number: Número
@@ -3862,6 +3870,9 @@ desktop:
         payment_status: Pagament
         printed_total: Total imprès
         recargo: Recàrrec d'equivalència
+        rectification_cause: Causa de la rectificació
+        rectification_direction: Sentit de la rectificació
+        rectification_method: Mètode de rectificació
         rectifies_invoice_number: Factura que rectifica
         referencia: Referència cadastral
         retention_amount: Import de la retenció

@@ -6,7 +6,7 @@ import type {
   PublicDecimal,
   TransactionId,
 } from "./ledgerClassificationContract";
-import type { PreconditionVerdictSnapshot } from "./ledgerInvoiceContract";
+import type { PreconditionVerdictSnapshot } from "./ledgerInvoiceImportContract";
 
 /**
  * Whether the asset was first put into operation by this taxpayer.

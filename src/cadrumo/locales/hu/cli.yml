@@ -460,6 +460,9 @@ cli:
         attach_document_source_help: A dokumentumfájl elérési útja.
         country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
           adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
+        document_received_on_help: Az a nap, amikor megkaptad a helyesbítő számlát
+          (ISO ÉÉÉÉ-HH-NN). Csak beérkezett számlára érvényes, és nem lehet korábbi
+          a kiállítás dátumánál.
         duplicate_help: Megválaszolja, melyik tárolt számla lehet már a dokumentum,
           és nem ír semmit.
         duplicate_invalid: A számla típusának és a dokumentum adatainak a várt alakúnak
@@ -485,15 +488,16 @@ cli:
           megadó soroknál figyelmen kívül marad. MINDEN ilyen sorra ezt az országot
           állítja, ezért a belföldi és külföldi partnereket vegyesen tartalmazó könyvhöz
           az oszlop kell.
-        import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
-          tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
-          taxable_base, valamint opcionálisan iva_rate/iva_category/operation_type/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
+        import_file_help: Számlasorokat tartalmazó CSV- vagy XLSX-fájl útvonala (counterparty_nif,
+          counterparty_name, invoice_number, invoice_date, taxable_base, valamint
+          opcionálisan iva_rate/iva_category/operation_type/invoice_class/series/rectifies_invoice_number/rectification_method/rectification_cause/rectification_direction/document_received_on/retencion_amount/retencion_rate/recargo_amount/currency/fx_rate/country_code/notes).
           A retencion_rate csak a hozzá tartozó retencion_amount mellett fogadható
-          el. Az fx_rate a sor pénzneme egy egységének euróértéke, és euróban kiállított
-          sornál elutasításra kerül. Az iva_category csak olyan kategória lehet, amelyet
-          a nyilvántartás a számla keltére meghatároz; az operation_type a Modelo
-          349 szerinti kulcs, és ha egy sor csak a kulcsot adja meg, az általa meghatározott
-          kategóriát kapja.
+          el. Az fx_rate a sor pénznemének egy egységének euróértéke, és EUR-soron
+          elutasításra kerül. Az iva_category csak olyan kategória lehet, amelyet
+          a nyilvántartás a számla dátumára meghirdet; az operation_type a Modelo
+          349 kulcsa, és a csak kulcsot megadó sor az általa meghirdetett kategóriát
+          veszi fel. A helyesbítési oszlopok csak helyesbítő sorra érvényesek, amelyhez
+          saját sorozat és a helyesbített számla száma is kell.
         import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
         import_unmapped_columns: 'nem importált oszlopok, mert egyetlen számlamező
           sem felelt meg nekik: {columns}'
@@ -548,6 +552,15 @@ cli:
           azonosítója; ezzel az ítélet csak a megadott adatokra vonatkozik.
         recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
           cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
+        rectification_cause_help: Miért helyesbíti a számla az adóalapot és az adót;
+          a nyilvántartás által a számla dátumára meghirdetett jogalapok egyike (a
+          LIVA 80. cikkének bekezdései, error_fundado_de_derecho vagy otra_modificacion).
+        rectification_direction_help: A helyesbítés csökkenti (minoracion) vagy növeli
+          (aumento) az eredeti adóalapot és adót. A végösszegek pozitívak maradnak;
+          ez az adat adja meg az irányt.
+        rectification_method_help: 'Hogyan adja meg az összegeit a helyesbítő számla
+          (factura rectificativa, RD 1619/2012 15.5. cikk): diferencia, ha magát a
+          helyesbítést, sustitucion, ha a helyesbítés utáni összegeket.'
         rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.
         referencia_catastral_help: Az ingatlan kataszteri azonosítója. Az 1. és 2.
           fekvési kódnál releváns; a 3. vagy 4. kódhoz ne add meg.

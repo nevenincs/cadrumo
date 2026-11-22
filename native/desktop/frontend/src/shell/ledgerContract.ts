@@ -416,6 +416,10 @@ export const INVOICE_UPDATE_FIELDS = [
   "series",
   "invoice_class",
   "rectifies_invoice_number",
+  "rectification_method",
+  "rectification_cause",
+  "rectification_direction",
+  "document_received_on",
   "payment_id",
   "declared_fx_rate",
 ] as const;
