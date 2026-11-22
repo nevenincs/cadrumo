@@ -57,6 +57,7 @@
           ],
           "bucket_id": "<bucket-id>",
           "created_at": "2026-04-01T09:00:00Z",
+          "document_shape": "pdf_text_layer",
           "evidence_id": "7e909961e9271168",
           "invoice_date": "2026-06-05",
           "invoice_number": "C-2026-0142",
@@ -64,10 +65,13 @@
           "iva_rate": "21",
           "media_kind": "pdf",
           "notes": "",
+          "readability": "readable",
+          "readability_checked_at": "2026-04-01T09:00:00Z",
           "source_path": "fixtures/factura-material-oficina.pdf",
           "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "supplier": "Papeleria Central SL",
           "taxable_base": "250",
+          "unreadable_cause": null,
           "updated_at": "2026-04-01T09:00:00Z"
         },
         "schema_version": "2",
@@ -146,7 +150,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "7e9adba8682b477137a78e90f371cd92e56e83c13f92bf3f3e398c3a72f4752d",
+          "calculation_revision_id": "93a76e19c8aebc71602eaa7578131eb145370176f3e787a8c57be155af2330a8",
           "casilla_values": {
             "01": "4000",
             "02": "912.50",
@@ -296,7 +300,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 7e9adba8682b477137a78e90f371cd92e56e83c13f92bf3f3e398c3a72f4752d (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 93a76e19c8aebc71602eaa7578131eb145370176f3e787a8c57be155af2330a8 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -401,7 +405,7 @@
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
+              "fingerprint": "sha256:09e755549c76025b79a7acd4844b529886a8de9d61ea57a610d9facfe8cdd990",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -536,7 +540,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "7e9adba8682b477137a78e90f371cd92e56e83c13f92bf3f3e398c3a72f4752d",
+          "calculation_revision_id": "93a76e19c8aebc71602eaa7578131eb145370176f3e787a8c57be155af2330a8",
           "completeness_status": "complete",
           "findings": [
             {
@@ -633,7 +637,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "f1c2e9b47ddead76a1d257396b8fa6785b233fb2f2b07c53ae3813defef07680",
+          "verification_report_id": "705b78811d99beb0ee721f2a2f893ff34460822d5a0fb0241f6426c19f6e241d",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -700,10 +704,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "b38e3679f5bfec010a55b0d1924362952284027b8bdfe930b5f9009aeefa72ad",
+          "bucket_event_id": "5de27d99500a8c1b3997feef0953e605c32cecad7de7866e343bb8ccf63dfc5c",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "7e9adba8682b477137a78e90f371cd92e56e83c13f92bf3f3e398c3a72f4752d",
+          "calculation_revision_id": "93a76e19c8aebc71602eaa7578131eb145370176f3e787a8c57be155af2330a8",
           "file_sha256": "fcc26fa6390a41b0460b8ed64d125df2966eda0088f6ed1d0aaec992e95886e7",
           "filing_year": 2026,
           "format": "fichero-boe",
