@@ -28,6 +28,10 @@ from dev.fixture_projections.operation_contract_module import (
 from dev.fixture_projections.typescript_wire_types import literal, ts_name
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 
+from cadrumo.application.ledger.batch_update_contracts import (
+    LEDGER_BATCH_UPDATE_MAX_ROWS,
+    LEDGER_BATCH_UPDATE_PLAN_CHANGED_REFUSAL_CODE,
+)
 from cadrumo.core.models import OPERATION_FILLED_BY_SCHEMA_KEY
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
@@ -490,6 +494,15 @@ FIELD_EXPORTS: dict[str, tuple[tuple[str, str, str, str], ...]] = {
 }
 
 
+#: Values a family's contract declares outside its models, as ``name: value`` the window reads in place of a copy.
+CONSTANTS: dict[str, tuple[tuple[str, int | str], ...]] = {
+    "movement": (
+        ("BATCH_ROW_LIMIT", LEDGER_BATCH_UPDATE_MAX_ROWS),
+        ("BATCH_PLAN_CHANGED", LEDGER_BATCH_UPDATE_PLAN_CHANGED_REFUSAL_CODE),
+    ),
+}
+
+
 def render(family: str) -> str:
     """The generated module of one family, before the frontend's formatter writes it."""
     contracts_name, definitions = FAMILIES[family]
@@ -519,6 +532,7 @@ def render(family: str) -> str:
     for name, definition, role, expression in FIELD_EXPORTS.get(family, ()):
         model = models[definition, role]
         blocks.append(f"export type {name} = {expression.format(model=ts_name(model.__name__))};")
+    blocks.extend(f"export const {name} = {json.dumps(value)};" for name, value in CONSTANTS.get(family, ()))
     return source + "\n" + "\n\n".join(blocks) + "\n"
 
 

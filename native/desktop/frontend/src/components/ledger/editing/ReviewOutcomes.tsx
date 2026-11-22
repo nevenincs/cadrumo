@@ -4,8 +4,8 @@ import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts, labelled, listed } from "@/shell/compose";
+import { BATCH_PLAN_CHANGED } from "../../../shell/ledgerMovementContract";
 import {
-  BATCH_PLAN_CHANGED,
   outcomeUnits,
   reportUnitKeys,
   type OutcomeUnit,
