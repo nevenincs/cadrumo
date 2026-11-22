@@ -340,6 +340,7 @@ def config_login(
         ctx,
         command="config.login",
         result=result,
+        active_profile=_active_profile_label(),
         lines=(
             f"active_profile\t{outcome.label}",
             f"profile_id\t{outcome.bucket_id}",
@@ -428,6 +429,9 @@ def config_logout(
 
     machine_secret = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     selected, target = _logout_target(name)
+    # A sign-out leaves the selection as it is, so the label the envelope names is read
+    # before it: nothing asked of the runtime after a committed sign-out can report it refused.
+    active_profile = _active_profile_label(known=target if name is None else None)
     outcome = (
         None
         if selected is None
@@ -456,6 +460,7 @@ def config_logout(
         ctx,
         command="config.logout",
         result=result,
+        active_profile=active_profile,
         lines=(
             f"logged_out_profile\t{logged_out_profile or '<none>'}",
             f"human_receipt_revoked\t{result.human_receipt_revoked}",
@@ -507,15 +512,27 @@ def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     raise CliRefusedBoundaryError(error.reason, context=error.context, translated_message=key) from None
 
 
+def _active_profile_label(*, known: LoginTarget | None = None) -> str | None:
+    """Return the label of the profile this command means, asking the runtime only for what ``known`` does not name."""
+    active_id = profile_selection.command_profile_id()
+    if active_id is None:
+        return None
+    if known is not None and known.bucket_id == active_id:
+        return known.label
+    target = profile_selection.runtime_login_target(active_id)
+    return None if target is None else target.label
+
+
 def _emit_envelope(
     ctx: typer.Context,
     *,
     command: str,
     result: object,
     lines: tuple[str, ...],
+    active_profile: str | None,
     notices: tuple[Notice, ...] = (),
 ) -> None:
-    """Render a typed direct-auth result through the shared success boundary."""
+    """Render a typed direct-auth result through the shared success boundary, naming ``active_profile``."""
     from cadrumo.application.operator_output.emit import emit_operator_json_success
     from cadrumo.application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
 
@@ -523,9 +540,6 @@ def _emit_envelope(
     root_state = root.obj if isinstance(root.obj, dict) else {}
     raw_format = root_state.get("format", root.params.get("format", root.params.get("format_", "text")))
     output_format = raw_format if isinstance(raw_format, OutputFormat) else OutputFormat(raw_format)
-    active_id = profile_selection.command_profile_id()
-    target = None if active_id is None else profile_selection.runtime_login_target(active_id)
-    active_profile = None if target is None else target.label
     if output_format is OutputFormat.JSON:
         emit_operator_json_success(command, result, notices=notices, active_profile=active_profile)
         return
