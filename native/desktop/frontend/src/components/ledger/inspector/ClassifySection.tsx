@@ -199,6 +199,13 @@ export function ClassifySection({
   /** Working the missing figures out from the IVA category: a proposal the
    * person saves with the rest, and the category first where there is none. */
   const deriveMissing = () => {
+    // Whether the proposal is already staged is the page's own to say: it
+    // never waits on the ledger, whose answer about the new stage may still
+    // be on its way or may not come at all.
+    if (derivation) {
+      say(t("desktop.ledger.inspector.fix.derive_already"));
+      return;
+    }
     const why = fieldLock(scope, "iva_category");
     if (why && waitsForAnswer("iva_category")) {
       hold({ kind: "derive" });
@@ -211,10 +218,6 @@ export function ClassifySection({
           reason: why,
         }),
       );
-      return;
-    }
-    if (derivation) {
-      say(t("desktop.ledger.inspector.fix.derive_already"));
       return;
     }
     if (ivaCategory === null) {
