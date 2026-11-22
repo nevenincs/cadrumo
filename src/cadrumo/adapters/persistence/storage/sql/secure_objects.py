@@ -16,6 +16,7 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.secure_object_write import SecureObjectWrite
 from .....core.time.clock import now as clock_utc_now
+from .....core.time.clock import wall_now
 from .....core.time.utc import coerce_utc_aware
 from ..crypto.encrypted_columns import SecureObjectCallKeys, secure_object_key_digest
 from ..errors import (
@@ -342,7 +343,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             if self._require_secure_active_session:
                 raise runtime_not_ready_error(StorageRuntimeReadinessCode.NO_ACTIVE_SESSION)
             return
-        now = clock_utc_now()
+        now = wall_now()
         outcome = evaluate_idle(session=session, now=now)
         if outcome.expired:
             raise SessionExpiredError(

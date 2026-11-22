@@ -34,6 +34,7 @@ from .value_presentation import format_casilla_value
 #: What a producer states for a list of periods that is empty.
 NO_PERIODS_FACT: Final = "none"
 PERIOD_LIST_SEPARATOR: Final = "|"
+BOX_LIST_SEPARATOR: Final = ","
 
 
 class FindingFactKind(StrEnum):
@@ -47,6 +48,8 @@ class FindingFactKind(StrEnum):
     DATE = "date"
     #: A casilla id, written as its printed box number or the words the form gives it.
     BOX = "box"
+    #: Several casilla ids joined by ``,``, each written as its box.
+    BOXES = "boxes"
     #: The printed number of the finding's own box, written as the form prints it.
     BOX_NUMBER = "box_number"
     #: A modelo number, kept as its three digits.
@@ -86,6 +89,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "ingreso_id": FindingFactKind.BOX,
         "reduccion_id": FindingFactKind.BOX,
         "rnt_id": FindingFactKind.BOX,
+        "floor_box": FindingFactKind.BOX,
+        "boxes": FindingFactKind.BOXES,
         "casilla_number": FindingFactKind.BOX_NUMBER,
         # Modelos and years.
         "modelo": FindingFactKind.MODELO,
@@ -127,6 +132,9 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "stated_turnover": FindingFactKind.MONEY,
         "pending_total": FindingFactKind.MONEY,
         "capacity": FindingFactKind.MONEY,
+        "floor_value": FindingFactKind.MONEY,
+        "limited_total": FindingFactKind.MONEY,
+        "after_limited": FindingFactKind.MONEY,
         # Other figures.
         "declared": FindingFactKind.NUMBER,
         "transaction_amount": FindingFactKind.NUMBER,
@@ -302,6 +310,10 @@ def _box(value: FindingFactValue, box_words: Mapping[str, str], language: Output
     return _in_words(_UNNUMBERED_BOX_LOCALE_KEY, language)
 
 
+def _boxes(value: FindingFactValue, box_words: Mapping[str, str], language: OutputLanguage) -> str:
+    return ", ".join(_box(token, box_words, language) for token in str(value).split(BOX_LIST_SEPARATOR))
+
+
 def _figure_text(value: FindingFactValue, kind: FindingFactKind, language: OutputLanguage) -> str:
     figure = _figure(value)
     if figure is None:
@@ -368,6 +380,8 @@ def fact_text(
         return None
     if kind is FindingFactKind.BOX:
         return _box(value, box_words, language)
+    if kind is FindingFactKind.BOXES:
+        return _boxes(value, box_words, language)
     if kind is FindingFactKind.BOX_NUMBER:
         return own_box or _box(value, {}, language)
     writer = _VALUE_WRITERS.get(kind)
@@ -422,6 +436,7 @@ def finding_message_text(
 
 __all__ = [
     "BELOW_FILING_GRADE_NOTICE_LOCALE_KEY",
+    "BOX_LIST_SEPARATOR",
     "FINDING_FACT_KINDS",
     "NO_PERIODS_FACT",
     "PERIOD_LIST_SEPARATOR",

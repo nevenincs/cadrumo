@@ -16,10 +16,11 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
 from .....core.secure_object_write import SecureObjectWrite
-from .....core.time.clock import frozen_clock
+from .....core.time.clock import frozen_clock, wall_now
 from ..bucket.directory_layout import bucket_paths
+from ..bucket.errors import BucketLockedError
 from ..errors import SessionExpiredError, StorageValidationError
-from ..master_key.active_session import activate_session
+from ..master_key.active_session import activate_session, require_fresh_active_session
 from ..master_key.bucket_session import BucketSession
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..runtime import (
@@ -43,6 +44,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2099, 5, 26, 12, 15, 0, tzinfo=UTC)
 _DEK = b"d" * 32
+#: A document clock long behind real time, as a fixed-clock replay pins it.
+_PAST_DOCUMENT_INSTANT = datetime(2020, 1, 15, 9, 0, 0, tzinfo=UTC)
 _BUCKET_A_ID = "094d94e7-4474-407c-8971-d9c1a2476db0"
 _BUCKET_B_ID = "d9df0562-55c9-43c8-8486-b79d4016cfbc"
 _PRIVATE_BUCKET_ID = "80bc7e0d-f9dd-4be7-afc6-71d192074647"
@@ -599,11 +602,15 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
 
 
 def test_runtime_repository_factory_refuses_an_ended_session_as_expired(tmp_path: Path) -> None:
-    """A session that ended is the operator's to reopen, as the secure-object repository reports it."""
+    """A session that ended is the operator's to reopen, as the secure-object repository reports it.
+
+    The idle window lapsed on real time; the document clock frozen long before
+    it does not revive the session.
+    """
     cases = (
         (_sealed_session(_BUCKET_A_ID), StorageRuntimeReadinessCode.SESSION_SEALED),
         (
-            _session(_BUCKET_A_ID, opened_at=_NOW - timedelta(minutes=20), idle_minutes=5),
+            _session(_BUCKET_A_ID, opened_at=wall_now() - timedelta(minutes=20), idle_minutes=5),
             StorageRuntimeReadinessCode.SESSION_EXPIRED,
         ),
     )
@@ -613,8 +620,138 @@ def test_runtime_repository_factory_refuses_an_ended_session_as_expired(tmp_path
         with activate_session(_session(_BUCKET_A_ID)):
             runtime = inspect_storage_runtime(settings, now=_NOW)
 
-        with activate_session(replacement_session), frozen_clock(_NOW), pytest.raises(SessionExpiredError) as raised:
+        with (
+            activate_session(replacement_session),
+            frozen_clock(_PAST_DOCUMENT_INSTANT),
+            pytest.raises(SessionExpiredError) as raised,
+        ):
             runtime.secure_object_repository()
         assert not isinstance(raised.value, StorageValidationError)
         assert raised.value.context is not None
         assert raised.value.context["readiness_code"] == match.value
+
+
+# --- bucket-session expiry follows real time, never the document clock ------------------------
+
+
+def _wall_session(bucket_id: str, *, idle_minutes: int = 15) -> BucketSession:
+    """A session opened now on real time, as sign-in and worker custody open one."""
+    opened_at = wall_now()
+    return BucketSession.open_resumed(
+        bucket_id=bucket_id,
+        dek=_DEK,
+        idle_minutes=idle_minutes,
+        opened_at=opened_at,
+        idle_deadline=opened_at + timedelta(minutes=idle_minutes),
+        absolute_deadline=opened_at + timedelta(minutes=240),
+    )
+
+
+def _end_on_wall_time(session: BucketSession) -> None:
+    instant = wall_now()
+    session.retarget_lifetime(
+        opened_at=instant - timedelta(minutes=10),
+        idle_minutes=5,
+        deadline=instant - timedelta(seconds=1),
+    )
+
+
+def _workflow_write(payload: bytes) -> SecureObjectWrite:
+    return SecureObjectWrite(
+        namespace=WORKFLOW_STATE_NAMESPACE.namespace,
+        object_key=WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+        classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+        schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+        written_at=_PAST_DOCUMENT_INSTANT,
+        payload=payload,
+    )
+
+
+def _workflow_payload(repo: SecureObjectRepository) -> bytes | None:
+    loaded = repo.load(
+        WORKFLOW_STATE_NAMESPACE.namespace,
+        WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+        expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+        max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+    )
+    return None if loaded is None else loaded.payload
+
+
+def test_a_frozen_future_document_clock_does_not_expire_a_live_session(tmp_path: Path) -> None:
+    """A session live on real time stays live when the document clock reads a day ahead.
+
+    DISCRIMINATING against judging the session on the document clock: the
+    runtime projection, the runtime factory, the fresh-session check and the
+    repository's own freshness check would each see the deadline passed.
+    """
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
+    session = _wall_session(_BUCKET_A_ID)
+
+    with (
+        override_settings(cadrumo_storage_root=tmp_path),
+        activate_session(session),
+        frozen_clock(wall_now() + timedelta(days=1)),
+    ):
+        runtime = inspect_storage_runtime(settings)
+        assert runtime.active_session is not None
+        assert runtime.active_session.expired is False
+        assert require_fresh_active_session() is session
+        repo = runtime.secure_object_repository()
+        repo.save_many((_workflow_write(b"future-clock"),))
+        assert _workflow_payload(repo) == b"future-clock"
+
+    assert session.sealed is False
+
+
+def test_a_frozen_past_document_clock_does_not_revive_an_ended_session(tmp_path: Path) -> None:
+    """A session that ended on real time refuses at every judge while the document clock reads the past.
+
+    DISCRIMINATING against judging the session on the document clock, which
+    would place the past instant inside the ended window and admit the access.
+    """
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
+    session = _wall_session(_BUCKET_A_ID)
+
+    with override_settings(cadrumo_storage_root=tmp_path), activate_session(session):
+        runtime = inspect_storage_runtime(settings)
+        repo = runtime.secure_object_repository()
+        repo.save_many((_workflow_write(b"before-the-end"),))
+        _end_on_wall_time(session)
+        with frozen_clock(_PAST_DOCUMENT_INSTANT):
+            projected = inspect_storage_runtime(settings).active_session
+            assert projected is not None
+            assert projected.expired is True
+            with pytest.raises(SessionExpiredError) as factory_refusal:
+                runtime.secure_object_repository()
+            assert factory_refusal.value.context is not None
+            assert factory_refusal.value.context["readiness_code"] == StorageRuntimeReadinessCode.SESSION_EXPIRED.value
+            with pytest.raises(SessionExpiredError):
+                repo.load(
+                    WORKFLOW_STATE_NAMESPACE.namespace,
+                    WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+                    expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                )
+            with pytest.raises(BucketLockedError):
+                require_fresh_active_session()
+
+
+def test_a_read_under_a_frozen_past_clock_rolls_the_idle_window_on_real_time(tmp_path: Path) -> None:
+    """Activity under a past document clock extends the idle window from now, not from that instant.
+
+    DISCRIMINATING against rolling the window on the document clock, which
+    would set the idle deadline years behind real time and lock the session
+    for the next real-time read.
+    """
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
+    session = _wall_session(_BUCKET_A_ID)
+
+    with override_settings(cadrumo_storage_root=tmp_path), activate_session(session):
+        repo = inspect_storage_runtime(settings).secure_object_repository()
+        repo.save_many((_workflow_write(b"rolled"),))
+        before_read = wall_now()
+        with frozen_clock(_PAST_DOCUMENT_INSTANT):
+            assert _workflow_payload(repo) == b"rolled"
+        assert session.idle_deadline >= before_read
+        assert _workflow_payload(repo) == b"rolled"
+        assert require_fresh_active_session() is session

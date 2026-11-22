@@ -43,6 +43,13 @@ from ...application.invoices.duplicate_check_operation import (
 from ...application.invoices.figures_preview_contracts import InvoiceFiguresPreviewRequest, InvoiceFiguresPreviewResult
 from ...application.invoices.payment_match_operation import LedgerInvoiceMatchRequest, LedgerInvoiceMatchResult
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
+from ...application.ledger.batch_update_contracts import (
+    LEDGER_BATCH_UPDATE_OPERATION_DEFINITION_ID,
+    LEDGER_BATCH_UPDATE_PREVIEW_OPERATION_DEFINITION_ID,
+    LedgerBatchUpdatePreviewRequest,
+    LedgerBatchUpdateRequest,
+    LedgerBatchUpdateResult,
+)
 from ...application.ledger.bulk_classify_operation import (
     LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
     LedgerBulkClassifyProjection,
@@ -323,6 +330,42 @@ def assert_ledger_update_outcome(ctx: ExecutorOutcome) -> None:
     )
     assert persisted_update is not None
     assert persisted_update.raw.description == "updated through registered operation"
+
+
+def assert_ledger_batch_update_preview_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the batch edit preview plans both rows and writes nothing."""
+    assert isinstance(ctx.payload, LedgerBatchUpdatePreviewRequest)
+    preview = ctx.resolve(LedgerBatchUpdateResult)
+    assert isinstance(preview, LedgerBatchUpdateResult)
+    assert preview.profile_id == ctx.profile_id
+    assert preview.outcome == "previewed"
+    assert [row.outcome for row in preview.rows] == ["applied", "applied"]
+    assert preview.bucket_event_ids == ()
+    catalogue = TransactionCatalogueRepository(bucket_id=str(ctx.profile_id)).load()
+    for row in ctx.payload.rows:
+        persisted = catalogue.get(row.transaction_id)
+        assert persisted is not None
+        assert persisted.modified_at.isoformat() == row.expected_modified_at
+
+
+def assert_ledger_batch_update_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the reviewed batch edit wrote both rows under the reviewed plan."""
+    assert isinstance(ctx.payload, LedgerBatchUpdateRequest)
+    applied = ctx.resolve(LedgerBatchUpdateResult)
+    assert isinstance(applied, LedgerBatchUpdateResult)
+    assert applied.profile_id == ctx.profile_id
+    assert applied.outcome == "applied"
+    assert applied.plan_digest == ctx.payload.reviewed_plan_digest
+    assert applied.counts.applied == len(ctx.payload.rows) == 2
+    assert applied.bucket_event_ids
+    catalogue = TransactionCatalogueRepository(bucket_id=str(ctx.profile_id)).load()
+    category = ctx.payload.rows[0].properties.category_id
+    for row in applied.rows:
+        assert row.result_transaction_id is not None
+        persisted = catalogue.get(row.result_transaction_id)
+        assert persisted is not None
+        assert persisted.business_classification is BusinessClassification.BUSINESS
+        assert persisted.category_id == category
 
 
 def assert_ledger_reset_outcome(ctx: ExecutorOutcome) -> None:
@@ -858,6 +901,8 @@ LEDGER_OUTCOME_ASSERTIONS: dict[str, Callable[[ExecutorOutcome], None]] = {
     "ledger.split.manual": assert_ledger_split_manual_outcome,
     "ledger.merge": assert_ledger_merge_outcome,
     "ledger.update": assert_ledger_update_outcome,
+    LEDGER_BATCH_UPDATE_PREVIEW_OPERATION_DEFINITION_ID: assert_ledger_batch_update_preview_outcome,
+    LEDGER_BATCH_UPDATE_OPERATION_DEFINITION_ID: assert_ledger_batch_update_outcome,
     "ledger.reset": assert_ledger_reset_outcome,
     "ledger.import": assert_ledger_import_outcome,
     "ledger.add": assert_ledger_add_outcome,

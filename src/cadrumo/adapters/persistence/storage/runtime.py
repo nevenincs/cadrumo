@@ -22,7 +22,7 @@ from ....core.config import (
     settings_for_active_profile_bucket,
 )
 from ....core.config_support import StorageRouteClassification, StorageRouteKind
-from ....core.time.clock import now as clock_utc_now
+from ....core.time.clock import wall_now
 from .errors import (
     SessionExpiredError,
     storage_validation_error,
@@ -108,7 +108,7 @@ class StorageRuntime(BaseModel):
         active = current_active_bucket_session()
         if active is None:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.NO_ACTIVE_SESSION)
-        now = clock_utc_now()
+        now = wall_now()
         # An ended session is the operator's to reopen, not a broken store: it
         # refuses as the expiry the secure-object repository reports for the
         # same state, keeping the readiness code that names which end it met.
@@ -179,7 +179,7 @@ def inspect_storage_runtime(
     """Return the current profile-bound secure-storage :class:`StorageRuntime` state."""
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
-    checked_at = now or clock_utc_now()
+    checked_at = now or wall_now()
     active = current_active_bucket_session()
     session, session_issues = _active_session_projection(active, checked_at)
     issues = [*session_issues, *_route_readiness_issues(route, active)]

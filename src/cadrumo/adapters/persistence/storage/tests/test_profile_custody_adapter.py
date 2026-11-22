@@ -6,8 +6,9 @@ import base64
 import subprocess
 import threading
 import time
+from datetime import timedelta
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -18,6 +19,9 @@ from .....application.user_profile.custody_crypto_contracts import (
 )
 from .....application.user_profile.proof_cancellation import ProfileProofCancellation
 from .....core.config import override_settings
+from .....core.secure_object_write import SecureObjectWrite
+from .....core.time.clock import frozen_clock, wall_now
+from ..bucket.directory_layout import bucket_paths
 from ..crypto.aead import EncryptedBlob, decrypt_record
 from ..custody import kdf_process
 from ..custody.capsule_records import ProfileCustodyCapsuleLabel
@@ -28,7 +32,9 @@ from ..custody.records import ProfileCustodyKdfParameters
 from ..custody.tests.label_head_probe import begin_advance
 from ..errors import DecryptionError
 from ..profile_custody import build_profile_custody_port
+from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from .passphrase_probe import open_with_passphrase
+from .registered_bucket import publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -46,6 +52,50 @@ def test_local_record_store_preserves_bounded_read_write_and_clear(tmp_path: Pat
     assert store.read(record, maximum_bytes=16) == b"second"
     store.clear(record)
     assert not record.exists()
+
+
+def test_the_staged_bucket_bridge_session_opens_on_real_time_under_a_frozen_past_clock(tmp_path: Path) -> None:
+    """The one-minute bridge session a staged capsule write opens is minted, and judged, on real time.
+
+    DISCRIMINATING against minting the bridge on the document clock: a bridge
+    dated to a past instant would already have ended on real time, and the
+    staged repository would refuse its first write.
+    """
+    profile_id = uuid4()
+    publish_registration_capsule(tmp_path, str(profile_id))
+    namespace = WORKFLOW_STATE_NAMESPACE.namespace
+    object_key = WORKFLOW_STATE_NAMESPACE.require_default_object_key()
+    port = build_profile_custody_port()
+    with (
+        frozen_clock((wall_now() - timedelta(days=400)).replace(microsecond=0)),
+        port.secure_object_repository(
+            profile_id=profile_id,
+            dek=b"k" * 32,
+            root=tmp_path,
+            database_file=bucket_paths(tmp_path, str(profile_id)).database_file,
+        ) as staged,
+    ):
+        staged.apply_batch(
+            (
+                SecureObjectWrite(
+                    namespace=namespace,
+                    object_key=object_key,
+                    classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                    written_at=wall_now() - timedelta(days=400),
+                    payload=b"bridged",
+                ),
+            )
+        )
+        loaded = staged.load(
+            namespace,
+            object_key,
+            expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+        )
+
+    assert loaded is not None
+    assert loaded.payload == b"bridged"
 
 
 def test_record_crypto_returns_the_application_dto_and_refuses_tampering() -> None:

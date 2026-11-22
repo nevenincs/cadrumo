@@ -2996,6 +2996,9 @@ application:
       input_required: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
         yet: the input %{binding} (box %{boxes}) has no value. Supply it, then calculate
         again. Nothing was saved.'
+      input_required_profile_fact: 'Modelo %{modelo} %{period} %{filing_year} cannot
+        be calculated yet because your profile does not state this input: %{binding_label}.
+        State it in your profile, then calculate again. Nothing was saved.'
       input_required_unprinted: 'Modelo %{modelo} %{period} %{filing_year} cannot
         be calculated yet: the input %{binding} has no value. Supply it, then calculate
         again. Nothing was saved.'
