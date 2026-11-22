@@ -294,10 +294,12 @@ class AdminServer:
             result = {"kind": "refused", "code": "invalid_request"}
         except FrontendRefusedError as error:
             # A lease the runtime keeps suspended returns by itself and nothing was done: ask again.
-            recovering = error.reason == AccessDenialCode.CUSTODY_RECOVERING.value
-            result = {"kind": "refused", "code": "busy" if recovering else "service_failed"}
-        except Exception:
-            result = {"kind": "refused", "code": "service_failed"}
+            if error.reason == AccessDenialCode.CUSTODY_RECOVERING.value:
+                result = {"kind": "refused", "code": "busy"}
+            else:
+                result = _service_failed(request.action, error)
+        except Exception as error:
+            result = _service_failed(request.action, error)
         finally:
             if secret is not None:
                 wipe(secret)
@@ -362,6 +364,19 @@ def _conforming_catalog(answer: JsonValue) -> JsonValue:
     log_ref = new_log_ref()
     _LOGGER.error("provider catalog departs from the pinned agent schema at=%s log_ref=%s", departure, log_ref)
     return {"kind": "refused", "code": "catalog_unavailable", "log_ref": log_ref}
+
+
+def _service_failed(action: str, error: Exception) -> dict[str, JsonValue]:
+    """Refuse a request that failed unexpectedly, logging its cause under the reference the refusal carries."""
+    log_ref = new_log_ref()
+    _LOGGER.error(
+        "service admin request failed action=%s error=%s log_ref=%s",
+        action,
+        type(error).__name__,
+        log_ref,
+        exc_info=error,
+    )
+    return {"kind": "refused", "code": "service_failed", "log_ref": log_ref}
 
 
 def _read_request_secret(stream: socket.socket, request: AdminRequest, deadline: float) -> bytearray | None:
