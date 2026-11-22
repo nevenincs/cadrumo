@@ -18,7 +18,7 @@ import {
 } from "react";
 import type { LedgerPort } from "../../shell/ledger";
 import { isTransactionPrefix } from "../../shell/ledgerGrammar";
-import { BATCH_ROW_LIMIT } from "../../shell/ledgerPlan";
+import { BATCH_ROW_LIMIT } from "../../shell/ledgerMovementContract";
 import { readAnswer } from "../../shell/ledgerWindow";
 
 /** The most movements the page reads for one read of the window, for the

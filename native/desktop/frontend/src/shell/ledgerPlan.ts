@@ -19,6 +19,7 @@ import type {
   LedgerClassifyWindowRequest,
   LedgerPropertySetField,
 } from "./ledgerMovementContract";
+import { BATCH_ROW_LIMIT } from "./ledgerMovementContract";
 import type {
   LedgerStagedBlocker,
   LedgerWriteRoute,
@@ -300,9 +301,6 @@ export const isPropertyField = (
 ): field is LedgerPropertySetField & StageFieldName =>
   field in PROPERTY_FIELDS &&
   (STAGE_FIELDS as readonly string[]).includes(field);
-
-/** The most movements one batch edit names, as its contract bounds them. */
-export const BATCH_ROW_LIMIT = 2000;
 
 /** A batch edit's digest as long as the write sends it, for measuring a part
  * before its preview has answered. */
