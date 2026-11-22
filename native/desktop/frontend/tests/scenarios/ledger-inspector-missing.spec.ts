@@ -179,6 +179,15 @@ test("a missing IVA fact is worked out from the IVA category as a staged proposa
     label("desktop.ledger.inspector.fix.derive_already"),
   );
   expect(await trayCount(target)).toBe(1);
+  // The ledger answers what the staged proposal leaves: the review shows its
+  // plan, never that the ledger could not be read.
+  await tray(target).locator(".ledger-tray-review").click();
+  const review = target.locator(".ledger-review");
+  await expect(review).toBeVisible();
+  await expect(review.locator(".ledger-apply-save")).toBeVisible();
+  await expect(
+    review.getByText(label("desktop.ledger.apply.read_failed")),
+  ).toHaveCount(0);
 });
 
 test("working a missing fact out needs the IVA category: without one the list opens and says so", async ({
