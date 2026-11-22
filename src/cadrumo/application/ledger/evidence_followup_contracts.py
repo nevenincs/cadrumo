@@ -403,8 +403,8 @@ def _agreed_kind(
     return (declared_kind if declared_kind is not None else suggested_kind), False
 
 
-class EvidenceReviewVatPrefixCountryProjection(BaseModel):
-    """The Member State whose VAT prefix each party's identification number carries.
+class EvidenceReviewNifIvaPrefixCountryProjection(BaseModel):
+    """The Member State whose NIF-IVA prefix each party's identification number carries.
 
     A suggestion for the person to accept as the counterparty's country, derived
     from the number's prefix alone (Directive 2006/112/EC art. 215). It says
@@ -418,9 +418,9 @@ class EvidenceReviewVatPrefixCountryProjection(BaseModel):
     customer: _CountryAlpha2 | None = None
 
     @model_validator(mode="after")
-    def _states_something(self) -> EvidenceReviewVatPrefixCountryProjection:
+    def _states_something(self) -> EvidenceReviewNifIvaPrefixCountryProjection:
         if self.supplier is None and self.customer is None:
-            raise ValueError("a VAT-prefix suggestion names at least one party's country")
+            raise ValueError("a NIF-IVA prefix suggestion names at least one party's country")
         return self
 
 
@@ -432,8 +432,8 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
     carries it.
 
     ``direction`` carries the operator's import direction beside the reading's
-    suggestion, and ``counterparty_vat_prefix_country`` the country each party's
-    VAT-number prefix names; both are suggestions to review, never draft facts.
+    suggestion, and ``counterparty_nif_iva_prefix_country`` the country each party's
+    NIF-IVA prefix names; both are suggestions to review, never draft facts.
 
     ``off_host_read_offered`` says whether the person may be asked to send this
     profile's documents off this computer to be read: the deployment permits it,
@@ -453,7 +453,7 @@ class LedgerEvidenceReviewViewProjection(BaseModel):
     party_attribution_advisory: PartyAttributionAdvisoryProjection | None = None
     country_vocabulary_advisory: CountryVocabularyAdvisoryProjection | None = None
     direction: EvidenceReviewDirectionProjection | None = None
-    counterparty_vat_prefix_country: EvidenceReviewVatPrefixCountryProjection | None = None
+    counterparty_nif_iva_prefix_country: EvidenceReviewNifIvaPrefixCountryProjection | None = None
     off_host_read_offered: bool = False
 
     @field_validator("drafted_at")
@@ -569,9 +569,9 @@ __all__ = [
     "EvidenceConfirmPreconditionProjection",
     "EvidenceConsentEntriesFactory",
     "EvidenceReviewDirectionProjection",
+    "EvidenceReviewNifIvaPrefixCountryProjection",
     "EvidenceReviewQueueRowProjection",
     "EvidenceReviewReasonWordsWire",
-    "EvidenceReviewVatPrefixCountryProjection",
     "LedgerEvidenceAttachmentQueueExecutionResult",
     "LedgerEvidenceAttachmentQueueProjection",
     "LedgerEvidenceAttachmentQueueRequest",

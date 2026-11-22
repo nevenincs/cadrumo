@@ -6,9 +6,11 @@ import { label } from "../support/strings";
 // service starts the agent the host can answer that read busy, and the
 // agent's other reads (its status and the ready it publishes, its catalog,
 // its local models and engine, its skills, the keys for agents outside
-// Cadrumo) can stay unanswered for many seconds more: the settings are read
-// again on their own until the host answers them, and each answer is drawn.
-// The bound is the one ruled for the window: drawn within 4 s of opening.
+// Cadrumo) can stay unanswered for many seconds more. A busy answer is said as
+// the wait it is and read again on a cue, never by time: with the agent's
+// status held no publication comes, so the cue is the person's (coming back
+// to the window, or opening the settings again), and that answer is drawn.
+// The bound is the one ruled for the window: drawn within 4 s of the ask.
 
 test.beforeEach(() => {
   scenarioOnly("The scenario host holds the agent's other reads.");
@@ -23,6 +25,22 @@ const providers = (target: Page) =>
 
 const settingsDoor = (target: Page) =>
   pane(target).getByRole("button", { name: label("desktop.agent.settings") });
+
+const statusReads = (target: Page) =>
+  target.evaluate(
+    () =>
+      (window.__scenarioHostCalls ?? []).filter(
+        (call) => call === "providerStatus",
+      ).length,
+  );
+
+const drawnWithin = async (target: Page) => {
+  const began = Date.now();
+  await expect(
+    providers(target).locator("[data-provider]").first(),
+  ).toBeVisible({ timeout: FIRST_DRAW_MS + 2_000 });
+  return Date.now() - began;
+};
 
 const starting = (target: Page) =>
   pane(target)
@@ -54,20 +72,25 @@ test("provider settings answered busy are drawn within 4 s while every other age
   await agentRail.click();
   await expect(settingsDoor(target)).toBeVisible();
 
-  // The first status read is answered busy, at once; the next at once too.
+  // The first status read is answered busy, at once.
   await target.evaluate(() =>
     window.__scenarioProviderSignIn!.failNextSettingsRead({ code: "busy" }),
   );
-  const first = openAndTime(target);
-  // A wait, said as one, not a failure to retry.
+  await settingsDoor(target).click();
+  // A wait, said as one, not a failure to retry, and not read again by time.
   await expect(starting(target)).toBeVisible();
   await expect(
     pane(target).getByText(label("desktop.providers.load_failed")),
   ).toHaveCount(0);
-  expect(await first).toBeLessThanOrEqual(FIRST_DRAW_MS);
+  const asked = await statusReads(target);
+  await target.waitForTimeout(1_000);
+  expect(await statusReads(target)).toBe(asked);
+  // The person coming back to the window reads it again, and it is drawn.
+  await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+  expect(await drawnWithin(target)).toBeLessThanOrEqual(FIRST_DRAW_MS);
 
-  // Each later opening reads the status again, and that answer is drawn too,
-  // a busy one followed in the same bound.
+  // Each later opening reads the status again; one answered busy keeps the
+  // answer drawn before it on screen, within the same bound.
   await settingsDoor(target).click();
   await expect(providers(target)).toHaveCount(0);
   await target.evaluate(() =>

@@ -16,7 +16,7 @@ import {
   recordUpdate,
   readCorrection,
   readCountryOf,
-  vatPrefixCountryOf,
+  nifIvaPrefixCountryOf,
   readingRows,
   resolutionOf,
   changedReadingFields,
@@ -480,10 +480,10 @@ test("a value read from a record's own data is not said to be found on a page", 
   ).toContain(label("desktop.ledger.documents.grounding.anchored"));
 });
 
-test("the VAT-number prefix suggests the counterparty's country on the chosen side only", () => {
+test("the NIF-IVA prefix suggests the counterparty's country on the chosen side only", () => {
   const prefixes = { supplier: "PT", customer: null };
-  expect(vatPrefixCountryOf(prefixes, "received")).toBe("PT");
-  expect(vatPrefixCountryOf(prefixes, "issued")).toBeNull();
-  expect(vatPrefixCountryOf(prefixes, null)).toBeNull();
-  expect(vatPrefixCountryOf(null, "received")).toBeNull();
+  expect(nifIvaPrefixCountryOf(prefixes, "received")).toBe("PT");
+  expect(nifIvaPrefixCountryOf(prefixes, "issued")).toBeNull();
+  expect(nifIvaPrefixCountryOf(prefixes, null)).toBeNull();
+  expect(nifIvaPrefixCountryOf(null, "received")).toBeNull();
 });

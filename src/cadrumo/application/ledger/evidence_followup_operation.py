@@ -21,7 +21,7 @@ from ...core.time.clock import now
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.iva.identification import vat_number_issuing_country
+from ...domain.iva.identification import nif_iva_issuing_country
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ..operations.error_detail import served_words_language
 from ..operations.models import OperationRequest
@@ -45,8 +45,8 @@ from .evidence_followup_contracts import (
     MAX_EVIDENCE_FOLLOWUP_READ_ROWS,
     EvidenceConfirmPreconditionProjection,
     EvidenceReviewDirectionProjection,
+    EvidenceReviewNifIvaPrefixCountryProjection,
     EvidenceReviewQueueRowProjection,
-    EvidenceReviewVatPrefixCountryProjection,
     LedgerEvidenceAttachmentQueueExecutionResult,
     LedgerEvidenceAttachmentQueueProjection,
     LedgerEvidenceAttachmentQueueRequest,
@@ -350,22 +350,22 @@ def _review_view_advisories(
     return party_advisory, country_advisory
 
 
-def _review_view_vat_prefix_country(
+def _review_view_nif_iva_prefix_country(
     draft: InvoiceDraft,
     operation: PinnedAuthorityOperation,
-) -> EvidenceReviewVatPrefixCountryProjection | None:
-    """Name the country each party's VAT-number prefix carries, for the person to accept or ignore.
+) -> EvidenceReviewNifIvaPrefixCountryProjection | None:
+    """Name the country each party's NIF-IVA prefix carries, for the person to accept or ignore.
 
     Served beside the draft and never written into it: the reader refuses to
     take a tax-id prefix as the party's establishment, and a prefix still says
     only which Member State issued the number (Directive 2006/112/EC art. 215).
     """
     with validating_governed_facts(operation):
-        supplier = vat_number_issuing_country(draft.supplier_tax_id, operation=operation)
-        customer = vat_number_issuing_country(draft.customer_tax_id, operation=operation)
+        supplier = nif_iva_issuing_country(draft.supplier_tax_id, operation=operation)
+        customer = nif_iva_issuing_country(draft.customer_tax_id, operation=operation)
     if supplier is None and customer is None:
         return None
-    return EvidenceReviewVatPrefixCountryProjection(supplier=supplier, customer=customer)
+    return EvidenceReviewNifIvaPrefixCountryProjection(supplier=supplier, customer=customer)
 
 
 def _review_view_invoice_draft_projection(draft: InvoiceDraft) -> InvoiceDraftProjectionV1:
@@ -419,7 +419,7 @@ def _review_view_projection(
     party_advisory: PartyAttributionAdvisoryProjection | None,
     country_advisory: CountryVocabularyAdvisoryProjection | None,
     *,
-    vat_prefix_country: EvidenceReviewVatPrefixCountryProjection | None,
+    nif_iva_prefix_country: EvidenceReviewNifIvaPrefixCountryProjection | None,
     off_host_read_offered: bool,
 ) -> LedgerEvidenceReviewViewProjection:
     return LedgerEvidenceReviewViewProjection(
@@ -439,7 +439,7 @@ def _review_view_projection(
         direction=EvidenceReviewDirectionProjection.of(
             declared_kind=stored.declared_kind, suggested_kind=draft.suggested_kind
         ),
-        counterparty_vat_prefix_country=vat_prefix_country,
+        counterparty_nif_iva_prefix_country=nif_iva_prefix_country,
         off_host_read_offered=off_host_read_offered,
     )
 
@@ -462,7 +462,7 @@ def _read_review_view(
         projected_draft,
         _party_attribution_projection(party_advisory),
         _country_vocabulary_projection(country_advisory),
-        vat_prefix_country=_review_view_vat_prefix_country(draft, operation),
+        nif_iva_prefix_country=_review_view_nif_iva_prefix_country(draft, operation),
         off_host_read_offered=ports.off_host_read_askable(bucket_id=bucket_id),
     )
     if result.evidence_reference != payload.evidence_reference:

@@ -34,6 +34,10 @@ pub enum Event {
     Stopped {
         reason: String,
     },
+    /// A read the window was answered busy or still pending for has settled,
+    /// so the window is cued to ask for it again; nothing the service serves
+    /// changed state.
+    ReadSettled,
 }
 
 /// A line that is not one of the protocol's events.
@@ -111,6 +115,8 @@ pub fn decode(line: &[u8]) -> Result<Event, Violation> {
             #[serde(default, alias = "code")]
             reason: String,
         },
+        #[serde(rename = "read_settled")]
+        ReadSettled {},
     }
     if line.len() > LINE_LIMIT {
         return Err(Violation);
@@ -167,6 +173,7 @@ pub fn decode(line: &[u8]) -> Result<Event, Violation> {
         Wire::Stopped { reason } if reason.is_empty() || code(&reason) => {
             Ok(Event::Stopped { reason })
         }
+        Wire::ReadSettled {} => Ok(Event::ReadSettled),
         _ => Err(Violation),
     }
 }
@@ -243,6 +250,18 @@ mod tests {
             Ok(Event::Refused {
                 code: "credentials_unavailable".into()
             })
+        );
+    }
+
+    #[test]
+    fn a_settled_read_is_read_and_carries_nothing() {
+        assert_eq!(
+            decode(br#"{"event":"read_settled"}"#),
+            Ok(Event::ReadSettled)
+        );
+        assert_eq!(
+            decode(br#"{"event":"read_settled","read":"catalog"}"#),
+            Err(Violation)
         );
     }
 

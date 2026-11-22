@@ -388,6 +388,7 @@ export function AgentColumn({
     reader,
     (settingsOpen && shown) || needsCredential,
     opened,
+    status,
   );
   const previousLogins = useRef<{ reader: string; lanes: Set<string> } | null>(
     null,
