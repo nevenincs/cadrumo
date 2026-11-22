@@ -12,12 +12,12 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
-    replace_test_profile_record,
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
+from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from cadrumo.application.user_profile.projections import record_to_path_values
-from cadrumo.domain.user_profile.errors import UserProfileValidationError
+from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -54,17 +54,12 @@ def _register_with_tax_id() -> None:
 def _write_dni_nie(value: str) -> None:
     """Try to set the retired ``auth.dni_nie`` through the validated edit door."""
     with bound_test_profile_record(_BUCKET_ID) as repository:
-        record = repository.load(_BUCKET_ID)
-    replace_test_profile_record(
-        record.model_copy(
-            update={
-                "facts": (
-                    *(fact for fact in record.facts if fact.path != _DNI_NIE_PATH),
-                    UserProfileFact(path=_DNI_NIE_PATH, value=value),
-                ),
-            },
-        ),
-    )
+        apply_profile_fact_changes(
+            profile_id=_BUCKET_ID,
+            changes=(UserProfileFact(path=_DNI_NIE_PATH, value=value),),
+            door=ProfileFactWriteDoor.MANAGER_FIELD,
+            profile_decode_context=repository.session.profile_decode_context,
+        )
 
 
 def _stored() -> dict[str, str | None]:
@@ -76,7 +71,7 @@ def _stored() -> dict[str, str | None]:
 def test_the_validated_edit_door_refuses_a_second_clave_identity() -> None:
     """A copy of the identity apart from the tax identifier is not a profile fact."""
     _register_with_tax_id()
-    with pytest.raises(UserProfileValidationError, match=r"auth.dni_nie"):
+    with pytest.raises(ProfileSchemaValidationError, match=r"auth\.dni_nie"):
         _write_dni_nie(_OTHER_TAX_ID)
 
     assert _stored() == {_TAX_ID_PATH: _TAX_ID, _DNI_NIE_PATH: None}
