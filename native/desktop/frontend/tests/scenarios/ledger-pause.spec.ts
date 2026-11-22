@@ -40,14 +40,14 @@ const ledgerControls = {
     target: Page,
     definition: string,
     count: number,
-    where?: Record<string, string>,
+    where?: Record<string, string | string[]>,
   ) =>
     target.evaluate(
       ([name, times, only]) =>
         window.__scenarioLedger!.nextReads(
           name as string,
           times as number,
-          (only ?? undefined) as Record<string, string> | undefined,
+          (only ?? undefined) as Record<string, string | string[]> | undefined,
         ),
       [definition, count, where ?? null] as const,
     ),
@@ -596,7 +596,7 @@ test("selected movements remain unread until their seal reads answer", async ({
   page: target,
 }) => {
   await openLedger(target);
-  await target.evaluate(() => window.__scenarioLedger!.holdTracks());
+  await target.evaluate(() => window.__scenarioLedger!.holdSealedReads());
   try {
     await dataRows(target).nth(0).locator("input[type=checkbox]").click();
     await dataRows(target).nth(1).locator("input[type=checkbox]").click();
@@ -604,26 +604,27 @@ test("selected movements remain unread until their seal reads answer", async ({
       await target.keyboard.press("Alt+KeyI");
     await expect
       .poll(() =>
-        target.evaluate(() => window.__scenarioLedger!.pendingTracks()),
+        target.evaluate(() => window.__scenarioLedger!.pendingSealedReads()),
       )
       .toBeGreaterThan(0);
     const form = panel(target)
       .locator("form")
       .filter({
-        has: target.getByText(label("desktop.ledger.column.notes"), {
-          exact: true,
-        }),
+        // The field's name, followed while it reaches no movement by how many it leaves out.
+        has: target.getByText(
+          new RegExp(`^${label("desktop.ledger.column.notes")}( ·|$)`),
+        ),
       });
     await form.locator("input").fill("Test note");
     await expect(form.getByRole("button")).toBeDisabled();
-    await target.evaluate(() => window.__scenarioLedger!.releaseTracks());
+    await target.evaluate(() => window.__scenarioLedger!.releaseSealedReads());
     await expect(form.getByRole("button")).toBeEnabled();
   } finally {
-    await target.evaluate(() => window.__scenarioLedger?.releaseTracks());
+    await target.evaluate(() => window.__scenarioLedger?.releaseSealedReads());
   }
 });
 
-test("a changed selection can read without spending the old queue's budget", async ({
+test("a changed selection waits for the read already asking about its movements", async ({
   page: target,
 }) => {
   await captureUnrecordedQuestions(target);
@@ -632,27 +633,34 @@ test("a changed selection can read without spending the old queue's budget", asy
   );
   await target.locator("[data-rail=ledger]").click();
   await expect(dataRows(target).first()).toBeVisible();
-  await target.evaluate(() => window.__scenarioLedger!.holdTracks());
+  await target.evaluate(() => window.__scenarioLedger!.holdSealedReads());
   try {
     const selectShown = grid(target).getByRole("checkbox", {
       name: label("desktop.ledger.select.shown"),
     });
     await selectShown.click();
+    // Every shown movement is asked in one read.
     await expect
       .poll(() =>
-        target.evaluate(() => window.__scenarioLedger!.pendingTracks()),
+        target.evaluate(() => window.__scenarioLedger!.pendingSealedReads()),
       )
-      .toBe(4);
+      .toBe(1);
     await selectShown.click();
     await dataRows(target).nth(8).locator("input[type=checkbox]").click();
-    await expect
-      .poll(() =>
-        target.evaluate(() => window.__scenarioLedger!.pendingTracks()),
-      )
-      .toBe(5);
+    // The eighth was in that read: it is not asked again.
+    await target.waitForTimeout(300);
+    expect(
+      await target.evaluate(() =>
+        window.__scenarioLedger!.pendingSealedReads(),
+      ),
+    ).toBe(1);
   } finally {
-    await target.evaluate(() => window.__scenarioLedger?.releaseTracks());
+    await target.evaluate(() => window.__scenarioLedger?.releaseSealedReads());
   }
+  const asked = await target.evaluate(() =>
+    window.__scenarioLedger!.requests("ledger.sealed.read"),
+  );
+  expect(asked).toHaveLength(1);
 });
 
 test("a staged movement whose sealed state was not read is held as unread until it is read again", async ({
@@ -661,10 +669,10 @@ test("a staged movement whose sealed state was not read is held as unread until 
   await openLedger(target);
   const row = rowOf(target, "PAPELERIA TRAZO");
   const id = (await row.getAttribute("data-key"))!;
-  // Its participation fails to read twice: the page's own read, and the
+  // Its sealed state fails to read twice: the page's own read, and the
   // review's, which asks again what failed.
-  await ledgerControls.nextReads(target, "ledger.track", 2, {
-    transaction_prefix: id,
+  await ledgerControls.nextReads(target, "ledger.sealed.read", 2, {
+    transaction_ids: [id],
   });
   await typeInto(target, cellOf(row, "counterparty"), "Trazo Papelería SL");
   await openReview(target);
@@ -723,8 +731,8 @@ test("a bulk save with an unknown outcome is counted, not listed by name, and it
 test("the review reads the lock of every staged movement before it saves, the same each time", async ({
   page: target,
 }) => {
-  // Twelve hundred locks are read one movement at a time.
-  test.setTimeout(120_000);
+  // Twelve hundred locks are read in one read.
+  test.setTimeout(60_000);
   await captureUnrecordedQuestions(target);
   await target.goto(
     "/scenarios.html?scenario=ledger&latency=0&bar=off&ledgerRows=1200",
@@ -739,16 +747,6 @@ test("the review reads the lock of every staged movement before it saves, the sa
   for (let round = 0; round < 2; round += 1) {
     await target.locator(".ledger-tray-review").click();
     await expect(review(target)).toBeVisible();
-    if (round === 0)
-      // Reading the locks says how far it has got.
-      await expect(
-        review(target).locator(".ledger-apply-reading"),
-      ).toContainText(
-        label("desktop.ledger.apply.checking_locks", { done: "", total: "" })
-          .split("·")[0]!
-          .trim(),
-        { timeout: 20_000 },
-      );
     await expect(
       review(target).locator(".ledger-review-summary"),
     ).not.toHaveText(label("desktop.ledger.apply.reading"), {
@@ -766,6 +764,16 @@ test("the review reads the lock of every staged movement before it saves, the sa
     await expect(review(target)).toHaveCount(0);
   }
   expect(summaries[1]).toBe(summaries[0]);
+  // The page and the review asked about every movement in bounded reads,
+  // never one read per movement.
+  const asked = await target.evaluate(() =>
+    window.__scenarioLedger!.requests("ledger.sealed.read"),
+  );
+  expect(asked.length).toBeLessThanOrEqual(3);
+  expect(
+    new Set(asked.flatMap((request) => request.transaction_ids as string[]))
+      .size,
+  ).toBe(1200);
 });
 
 test("an export lost before it wrote its file says the file is not where it was saved", async ({

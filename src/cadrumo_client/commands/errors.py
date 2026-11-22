@@ -21,6 +21,33 @@ class CliRefusedBoundaryError(CadrumoError):
     """Refuse a command without exposing a success-shaped JSON result."""
 
 
+#: The refusal reason a stale operation contract carries, apart from a malformed frame.
+OPERATION_CONTRACT_STALE_REASON = "operation_contract_stale"
+
+
+class CliOperationContractStaleError(CliRefusedBoundaryError):
+    """Refuse an operation whose runtime contract differs from the command's typed models.
+
+    The runtime answered with a well-formed contract for the requested
+    operation, but its schemas or secret and operand requirements are not the
+    ones this command was built against, so one side is out of date. Nothing
+    was submitted. Only the public operation ID and the differing contract
+    field are named; no payload or schema content is carried.
+    """
+
+    def __init__(self, *, definition_id: str, field: str) -> None:
+        """Name the operation and the first contract field that differs."""
+        super().__init__(
+            translated_message="errors.refused.refused_cli_operation_contract_stale",
+            context={
+                "reason": OPERATION_CONTRACT_STALE_REASON,
+                "operation": definition_id,
+                "field": field,
+                "effect": "none",
+            },
+        )
+
+
 class CliUnexpectedBoundaryError(CadrumoError):
     """Wrap an unexpected callback exception without exposing its message."""
 
@@ -40,8 +67,8 @@ def _raising_product_frame(error: BaseException) -> str:
 def boundary_failure_level(error: BaseException) -> int:
     """Return the log level for a failure a frontend ends its command with.
 
-    Internal faults and local-runtime transport refusals are errors: the
-    runtime could not be used at all. A registered refusal that changed nothing,
+    Internal faults, local-runtime transport refusals and a stale operation
+    contract are errors: the runtime could not be used at all. A registered refusal that changed nothing,
     such as a signed-out session or a failed readiness gate, is an expected
     outcome of the profile's state and is informational. A refusal that
     carries an applied, partial or unknown effect, or a settlement other than
@@ -52,7 +79,7 @@ def boundary_failure_level(error: BaseException) -> int:
     seen: set[int] = set()
     link: BaseException | None = error
     while link is not None and id(link) not in seen:
-        if isinstance(link, RefusalError):
+        if isinstance(link, RefusalError | CliOperationContractStaleError):
             return logging.ERROR
         seen.add(id(link))
         link = link.__cause__ or link.__context__
@@ -166,6 +193,8 @@ class CliOperationStillRunningError(CadrumoError):
 
 
 __all__ = [
+    "OPERATION_CONTRACT_STALE_REASON",
+    "CliOperationContractStaleError",
     "CliOperationStillRunningError",
     "CliOutboundPayloadBoundaryError",
     "CliRecordedOperationError",

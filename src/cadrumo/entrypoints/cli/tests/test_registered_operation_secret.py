@@ -24,7 +24,7 @@ from cadrumo.application.operations.models import OperationIdentity
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
-from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliOperationContractStaleError, CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationRequest, OperationSubmitted
@@ -136,7 +136,9 @@ def test_mismatched_requirement_refuses_before_secret_transfer_and_clears_buffer
 def test_contract_refusal_clears_secret_before_any_submission() -> None:
     client = _Client(secret_required=False)
     secret = bytearray(b"synthetic-passphrase")
-    with pytest.raises(RefusalError):
+    with pytest.raises(CliOperationContractStaleError) as refused:
         _run(client, secret)
+    assert refused.value.context is not None
+    assert refused.value.context["field"] == "ephemeral_secret_required"
     assert client.submissions == client.secret_submissions == 0
     assert secret == bytes(len(secret))

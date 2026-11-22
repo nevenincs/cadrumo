@@ -1782,6 +1782,10 @@ errors:
       són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
       estàndard està redirigida. Executa-la en una terminal interactiva.
+    refused_cli_operation_contract_stale: El servei en segon pla ofereix per a aquesta
+      operació un contracte diferent del que espera aquesta ordre, així que no s'ha
+      enviat res. Actualitza o reinstal·la Cadrumo perquè l'ordre i el servei en segon
+      pla siguin de la mateixa versió.
     refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
       Comprova els arguments o executa `aeat --help`.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.

@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NOW = datetime(2099, 5, 26, 12, 15, 0, tzinfo=UTC)
 _DEK = b"d" * 32
 #: A document clock long behind real time, as a fixed-clock replay pins it.
-_PAST_DOCUMENT_INSTANT = datetime(2020, 1, 15, 9, 0, 0, tzinfo=UTC)
+_PAST_DOCUMENT_INSTANT = datetime.now(UTC).replace(microsecond=0) - timedelta(days=2000)
 _BUCKET_A_ID = "094d94e7-4474-407c-8971-d9c1a2476db0"
 _BUCKET_B_ID = "d9df0562-55c9-43c8-8486-b79d4016cfbc"
 _PRIVATE_BUCKET_ID = "80bc7e0d-f9dd-4be7-afc6-71d192074647"

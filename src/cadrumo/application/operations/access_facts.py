@@ -105,6 +105,8 @@ _LOCAL_READS: Final = (
     "ledger.track",
     # A preview runs the batch plan against the stored rows and commits nothing.
     "ledger.update.batch.preview",
+    # Which movements a finalized declaration seals, read once for a selection.
+    "ledger.sealed.read",
     "ledger.view",
     # A capture reads the tax agency through a browser and stores what it saw.
     # The live operations listed here read what earlier captures stored.

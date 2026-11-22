@@ -638,7 +638,22 @@ test("created draft selections follow returned stored ids and removed drafts lea
             250,
           ),
         }
-      : { settle: { participated_in: [] } },
+      : {
+          settle: {
+            profile_id: "p",
+            rows: (
+              (call.kind === "submit" &&
+                (call.payload as { transaction_ids?: string[] })
+                  .transaction_ids) ||
+              []
+            ).map((id) => ({
+              transaction_id: id,
+              state: "open",
+              seal_count: 0,
+              seals: [],
+            })),
+          },
+        },
   );
   const listed = await readWindow(storedPort, null);
   expect(listed.kind).toBe("read");
@@ -649,15 +664,17 @@ test("created draft selections follow returned stored ids and removed drafts lea
   expect(inspectable.map((row) => row.transaction.transaction_id)).toEqual(
     created,
   );
-  for (const row of inspectable)
-    expect(await readSealed(storedPort, row.transaction.transaction_id)).toBe(
-      false,
-    );
+  const sealed = await readSealed(
+    storedPort,
+    inspectable.map((row) => row.transaction.transaction_id),
+  );
+  expect([...sealed.values()]).toEqual([false, false]);
   expect(
     calls.filter(
-      (call) => call.kind === "submit" && call.definition === "ledger.track",
+      (call) =>
+        call.kind === "submit" && call.definition === "ledger.sealed.read",
     ),
-  ).toHaveLength(2);
+  ).toHaveLength(1);
   // Removing an unsaved draft also retires its selection without removing an offscreen stored handle.
   expect([
     ...reconcileMovementSelection(new Set([drafts[0]!.key, A]), []),

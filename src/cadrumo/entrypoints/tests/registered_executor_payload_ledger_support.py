@@ -307,6 +307,11 @@ def _ledger_update(ctx: PayloadContext) -> PayloadResult:
     )
 
 
+def _days_ago(days: int) -> date:
+    """A booking day stamped from the current instant, so no seed names a filing year."""
+    return now().date() - timedelta(days=days)
+
+
 def _ledger_batch_rows(
     ctx: PayloadContext, ports: LedgerActionPorts, *, description: str
 ) -> tuple[LedgerBatchUpdateRow, ...]:
@@ -317,10 +322,10 @@ def _ledger_batch_rows(
     )
     seeded = (
         _seed_unprocessed_outgoing(
-            ctx, ports, booked_date=date(2025, 1, 19), amount="31.00", description=f"{description} one"
+            ctx, ports, booked_date=_days_ago(2), amount="31.00", description=f"{description} one"
         ),
         _seed_unprocessed_outgoing(
-            ctx, ports, booked_date=date(2025, 1, 20), amount="32.00", description=f"{description} two"
+            ctx, ports, booked_date=_days_ago(1), amount="32.00", description=f"{description} two"
         ),
     )
     catalogue = ports.transaction_repository.load()
@@ -336,6 +341,18 @@ def _ledger_batch_rows(
             )
         )
     return tuple(rows)
+
+
+def _ledger_sealed_read(ctx: PayloadContext) -> PayloadResult:
+    """Name one stored unsealed row and an id no movement has."""
+    ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
+    created = _seed_unprocessed_outgoing(
+        ctx, ports, booked_date=_days_ago(1), amount="33.00", description="conformance sealed read seed"
+    )
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "transaction_ids": (created.ref.transaction_id, "f" * 64)},
+    )
 
 
 def _ledger_batch_update_preview(ctx: PayloadContext) -> PayloadResult:
@@ -848,6 +865,7 @@ LEDGER_BUILDERS: dict[str, PayloadBuilder] = {
     "ledger.split.manual": _ledger_split_manual,
     "ledger.merge": _ledger_merge,
     "ledger.update": _ledger_update,
+    "ledger.sealed.read": _ledger_sealed_read,
     LEDGER_BATCH_UPDATE_PREVIEW_OPERATION_DEFINITION_ID: _ledger_batch_update_preview,
     LEDGER_BATCH_UPDATE_OPERATION_DEFINITION_ID: _ledger_batch_update,
     "ledger.reset": _ledger_reset,

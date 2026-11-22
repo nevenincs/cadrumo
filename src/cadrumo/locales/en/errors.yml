@@ -1624,6 +1624,10 @@ errors:
       Use only one of --quiet, --verbose or --debug.
     refused_cli_non_tty: This command needs interactive input, but standard input
       is piped. Run it in an interactive terminal.
+    refused_cli_operation_contract_stale: The background service offers a different
+      contract for this operation than this command expects, so nothing was sent.
+      Update or reinstall Cadrumo so the command and the background service come from
+      the same version.
     refused_cli_validation_boundary: The command input failed validation. Check the
       command's arguments or run `aeat --help`.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
