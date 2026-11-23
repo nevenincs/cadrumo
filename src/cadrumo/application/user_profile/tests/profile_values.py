@@ -13,14 +13,23 @@ from typing import TYPE_CHECKING
 
 from cadrumo.application.user_profile.completeness import conditional_profile_missing_required
 from cadrumo.application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
-from cadrumo.domain.user_profile.tests.schema_value_support import schema_valid_placeholder
-from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.domain.user_profile.tests.schema_value_support import (
+    REQUIRED_PROFILE_PLACEHOLDERS,
+    schema_valid_placeholder,
+)
+from cadrumo.domain.user_profile.values import UserProfileFact, UserProfileFactValue
 
 if TYPE_CHECKING:
-    from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
+    from cadrumo.domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition
 
 
 _COMPLETENESS_PROBE_PROFILE_ID = "00000000-0000-4000-8000-000000000000"
+
+
+def _placeholder(path: str, field: ProfileFieldDefinition) -> UserProfileFactValue:
+    """Fill ``path`` with its declared tax-axis value, else any schema-valid value."""
+    declared = REQUIRED_PROFILE_PLACEHOLDERS.get(path)
+    return declared if declared is not None else schema_valid_placeholder(field)
 
 
 def complete_conditional_facts(
@@ -35,7 +44,7 @@ def complete_conditional_facts(
         missing = tuple(path for path in conditional_profile_missing_required(values) if path in fields)
         if not missing:
             break
-        completed.extend(UserProfileFact(path=path, value=schema_valid_placeholder(fields[path])) for path in missing)
+        completed.extend(UserProfileFact(path=path, value=_placeholder(path, fields[path])) for path in missing)
     return tuple(completed)
 
 
@@ -54,7 +63,7 @@ def complete_profile_facts(
         )
         if not missing:
             return tuple(completed)
-        completed.extend(UserProfileFact(path=path, value=schema_valid_placeholder(fields[path])) for path in missing)
+        completed.extend(UserProfileFact(path=path, value=_placeholder(path, fields[path])) for path in missing)
     raise RuntimeError("profile completeness did not converge; a required field is unfillable")
 
 

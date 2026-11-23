@@ -1025,6 +1025,7 @@ export function FilingCalendarView({
             key={profile?.profile_id ?? "unknown"}
             profile={profile}
             evidence={profileEvidence}
+            missingPaths={state.calendar.undeclared_profile_facts}
             onNavigate={onNavigate}
             className="mx-4 mt-3 w-auto"
           />

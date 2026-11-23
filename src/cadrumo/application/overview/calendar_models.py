@@ -43,7 +43,7 @@ from ...core.post_filing_event import PostFilingEventKind
 from ...core.prose_elision import ElidedProse
 from ...core.source_locator import SourceUrl
 from ...core.time.date_range import validate_inclusive_date_range
-from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict, TaxpayerModelFact
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage, HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus, Recovery
@@ -774,9 +774,17 @@ class OverviewCalendar(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
+    undeclared_profile_facts: tuple[TaxpayerModelFact, ...] = Field(default=())
+    """Every profile fact the taxpayer model still lacks, each named by the profile path that answers it."""
     suppressed_entries: tuple[SuppressedCalendarEntry, ...] = Field(default=())
     events: tuple[OverviewCalendarEvent, ...] = Field(default=())
     coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
+
+    @model_validator(mode="after")
+    def _undeclared_facts_match_the_model(self) -> Self:
+        if self.taxpayer_model_declared and self.undeclared_profile_facts:
+            raise ValueError("a calendar with a declared taxpayer model names no undeclared profile fact")
+        return self
 
 
 class OverviewStatusReport(BaseModel):

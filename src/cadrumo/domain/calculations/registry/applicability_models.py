@@ -103,6 +103,13 @@ class ApplicabilityProvenance(StrEnum):
     LEDGER_DERIVED = "ledger_derived"
 
 
+class TaxpayerModelFact(StrEnum):
+    """A profile fact the taxpayer model is declared by, named by its profile path."""
+
+    ENTITY_TYPE = "taxpayer_type.entity_type"
+    IRPF_INCOME_CATEGORIES = "taxpayer_type.irpf_income_categories"
+
+
 class ApplicabilityEvidenceDisagreement(BaseModel):
     """The profile answer and the ledger derivation of one payer fact contradict each other.
 

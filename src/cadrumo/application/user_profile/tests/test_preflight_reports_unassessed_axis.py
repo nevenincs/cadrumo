@@ -43,11 +43,19 @@ _PROFILE_ID = "6d1e4b90-2c77-4a53-8e14-9b0f5a2c7d31"
 _PERIOD = Period.from_year_and_code(2024, "1T")
 
 
+#: The taxpayer model facts every ready profile states, so readiness here turns on
+#: the axis under test rather than on the calendar's taxpayer model.
+_TAXPAYER_MODEL = (
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+)
+
+
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
     return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=facts,
+        facts=(*_TAXPAYER_MODEL, *facts),
         context=leased_profile_create_context(),
     )
 
