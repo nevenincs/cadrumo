@@ -21,6 +21,7 @@ from ...domain.calculations.registry.applicability_models import ApplicabilityVe
 
 __all__ = [
     "EXCLUDING_VERDICTS",
+    "SUPPRESSING_VERDICTS",
     "suppressed_verdict_words",
 ]
 
@@ -34,6 +35,9 @@ _VERDICT_LOCALE_KEYS: Final[Mapping[ApplicabilityVerdict, str]] = MappingProxyTy
     }
 )
 """The sentence of each verdict under which the calendar holds an obligation off its schedule."""
+
+SUPPRESSING_VERDICTS: Final[frozenset[ApplicabilityVerdict]] = frozenset(_VERDICT_LOCALE_KEYS)
+"""The only verdicts under which the calendar may hold an obligation off its schedule."""
 
 EXCLUDING_VERDICTS: Final[frozenset[ApplicabilityVerdict]] = frozenset(
     verdict for verdict in _VERDICT_LOCALE_KEYS if verdict is not ApplicabilityVerdict.INCOMPLETE
