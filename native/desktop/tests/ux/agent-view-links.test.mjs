@@ -61,8 +61,12 @@ import { callsSince, pageTimeInvokes } from "./ux-calls.mjs";
 import { dismissSetup } from "./ux-nav.mjs";
 
 const PERSON = process.env.CADRUMO_DESKTOP_AGENT_LINKS_PERSON === "1";
-const PERSON_MS = Number(process.env.CADRUMO_DESKTOP_AGENT_LINKS_PERSON_MS ?? 600_000);
-const REPLY_MS = Number(process.env.CADRUMO_DESKTOP_AGENT_LINKS_REPLY_MS ?? 300_000);
+const PERSON_MS = Number(
+  process.env.CADRUMO_DESKTOP_AGENT_LINKS_PERSON_MS ?? 600_000,
+);
+const REPLY_MS = Number(
+  process.env.CADRUMO_DESKTOP_AGENT_LINKS_REPLY_MS ?? 300_000,
+);
 const STAGED_SHA256 = (process.env.CADRUMO_UX_STAGED_SHA256 ?? "")
   .trim()
   .toLowerCase();

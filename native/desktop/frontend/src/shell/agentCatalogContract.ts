@@ -391,8 +391,8 @@ export type LocalEngine = "llamacpp" | "ollama";
  * carries a projector layer where the model reads images, or a Hugging Face
  * model with its projector. llamacpp_default_context: The context size, in
  * tokens, a llama.cpp load of the model asks for, or null where none is
- * declared. It never exceeds the model's context length, and is declared only
- * with a llama.cpp artefact.
+ * declared. It never exceeds `LLAMACPP_CONTEXT_CEILING` or the model's context
+ * length, and is declared only with a llama.cpp artefact.
  */
 export type ModelArtefacts = {
   ollama: RegistryArtefact | null;

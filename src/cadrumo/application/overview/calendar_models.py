@@ -49,6 +49,7 @@ from ...domain.deadlines.festivos import DeadlineHolidayCoverage, HolidayJurisdi
 from ...domain.deadlines.models import ObligationStatus, Recovery
 from ..operator_actions.models import DeclaredNextAction
 from .coverage import ObligationCoverageReport
+from .suppressed_verdict_words import SUPPRESSING_VERDICTS
 
 
 def _hydrate_calendar_period(value: object) -> object:
@@ -749,6 +750,11 @@ class SuppressedCalendarEntry(BaseModel):
     def _window_is_ordered(self) -> Self:
         if self.opens_on > self.adjusted_closes_on or self.closes_on > self.adjusted_closes_on:
             raise ValueError("a suppressed obligation's window closes before it opens")
+        # A held-off row is served with the sentence of its verdict; one with
+        # no sentence would fail the whole calendar read when it is projected,
+        # so it is refused where it is built.
+        if self.verdict not in SUPPRESSING_VERDICTS:
+            raise ValueError("a suppressed obligation carries a verdict that holds nothing off the schedule")
         return self
 
 

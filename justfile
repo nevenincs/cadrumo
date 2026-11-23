@@ -699,12 +699,20 @@ test-packaging-portable:
 test-packaging-ci:
     @uv run --no-sync python -B -m dev.packaging.campaign --profile ci
 
-# `windows_only` is excluded because the one such case here drives the
-# development environment's installed launchers, not the sealed cohort, and
-# `test-windows` owns it: that is the recipe a Windows runner executes.
-[doc('Run packaging artifact qualification against one sealed temporary cohort.')]
+# The oracle tests that build their own cohort carry `external_tool`: the build
+# acquires the lock-selected runtime wheels, which the dependency set does not
+# install and the test network guard refuses to fetch. The first line is the
+# one path that may reach the index: it warms the runtime wheel cache from
+# uv.lock by exact version and SHA-256 and re-verifies every entry. The test
+# run is then served from that cache with the network guard still armed.
+# The expression does not exclude `external_tool`, so this recipe stays the one
+# owner of the whole module, including its cohort-free source check.
+# `windows_only` stays with `test-windows`, which drives the development
+# environment's installed launchers rather than the sealed cohort.
+[doc('Warm the runtime wheel cache from uv.lock (network), then run the installed-oracle cohort tests offline (external_tool marker).')]
 [group('test')]
-test-installed-oracles: build-packaging-cohort
+test-installed-oracles:
+    @uv run --no-sync python -B -m dev.packaging.runtime_wheelhouse warm-cache
     @uv run --no-sync pytest -v -n0 -m "integration and serial and not windows_only" dev/packaging/tests/test_installed_oracles.py
 
 [doc('Run non-performance serial packaging contracts against the sealed cohort.')]
