@@ -95,6 +95,7 @@ from .calendar_warnings import (
 from .coverage import build_obligation_coverage
 from .modelo202_instalment import Modelo202InstalmentVerdict, modelo_202_instalment_verdict
 from .next_actions import declare_next_action
+from .suppressed_verdict_words import EXCLUDING_VERDICTS
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -855,14 +856,12 @@ def _question_locale_key(path: str) -> str | None:
     return IVA_BLOCK_QUESTION_LOCALE_KEYS.get(path) or PROFILE_FIELD_WARNING_LOCALE_KEYS.get(path)
 
 
-def _undetermined_calendar_entry(
-    item: UndeterminedObligation, verdict: ApplicabilityVerdict
-) -> SuppressedCalendarEntry:
+def _undetermined_calendar_entry(item: UndeterminedObligation) -> SuppressedCalendarEntry:
     """Hold a window an unanswered fact leaves undecided off the schedule, with the door to the question.
 
-    ``verdict`` is the modelo's own applicability: an applicable modelo whose
-    filing cadence alone is unknown keeps it, so the window says the modelo is
-    owed and only its date is open.
+    The window is neither owed nor excluded until the question is answered: an
+    applicable modelo whose cadence is unknown has no dated window of its own,
+    since the monthly and quarterly windows differ.
     """
     return SuppressedCalendarEntry(
         modelo=item.modelo,
@@ -870,7 +869,7 @@ def _undetermined_calendar_entry(
         opens_on=item.opens_on,
         closes_on=item.closes_on,
         adjusted_closes_on=item.closes_on,
-        verdict=verdict,
+        verdict=ApplicabilityVerdict.INCOMPLETE,
         reason=" ".join(
             tr(key) for key in (_question_locale_key(path) for path in item.deciding_paths) if key is not None
         )
@@ -926,20 +925,7 @@ def _owed_undetermined(
     verdicts: Mapping[tuple[str, int], ApplicabilityVerdict],
 ) -> tuple[UndeterminedObligation, ...]:
     return tuple(
-        item
-        for item in undetermined
-        if verdicts[(str(item.modelo), item.period.filing_year)] not in _EXCLUDING_VERDICTS
-    )
-
-
-_EXCLUDING_VERDICTS = frozenset({ApplicabilityVerdict.NOT_APPLICABLE, ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH})
-
-
-def _undetermined_entry_verdict(verdict: ApplicabilityVerdict) -> ApplicabilityVerdict:
-    return (
-        ApplicabilityVerdict.APPLICABLE
-        if verdict is ApplicabilityVerdict.APPLICABLE
-        else ApplicabilityVerdict.INCOMPLETE
+        item for item in undetermined if verdicts[(str(item.modelo), item.period.filing_year)] not in EXCLUDING_VERDICTS
     )
 
 
@@ -1097,13 +1083,7 @@ def build_overview_calendar(
         _undetermined_in_range(schedules, calendar_range, operation=operation), undetermined_verdicts
     )
     if show_suppressed:
-        suppressed.extend(
-            _undetermined_calendar_entry(
-                item,
-                _undetermined_entry_verdict(undetermined_verdicts[(str(item.modelo), item.period.filing_year)]),
-            )
-            for item in undetermined
-        )
+        suppressed.extend(_undetermined_calendar_entry(item) for item in undetermined)
         suppressed.sort(key=lambda s: (s.modelo, s.period.filing_year, s.period.registry_token))
     iva_block_warnings = calendar_iva_block_unanswered_warnings(
         profile.iva_block_unanswered_paths,

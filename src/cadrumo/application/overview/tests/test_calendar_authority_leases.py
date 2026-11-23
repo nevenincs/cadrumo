@@ -22,7 +22,13 @@ from ....domain.calculations.registry.applicability import (
 from ....domain.calculations.registry.authority import IndexedRegistryAuthority, PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, latest_period_end
 from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 from ..calendar_warnings import derive_gating_fields
@@ -52,6 +58,9 @@ def _autonomo() -> TaxpayerProfile:
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
+        # Stated so every held-off row carries the verdict the lease decides,
+        # not a window an unanswered cadence question leaves undecided.
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 

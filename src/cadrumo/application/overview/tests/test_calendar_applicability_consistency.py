@@ -31,7 +31,13 @@ from ....domain.calculations.registry.applicability_models import ApplicabilityV
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 from ..explain import build_overview_explain
@@ -44,6 +50,11 @@ _CALENDAR_RANGE = OverviewCalendarRange(
     to_date=date(_YEAR, 12, 31),
 )
 _TODAY = date(_YEAR, 4, 1)
+# The cadence is stated so every window carries the modelo's applicability: an
+# unanswered large-company fact holds the cadence-decided windows as undecided
+# rows, which say nothing about applicability and are tested where that
+# question is.
+_STATED_CADENCE = ModeloEnrollment(large_company=False)
 
 
 def _autonomo() -> TaxpayerProfile:
@@ -53,6 +64,7 @@ def _autonomo() -> TaxpayerProfile:
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
+        enrollment=_STATED_CADENCE,
     )
 
 
@@ -62,6 +74,7 @@ def _sociedad_limitada() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("legal_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
+        enrollment=_STATED_CADENCE,
     )
 
 
@@ -71,6 +84,7 @@ def _landlord() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("GENERAL"),
+        enrollment=_STATED_CADENCE,
     )
 
 
@@ -80,6 +94,7 @@ def _attribution_entity() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("attribution_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
+        enrollment=_STATED_CADENCE,
     )
 
 
