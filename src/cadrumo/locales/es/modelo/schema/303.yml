@@ -249,6 +249,12 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Base imponible IVA soportado en operaciones interiores con bienes
               de inversión (parte de la casilla oficial 30)
+          iva-base-modificacion-bases-cuotas:
+            label: Base imponible de la modificación procedente de las facturas rectificativas
+              del periodo (LIVA art. 80 y art. 89; casilla oficial 14)
+          iva-base-modificacion-bases-cuotas-operador:
+            label: Base imponible de la modificación que indicas tú, para lo que no
+              consta documento en el catálogo (casilla oficial 14)
           iva-base-repercutida-general:
             label: Base imponible IVA repercutido al tipo general (21%) (parte de
               la casilla oficial 07)
@@ -304,6 +310,12 @@ modelo:
           iva-cuota-devengada-total:
             label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
               en adquisiciones intracomunitarias)
+          iva-cuota-modificacion-bases-cuotas:
+            label: Cuota de la modificación procedente de las facturas rectificativas
+              del periodo (LIVA art. 80 y art. 89; casilla oficial 15)
+          iva-cuota-modificacion-bases-cuotas-operador:
+            label: Cuota de la modificación que indicas tú, para lo que no consta
+              documento en el catálogo (casilla oficial 15)
           iva-cuota-repercutida-general:
             help: Cuota total de IVA repercutido calculada al tipo general del 21%.
             label: Cuota IVA repercutido al tipo general (21%)

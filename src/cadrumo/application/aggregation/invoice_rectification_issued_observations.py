@@ -34,7 +34,6 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ...core.i18n.translatable import Translatable as tr
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
@@ -44,8 +43,11 @@ from ...domain.invoices.enums import iva_rate_percentage
 from ...domain.iva.flow import derive_flow_for_classification
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva
 from ...domain.iva.schema import InvoiceKind, IvaLedgerObservationRole
-from .errors import AggregationValidationError
 from .invoice_devengo import resolve_invoice_devengo
+from .invoice_rectification_observations import (
+    rectification_amount_eur,
+    rectification_declaration_date,
+)
 
 if TYPE_CHECKING:
     from ...core.period import Period
@@ -174,43 +176,15 @@ def _row_observation(
     )
     observation = IvaLedgerObservation(
         ledger_id=f"invoice:{rectificativa.invoice_id}:rectification:{row_index}",
-        transaction_date=_declaration_date(declared_on, period),
+        transaction_date=rectification_declaration_date(declared_on, period),
         category=category,
         rate_kind=classification.rate_kind,
         flow_direction=flow,
-        base_amount=_eur(rectificativa, row.base, row_index=row_index),
-        iva_amount=_eur(rectificativa, row.cuota, row_index=row_index),
+        base_amount=rectification_amount_eur(rectificativa, row.base, row_index=row_index),
+        iva_amount=rectification_amount_eur(rectificativa, row.cuota, row_index=row_index),
         applied_rate=iva_rate_percentage(row.iva_rate, priced_on),
         observation_role=IvaLedgerObservationRole.RECTIFICATION_MODIFICATION,
         rectifies_ledger_id=None if original is None else f"invoice:{original.invoice_id}",
     )
     admitted = any(iva_build_matcher(selector)(observation) for selector in binding_selectors)
     return observation if admitted else IssuedRectificationDeclarationRefusal.NO_BINDING
-
-
-def _declaration_date(declared_on: date, period: Period) -> date:
-    """The date the observation carries, which must sit inside the period it is declared in.
-
-    The route's own date is used where the period holds it, which is every
-    route whose period IS a date's period. An elected period that the route's
-    date falls outside takes that period's first day, because the date exists
-    here to place the observation in the declaración-liquidación it belongs to
-    and the document holds no other date inside it.
-    """
-    return declared_on if period.has_date_span() and period.contains(declared_on) else period.start_date
-
-
-def _eur(invoice: Invoice, amount: Decimal, *, row_index: int) -> Decimal:
-    """One signed modification amount in EUR, refusing an invoice that resolves no rate."""
-    converted = invoice.line_amount_eur(amount)
-    if converted is None:
-        raise AggregationValidationError(
-            tr("aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"),
-            context={
-                "invoice_id": invoice.invoice_id,
-                "invoice_number": invoice.invoice_number,
-                "currency": invoice.currency,
-                "line_index": str(row_index),
-            },
-        )
-    return converted

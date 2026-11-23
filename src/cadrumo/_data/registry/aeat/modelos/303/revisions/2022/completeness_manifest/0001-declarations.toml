@@ -512,3 +512,18 @@ number = "99"
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "88"
 number = "88"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "14"
+number = "14"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-bases-cuotas.base"
+number = "iva.modificacion-bases-cuotas.base"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-bases-cuotas"
+number = "iva.modificacion-bases-cuotas"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-bases-cuotas.operador.base"
+number = "iva.modificacion-bases-cuotas.operador.base"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-bases-cuotas.operador"
+number = "iva.modificacion-bases-cuotas.operador"

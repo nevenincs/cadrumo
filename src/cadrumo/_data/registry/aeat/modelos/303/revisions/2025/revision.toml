@@ -1745,3 +1745,31 @@ removed_fields = []
 selector = { revision = "2024-desde-09-y-3t", id = "169" }
 fields = { constraints = { source_refs = ["aeat-dr-303-2024-late"] } }
 removed_fields = []
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-modificacion-bases-cuotas-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-iva-modificacion-bases-cuotas-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-dr303-14-projection"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024-desde-09-y-3t", id = "modelo-303-dr303-15-projection"}
+sequence_additions = {source_refs = ["aeat-dr-303-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
