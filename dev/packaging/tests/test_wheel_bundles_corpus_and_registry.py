@@ -30,6 +30,7 @@ never silently lost.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -41,9 +42,11 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
-from dev.packaging.google_oauth import GOOGLE_OAUTH_RESOURCE
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, GOOGLE_OAUTH_RESOURCE
 from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
+
+from .test_google_oauth_provisioning import client_document
 
 SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"
 
@@ -159,9 +162,12 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
             "cannot run without the project's build driver",
         )
     out_dir = tmp_path_factory.mktemp("wheel-out")
+    # A module fixture runs before the function-scoped synthetic client exists,
+    # so the build subprocess receives a synthetic client directly.
     subprocess.run(
         ["uv", "build", "--wheel", "--out-dir", str(out_dir)],
         cwd=REPO_ROOT,
+        env={**os.environ, GOOGLE_OAUTH_ENV: client_document()},
         capture_output=True,
         text=True,
         check=True,

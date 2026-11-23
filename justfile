@@ -610,7 +610,7 @@ test-packaging-source:
 [doc('Run portable non-serial packaging contract tests with explicit marker boundaries.')]
 [group('test')]
 test-packaging-contracts:
-    @uv run --no-sync pytest -v -n auto --no-loadscope-reorder -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests dev/packaging/native native/tests packaging/homebrew/tests
+    @uv run --no-sync pytest -v -n auto --no-loadscope-reorder -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/packaging/tests dev/packaging/native native/tests packaging/homebrew/tests
 
 [doc('Run packaging dependency, source, and contract preflight as independent verdicts.')]
 [group('test')]
@@ -710,7 +710,7 @@ test-installed-oracles: build-packaging-cohort
 [doc('Run non-performance serial packaging contracts against the sealed cohort.')]
 [group('test')]
 test-packaging-serial: build-packaging-cohort
-    @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" --ignore=dev/packaging/tests/test_installed_oracles.py dev/packaging/tests
+    @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" --ignore=dev/packaging/tests/test_installed_oracles.py dev/packaging/tests
 
 [doc('Run packaging artifact qualification: installed oracles, serial contracts, runtimes, and channels.')]
 [group('test')]
@@ -1114,7 +1114,7 @@ test-pytest-harness:
 [doc('Run the unit test suite in parallel. Streams failure identities as they happen.')]
 [group('test')]
 test-unit durations="":
-    @uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} {{calculation_exclusions}} {{ if durations == "" { "" } else { "--durations=" + durations } }}
+    @uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' {{harness_exclusions}} {{calculation_exclusions}} {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Focused subsystem selectors use the same explicit offline-capability boundary
 # as the full lanes. Each runs ordinary tests under xdist and isolation-sensitive
@@ -1129,8 +1129,8 @@ test-cli:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=0
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli || failed=1
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/entrypoints/cli || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/entrypoints/cli
     serial_status=$?
     if [[ "$serial_status" -eq 5 ]]; then
         echo "No serial CLI tests are currently declared."
@@ -1146,9 +1146,9 @@ test-cli:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     $failed = $false
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/entrypoints/cli
     if ($LASTEXITCODE -ne 0) { $failed = $true }
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/cli
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/entrypoints/cli
     $serialStatus = $LASTEXITCODE
     if ($serialStatus -eq 5) {
         Write-Host 'No serial CLI tests are currently declared.'
@@ -1168,8 +1168,8 @@ test-tui:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=0
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py || failed=1
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     serial_status=$?
     if [[ "$serial_status" -eq 5 ]]; then
         echo "No serial TUI tests are currently declared."
@@ -1185,9 +1185,9 @@ test-tui:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     $failed = $false
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     if ($LASTEXITCODE -ne 0) { $failed = $true }
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo_runtime/host/tests/frontend/cli/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     $serialStatus = $LASTEXITCODE
     if ($serialStatus -eq 5) {
         Write-Host 'No serial TUI tests are currently declared.'
@@ -1207,8 +1207,8 @@ test-calculations:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=0
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests || failed=1
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
     serial_status=$?
     if [[ "$serial_status" -eq 5 ]]; then
         echo "No serial calculation tests are currently declared."
@@ -1224,9 +1224,9 @@ test-calculations:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     $failed = $false
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
     if ($LASTEXITCODE -ne 0) { $failed = $true }
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
     $serialStatus = $LASTEXITCODE
     if ($serialStatus -eq 5) {
         Write-Host 'No serial calculation tests are currently declared.'
@@ -1251,7 +1251,7 @@ test-product: test-pytest-harness test-unit test-integration-parallel test-integ
 
 [private]
 _test-registry-collect:
-    @uv run --no-sync pytest --collect-only -v -n0 -m "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest --collect-only -v -n0 -m "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [private]
 _test-registry-load:
@@ -1259,7 +1259,7 @@ _test-registry-load:
 
 [private]
 _test-registry-calculations-parallel:
-    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
+    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
 
 # The desktop request tests bundle frontend sources that import the generated
 # window projections; test processes never seed, so the lane produces the families
@@ -1270,7 +1270,7 @@ _test-registry-seed:
 
 [private]
 _test-registry-conformance: _test-registry-seed
-    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus and not google_publisher_client" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Collect and load the registry first, then run calculation and conformance populations as one normalized signal.')]
 [group('test')]
@@ -1285,8 +1285,8 @@ test-tooling: test-test-policy test-repository-contracts test-ci-contracts
 [doc('Run repository test-policy and lane-contract tests, including the lane transport serial population.')]
 [group('test')]
 test-test-policy:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
-    @uv run --no-sync pytest -v -n0 -m "integration and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n0 -m "integration and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
 
 # `docs-check` owns the documentation build's tests. They compile the whole
 # site several times over, on the one interpreter that builds it; this lane
@@ -1294,14 +1294,14 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, documentation-build, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/mcp_eval/tests dev/audit/tests dev/corpus/tests dev/dependency_observation/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/fixture_projections/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/measure/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests {{harness_exclusions}} --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus" dev/acceptance dev/mcp_eval/tests dev/runtime_lifecycle/tests/test_installed_linux_refusal_stdio.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/acceptance dev/mcp_eval/tests dev/audit/tests dev/corpus/tests dev/dependency_observation/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/fixture_projections/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/measure/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests {{harness_exclusions}} --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/acceptance dev/mcp_eval/tests dev/runtime_lifecycle/tests/test_installed_linux_refusal_stdio.py
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
 test-release-tooling:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests dev/packaging/native native/tests packaging/homebrew/tests --ignore=dev/packaging/tests/test_installed_oracles.py
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/packaging/tests dev/packaging/native native/tests packaging/homebrew/tests --ignore=dev/packaging/tests/test_installed_oracles.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/packaging/tests
 
 # Split into a deterministic half and a `perf` half because the two have
 # different host requirements, not because they are separate subjects. The
@@ -1325,7 +1325,7 @@ test-ci-contracts:
 [group('test')]
 test-ci-contracts-gate:
     @uv run --no-sync python -m dev.docs.build --single-page docs/index.md
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_fixes.py dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_fixes.py dev/quality/tests/test_ty_fix_boundary.py
     @just test-ci-contracts-serial
 
 # Its own recipe purely to tolerate pytest's exit 5, the way the merge gate's
@@ -1341,7 +1341,7 @@ test-ci-contracts-gate:
 test-ci-contracts-serial:
     #!/usr/bin/env bash
     set -uo pipefail
-    uv run --no-sync pytest -v -n0 -m 'serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' dev/ci/tests dev/deploy/tests dev/release/tests
+    uv run --no-sync pytest -v -n0 -m 'serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' dev/ci/tests dev/deploy/tests dev/release/tests
     status=$?
     # Exit 5 means these paths hold no serial test outside the perf lane.
     if [ "$status" -ne 0 ] && [ "$status" -ne 5 ]; then
@@ -1354,7 +1354,7 @@ test-ci-contracts-serial:
 test-ci-contracts-serial:
     #!pwsh
     $ErrorActionPreference = 'Continue'
-    uv run --no-sync pytest -v -n0 -m 'serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' dev/ci/tests dev/deploy/tests dev/release/tests
+    uv run --no-sync pytest -v -n0 -m 'serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' dev/ci/tests dev/deploy/tests dev/release/tests
     # Exit 5 means these paths hold no serial test outside the perf lane.
     if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { exit $LASTEXITCODE }
 
@@ -1413,9 +1413,9 @@ test-gate changed_files="":
     if [ "$ci_contracts" = "true" ]; then
         just test-ci-contracts-gate
     fi
-    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}"
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' {{harness_exclusions}} "${targets[@]}"
     serial_status=0
-    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || serial_status=$?
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' {{harness_exclusions}} "${targets[@]}" || serial_status=$?
     # Exit 5 means the scoped targets hold no serial tests.
     if [ "$serial_status" -ne 0 ] && [ "$serial_status" -ne 5 ]; then
         exit "$serial_status"
@@ -1444,9 +1444,9 @@ test-gate changed_files="":
         just test-ci-contracts-gate
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
-    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} @targets
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' {{harness_exclusions}} @targets
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} @targets
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' {{harness_exclusions}} @targets
     # Exit 5 means the scoped targets hold no serial tests.
     if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { exit $LASTEXITCODE }
     just test-pytest-harness
@@ -1477,11 +1477,11 @@ test-gate-shard shard changed_files="":
     uv run --no-sync python -m dev.ci.gate_shards select "${select_args[@]}"
     mapfile -t targets < var/ci/shard-files.txt
     parallel_status=0
-    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || parallel_status=$?
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' {{harness_exclusions}} "${targets[@]}" || parallel_status=$?
     # The serial pass runs whatever the parallel pass returned, so a failed
     # shard still reports every test it holds.
     serial_status=0
-    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' {{harness_exclusions}} "${targets[@]}" || serial_status=$?
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client' {{harness_exclusions}} "${targets[@]}" || serial_status=$?
     if [ "$parallel_status" -ne 0 ] && [ "$parallel_status" -ne 5 ]; then
         exit "$parallel_status"
     fi
@@ -1499,7 +1499,7 @@ test-gate-shard shard changed_files="":
 [doc('Run the registry conformance suite (slow: walks every bundled revision).')]
 [group('test')]
 test-registry-conformance: _test-registry-seed
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus and not google_publisher_client" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Run the committed cli-sequence goldens gate for supplied changed paths or the full tree; reuses a recorded clean verdict.')]
 [group('test')]
@@ -1509,12 +1509,12 @@ test-sequence-goldens-gate *ARGS:
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('test')]
 test-integration-parallel:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} {{calculation_exclusions}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus"
+    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} {{calculation_exclusions}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client"
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 [group('test')]
 test-integration-serial:
-    @uv run --no-sync pytest -v {{harness_exclusions}} {{calculation_exclusions}} -m "integration and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" -n0
+    @uv run --no-sync pytest -v {{harness_exclusions}} {{calculation_exclusions}} -m "integration and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" -n0
 
 # Run the OS-credential-store custody tests. These carry `os_keychain` alongside
 # their execution marker, and EVERY lane above excludes it, so this recipe is the
@@ -1558,7 +1558,7 @@ test-windows:
         }
     }
     $env:CADRUMO_TEST_MSI_ADAPTER = $inputs.adapter
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package and not google_publisher_client" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
@@ -1701,6 +1701,20 @@ test-locale-spelling:
 [group('test')]
 test-ingest-corpus:
     uv run --no-sync pytest -v -n0 -m private_ingest_corpus dev/ingest_harness/tests
+
+# Run the tests that read the packaged installation client resource staged from
+# the publisher's Google Desktop OAuth client (packaging builds use a synthetic
+# client instead). They carry `google_publisher_client` because the client is a
+# host secret no CI runner or ordinary checkout holds, and EVERY lane above
+# excludes the marker, so this recipe is the only way to select them. Set
+# `CADRUMO_GOOGLE_OAUTH_CLIENT_JSON`, in the environment or in `env/.env`; the
+# first line stages it into the ignored source resource and refuses, naming the
+# variable, when none is configured, so the selection fails rather than skips.
+[doc('Stage the publisher Google Desktop OAuth client from CADRUMO_GOOGLE_OAUTH_CLIENT_JSON and run the tests that need it (google_publisher_client marker).')]
+[group('test')]
+test-google-publisher-client:
+    uv run --no-sync python -m dev.env google-publisher-client
+    uv run --no-sync pytest -v -n0 -m google_publisher_client src/cadrumo_runtime/host/tests/test_runtime_google_configuration_native.py
 
 # Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths

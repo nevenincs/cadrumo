@@ -33,7 +33,8 @@ verification. Every job runs on a self-hosted runner.
 
 Tests are separated by the markers `pyproject.toml` registers. The headless
 selection excludes `windows_only`, `os_keychain`, `external_tool`,
-`resident_service`, `private_ingest_corpus` and `perf`; the native lane's
+`resident_service`, `private_ingest_corpus`, `google_publisher_client` and
+`perf`; the native lane's
 recipes select what they need. A test that fails on a hosted runner because it
 needs a window, a credential store or a native tool is missing one of those
 markers: mark it, never skip it.
