@@ -7,10 +7,14 @@ import {
   ask,
   conversation,
   live,
+  matrixCell,
+  matrixLane,
+  matrixRows,
   messageField as field,
   openConversation,
   openHistory,
   personTurns,
+  pickWay,
   refusalOfSend,
   replyFacts,
   replyState,
@@ -957,53 +961,57 @@ async function openSettings(target: Page) {
   });
 }
 
-const providerBox = (settings: Locator) =>
-  settings.getByRole("button", { name: label("desktop.agent.provider") });
-const modelBox = (settings: Locator) =>
-  settings.getByRole("combobox", { name: label("desktop.agent.model") });
-const effortBox = (settings: Locator) =>
-  settings.getByRole("combobox", { name: label("desktop.agent.effort") });
+/** The heading rows of every lane an open model matrix shows. */
+const laneHeadings = (settings: Locator) =>
+  settings.locator("tr[data-slot=model-matrix-lane]");
 
-const pickerOptions = (target: Page) =>
-  target.getByRole("listbox").getByRole("option");
+/** The columns of the cells the row of `model` on the lane `way` has, in
+ * order: the provider's default, then each effort the model takes. */
+const cellsOf = (settings: Locator, way: string, model: string) =>
+  matrixRows(settings, way)
+    .and(settings.locator(`[data-model="${model}"]`))
+    .locator("[role=radio]")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-column")),
+    );
 
-/** Chooses a catalog lane by identity when providers share a name. */
-async function chooseLane(target: Page, settings: Locator, way: string) {
-  await providerBox(settings).click();
-  await target.locator(`[role=option][data-way="${way}"]`).click();
-}
+/** The name of the field the gateway lane's model is written in. */
+const modelWrittenFor = `${label("desktop.agent.model")}, ${nameOf("zhipu")}`;
 
-test("each catalog lane is one entry of the list with its provider's mark", async ({
+test("each catalog lane is one heading of the matrix with its provider's mark", async ({
   page: target,
 }) => {
   scenarioOnly("the providers are the scenario host's catalog");
   await open(target);
   const settings = await openSettings(target);
-  await providerBox(settings).click();
-  const options = pickerOptions(target);
-  await expect(options).toHaveCount(lanes.length);
-  await expect(options.locator("[data-slot=provider-mark]")).toHaveCount(
+  const headings = laneHeadings(settings);
+  await expect(headings).toHaveCount(lanes.length);
+  await expect(headings.locator("[data-slot=provider-mark]")).toHaveCount(
     lanes.length,
   );
   for (const lane of lanes) {
-    const entry = target.locator(
-      `[role=option][data-way="${lane.provider_id}/${lane.transport}"]`,
+    const heading = matrixLane(
+      settings,
+      `${lane.provider_id}/${lane.transport}`,
     );
-    await expect(entry).toContainText(lane.display_name);
-    await expect(entry.locator("[data-slot=provider-mark]")).toHaveAttribute(
+    await expect(heading).toContainText(lane.display_name);
+    await expect(heading.locator("[data-slot=provider-mark]")).toHaveAttribute(
       "data-provider",
       lane.provider_id,
     );
     if (!lane.health.selectable)
-      await expect(entry).toHaveAttribute("aria-disabled", "true");
+      await expect(heading).toHaveAttribute("data-standing", "setup");
   }
-  // Those that cannot run stay in the list, disabled, with their reason.
+  // Those that cannot run stay in the matrix, needing setup, with their
+  // reason.
   await expect(
-    target.getByRole("listbox").locator("[role=option][aria-disabled=true]"),
+    settings.locator("tr[data-slot=model-matrix-lane][data-standing=setup]"),
   ).toHaveCount(lanes.filter((lane) => !lane.health.selectable).length);
-  await expect(options.filter({ hasText: nameOf("deepseek") })).toContainText(
-    label("desktop.agent.lane_not_configured"),
-  );
+  await expect(
+    matrixLane(settings, "deepseek/cli").locator(
+      "[data-slot=model-matrix-lane-words]",
+    ),
+  ).toHaveText(label("desktop.agent.lane_not_configured"));
 });
 
 test("a provider's separate catalog lanes each offer their own models", async ({
@@ -1012,28 +1020,28 @@ test("a provider's separate catalog lanes each offer their own models", async ({
   scenarioOnly("the providers are the scenario host's catalog");
   await open(target);
   const settings = await openSettings(target);
-  await expect(providerBox(settings)).toContainText(nameOf("kimi"));
-  await providerBox(settings).click();
-  const held = target.locator('[role=option][data-way="kimi/cli"]');
-  await expect(held).toHaveAttribute("aria-disabled", "true");
+  await expect(settingsButton(target).first()).toHaveAccessibleName(
+    new RegExp(escaped(nameOf("kimi"))),
+  );
+  await expect(
+    matrixCell(settings, "kimi/api", "fixture-deep"),
+  ).toHaveAttribute("aria-checked", "true");
+  const held = matrixLane(settings, "kimi/cli");
+  await expect(held).toHaveAttribute("data-standing", "setup");
   await expect(held).toContainText(label("desktop.agent.lane_signed_out"));
-  await target.keyboard.press("Escape");
   // Example Beta runs both ways, with models of their own.
-  await chooseLane(target, settings, "qwen/api");
-  await expect(modelBox(settings).locator("option")).toHaveText([
-    "Fixture Coder",
-    "Fixture Chat",
-  ]);
-  await chooseLane(target, settings, "qwen/cli");
-  await expect(modelBox(settings).locator("option")).toHaveText([
-    "Fixture Tiered",
-    "Fixture Ultra",
-  ]);
+  await expect(
+    matrixRows(settings, "qwen/api").getByRole("rowheader"),
+  ).toHaveText(["Fixture Coder", "Fixture Chat"]);
+  await expect(
+    matrixRows(settings, "qwen/cli").getByRole("rowheader"),
+  ).toHaveText(["Fixture Tiered", "Fixture Ultra"]);
+  await pickWay(target, settings, "qwen/cli");
   // The composer names the provider and the model it is on.
   await expect(settingsButton(target).first()).toHaveAccessibleName(
     new RegExp(`${escaped(nameOf("qwen"))}, Fixture Ultra`),
   );
-  await chooseLane(target, settings, "zhipu/cli");
+  await pickWay(target, settings, "zhipu/cli");
   await expect(settings.getByRole("radiogroup")).toHaveCount(0);
 });
 
@@ -1043,72 +1051,94 @@ test("the efforts offered follow the model chosen", async ({
   scenarioOnly("the providers are the scenario host's catalog");
   await open(target);
   const settings = await openSettings(target);
-  const efforts = effortBox(settings).locator("option");
+  const composer = settingsButton(target).first();
   const words = (...keys: string[]) => keys.map((key) => label(key));
-  // A model that takes every effort and names no default leaves the choice to
-  // the provider, which is its own first option.
-  await expect(modelBox(settings)).toHaveValue("fixture-deep");
-  await expect(efforts).toHaveText(
+  // The columns are the provider's default and the efforts some shown model
+  // takes, lowest first.
+  await expect(settings.getByRole("columnheader")).toHaveText(
     words(
+      "desktop.agent.model",
       "desktop.agent.effort_default",
       "desktop.agent.effort_low",
       "desktop.agent.effort_medium",
       "desktop.agent.effort_high",
       "desktop.agent.effort_xhigh",
       "desktop.agent.effort_max",
+      "desktop.agent.effort_ultra",
     ),
   );
-  await expect(effortBox(settings)).toHaveValue("");
-  await effortBox(settings).selectOption({
-    label: label("desktop.agent.effort_max"),
-  });
-  await expect(settingsButton(target).first()).toContainText(
+  // A model that takes every effort and names no default leaves the choice to
+  // the provider, which is the cell chosen to start with.
+  const deep = matrixCell(settings, "kimi/api", "fixture-deep");
+  await expect(deep).toHaveAttribute("aria-checked", "true");
+  await expect(deep).toHaveAccessibleName(
+    label("desktop.agent.model_matrix_cell", {
+      model: "Fixture Deep",
+      effort: label("desktop.agent.effort_provider_default"),
+    }),
+  );
+  expect(await cellsOf(settings, "kimi/api", "fixture-deep")).toEqual([
+    "default",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+  ]);
+  await matrixCell(settings, "kimi/api", "fixture-deep", "max").click();
+  await expect(
+    matrixCell(settings, "kimi/api", "fixture-deep", "max"),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(deep).toHaveAttribute("aria-checked", "false");
+  await expect(composer).toContainText(
     `Fixture Deep · ${label("desktop.agent.effort_max")}`,
   );
-  // Another model takes fewer, and starts at the one its catalog names.
-  await modelBox(settings).selectOption("fixture-quick");
-  await expect(efforts).toHaveText(
-    words("desktop.agent.effort_low", "desktop.agent.effort_medium"),
+  // Another model takes fewer, and its default is the one its catalog names.
+  expect(await cellsOf(settings, "kimi/api", "fixture-quick")).toEqual([
+    "default",
+    "low",
+    "medium",
+  ]);
+  await matrixCell(settings, "kimi/api", "fixture-quick").click();
+  await expect(composer).toContainText(
+    `Fixture Quick · ${label("desktop.agent.effort_medium")}`,
   );
-  await expect(effortBox(settings)).toHaveValue("medium");
   // One that takes none has no effort to choose.
-  await modelBox(settings).selectOption("fixture-plain");
-  await expect(effortBox(settings)).toHaveCount(0);
+  expect(await cellsOf(settings, "kimi/api", "fixture-plain")).toEqual([
+    "default",
+  ]);
+  await matrixCell(settings, "kimi/api", "fixture-plain").click();
+  await expect(composer).toHaveAccessibleName(/Fixture Plain$/);
   // Another provider's models take their own: Example Beta over its API takes none,
   // over its app it takes these.
-  await chooseLane(target, settings, "qwen/api");
-  await expect(effortBox(settings)).toHaveCount(0);
-  await chooseLane(target, settings, "qwen/cli");
-  await expect(modelBox(settings)).toHaveValue("fixture-ultra");
-  await expect(efforts).toHaveText(
-    words("desktop.agent.effort_high", "desktop.agent.effort_ultra"),
+  for (const model of ["fixture-coder", "fixture-chat"])
+    expect(await cellsOf(settings, "qwen/api", model)).toEqual(["default"]);
+  await pickWay(target, settings, "qwen/cli");
+  await expect(
+    matrixCell(settings, "qwen/cli", "fixture-ultra"),
+  ).toHaveAttribute("aria-checked", "true");
+  expect(await cellsOf(settings, "qwen/cli", "fixture-ultra")).toEqual([
+    "default",
+    "high",
+    "ultra",
+  ]);
+  await expect(composer).toContainText(
+    `Fixture Ultra · ${label("desktop.agent.effort_high")}`,
   );
-  await expect(effortBox(settings)).toHaveValue("high");
-  await modelBox(settings).selectOption("fixture-tiered");
-  await expect(efforts).toHaveText(
-    words(
-      "desktop.agent.effort_low",
-      "desktop.agent.effort_medium",
-      "desktop.agent.effort_high",
-    ),
-  );
+  expect(await cellsOf(settings, "qwen/cli", "fixture-tiered")).toEqual([
+    "default",
+    "low",
+    "medium",
+    "high",
+  ]);
   // Nothing was chosen on the last model, so this one applies its own
   // default, not the last one's.
-  await expect(effortBox(settings)).toHaveValue("medium");
-  // An effort the person chose is kept for another model that takes it, and
-  // dropped for one that does not.
-  await effortBox(settings).selectOption({
-    label: label("desktop.agent.effort_high"),
-  });
-  await modelBox(settings).selectOption("fixture-ultra");
-  await expect(effortBox(settings)).toHaveValue("high");
-  await effortBox(settings).selectOption({
-    label: label("desktop.agent.effort_ultra"),
-  });
-  await modelBox(settings).selectOption("fixture-tiered");
-  await expect(effortBox(settings)).toHaveValue("medium");
+  await matrixCell(settings, "qwen/cli", "fixture-tiered").click();
+  await expect(composer).toContainText(
+    `Fixture Tiered · ${label("desktop.agent.effort_medium")}`,
+  );
   // A model's other settings are not offered: a run does not take them.
-  await expect(settings.getByRole("combobox")).toHaveCount(2);
+  await expect(settings.getByRole("combobox")).toHaveCount(0);
   await expect(settings).not.toContainText("Fixture service tier");
 });
 
@@ -1118,17 +1148,17 @@ test("a provider that lists no models is given the model's id, and sends only wi
   scenarioOnly("the providers are the scenario host's catalog");
   await open(target);
   const settings = await openSettings(target);
-  await chooseLane(target, settings, "zhipu/cli");
-  const model = settings.getByRole("textbox", {
-    name: label("desktop.agent.model"),
-  });
+  await pickWay(target, settings, "zhipu/cli");
+  // The lane's one row is the model written in it.
+  await expect(matrixRows(settings, "zhipu/cli")).toHaveCount(1);
+  const model = settings.getByRole("textbox", { name: modelWrittenFor });
   await expect(model).toHaveValue("");
-  await expect(settings).toContainText(label("desktop.agent.model_written"));
+  await expect(model).toHaveAttribute(
+    "title",
+    label("desktop.agent.model_written"),
+  );
   // The efforts its row declares, and the provider's own.
-  await expect(effortBox(settings).locator("option")).toHaveText([
-    label("desktop.agent.effort_default"),
-    label("desktop.agent.effort_max"),
-  ]);
+  expect(await cellsOf(settings, "zhipu/cli", "")).toEqual(["default", "max"]);
   await target.keyboard.press("Escape");
   // No model, nothing to send.
   await field(target).fill("Hola");
@@ -1139,7 +1169,7 @@ test("a provider that lists no models is given the model's id, and sends only wi
   ).toBeVisible();
   const reopened = await openSettings(target);
   await reopened
-    .getByRole("textbox", { name: label("desktop.agent.model") })
+    .getByRole("textbox", { name: modelWrittenFor })
     .fill("a-model-id");
   await target.keyboard.press("Escape");
   await expect(settingsButton(target).first()).toContainText("a-model-id");

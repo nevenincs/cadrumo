@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openModelPicker, pickWay, scenarioOnly } from "../support/agent";
-import { label } from "../support/strings";
+import {
+  matrixCell,
+  openModelPicker,
+  pickWay,
+  scenarioOnly,
+} from "../support/agent";
 
 // Documents are read with the one model the person picks in the agent
 // column's model picker, on any lane, local or not.
@@ -38,9 +42,9 @@ test("the model picked in the agent column is the one documents are read with, o
     .toMatchObject({ lane: "qwen_cli" });
   picker = await openModelPicker(target);
   await pickWay(target, picker, "zai/api");
-  const model = picker.getByLabel(label("desktop.agent.model"));
+  const vision = matrixCell(picker, "zai/api", "synthetic-vision:1");
   // The lane starts on another model, so the store changes only by the pick.
-  await expect(model).not.toHaveValue("synthetic-vision:1");
+  await expect(vision).toHaveAttribute("aria-checked", "false");
   await expect
     .poll(() => storedReading(target))
     .toMatchObject({ lane: "zai_api" });
@@ -48,7 +52,8 @@ test("the model picked in the agent column is the one documents are read with, o
     lane: "zai_api",
     model: "synthetic-vision:1",
   });
-  await model.selectOption("synthetic-vision:1");
+  await vision.click();
+  await expect(vision).toHaveAttribute("aria-checked", "true");
   await expect
     .poll(() => storedReading(target))
     .toEqual({ lane: "zai_api", model: "synthetic-vision:1" });
@@ -75,9 +80,9 @@ test("on a fresh profile the picker shows the installed model the service reads 
       source: "default",
     });
   const picker = await openModelPicker(target);
-  await expect(picker.getByLabel(label("desktop.agent.model"))).toHaveValue(
-    "synthetic-vision:1",
-  );
+  await expect(
+    matrixCell(picker, "zai/api", "synthetic-vision:1"),
+  ).toHaveAttribute("aria-checked", "true");
   // Showing it stores nothing: the default stays the service's answer.
   expect(
     await target.evaluate(async () => {

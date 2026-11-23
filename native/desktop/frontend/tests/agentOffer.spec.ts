@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { fixtureInstant } from "../src/dev/fixtureDates";
 import { FIXTURE_DECLARED_CATALOG } from "../src/dev/fixtures/agentCatalog";
 import {
   ranSelection,
@@ -16,7 +17,6 @@ import {
   groupedByProvider,
   laneIdOf,
   offerMatches,
-  taskEfforts,
   taskModelsOf,
   wayIdOf,
 } from "../src/shell/agentOffer";
@@ -33,6 +33,8 @@ import type { ProviderSettingsRecord } from "../src/shell/providerSettingsContra
 
 const words = (key: string) => key;
 
+const CHECKED = fixtureInstant(1, 1, "00:00:00Z");
+
 const OK: ProviderHealthResponse = {
   configured: "available",
   transport: "available",
@@ -40,7 +42,7 @@ const OK: ProviderHealthResponse = {
   catalog: "available",
   admission: "admitted",
   selectable: true,
-  checked_at: "2026-01-01T00:00:00Z",
+  checked_at: CHECKED,
 };
 
 const model = (
@@ -75,7 +77,7 @@ const lane = (
   model_source: "catalog",
   health: OK,
   catalog: {
-    state: { status: "available", checked_at: "2026-01-01T00:00:00Z" },
+    state: { status: "available", checked_at: CHECKED },
     models: [],
   },
   background_requests: {
@@ -116,13 +118,13 @@ const CATALOG: ServedProviderCatalog = {
       auth_kind: "provider_sign_in_only",
       health: { ...OK, authentication: "unauthenticated", selectable: false },
       catalog: {
-        state: { status: "available", checked_at: "2026-01-01T00:00:00Z" },
+        state: { status: "available", checked_at: CHECKED },
         models: [model("alpha-cli:pro", "ex-alpha-pro", "Example Alpha Pro")],
       },
     }),
     lane("claude", "api", "Example Alpha", {
       catalog: {
-        state: { status: "available", checked_at: "2026-01-01T00:00:00Z" },
+        state: { status: "available", checked_at: CHECKED },
         recommended_entry_id: "alpha:mini",
         models: [
           model("alpha:pro", "ex-alpha-pro", "Example Alpha Pro", {
@@ -145,13 +147,13 @@ const CATALOG: ServedProviderCatalog = {
     lane("qwen", "api", "Example Gamma", {
       health: { ...OK, configured: "unavailable", selectable: false },
       catalog: {
-        state: { status: "available", checked_at: "2026-01-01T00:00:00Z" },
+        state: { status: "available", checked_at: CHECKED },
         models: [model("gamma:1", "ex-gamma-1", "Example Gamma One")],
       },
     }),
     lane("deepseek", "api", "Example Deep", {
       catalog: {
-        state: { status: "available", checked_at: "2026-01-01T00:00:00Z" },
+        state: { status: "available", checked_at: CHECKED },
         models: MANY,
       },
     }),
@@ -164,7 +166,7 @@ const CATALOG: ServedProviderCatalog = {
       },
       model_download: "required",
       catalog: {
-        state: { status: "available", checked_at: "2026-01-01T00:00:00Z" },
+        state: { status: "available", checked_at: CHECKED },
         recommended: {
           vision: "ex-local-1",
           text: "ex-local-2",
@@ -188,7 +190,7 @@ const CATALOG: ServedProviderCatalog = {
       auth_kind: "api_key_with_base_url",
       model_source: "declared",
       catalog: {
-        state: { status: "available", checked_at: "2026-01-01T00:00:00Z" },
+        state: { status: "available", checked_at: CHECKED },
         native_controls: [
           {
             control_id: "thinking",
@@ -213,7 +215,7 @@ const CATALOG: ServedProviderCatalog = {
         accepts_pdfs: false,
       },
       catalog: {
-        state: { status: "available", checked_at: "2026-01-01T00:00:00Z" },
+        state: { status: "available", checked_at: CHECKED },
         models: [model("moon:1", "ex-moon-1", "Example Moon One")],
       },
     }),
@@ -440,13 +442,15 @@ test("task lanes are the observed catalog lanes that take background text, in se
     "llamacpp_api",
   ]);
   // Efforts only where the lane takes an effort for a background request.
-  expect(taskEfforts(offer, "claude_api", "ex-alpha-pro")).toEqual([
+  const background = (lane: string, model: string) =>
+    taskModelsOf(laneOf(lane)).find((held) => held.model === model)
+      ?.backgroundEfforts;
+  expect(background("claude_api", "ex-alpha-pro")).toEqual([
     "low",
     "medium",
     "high",
   ]);
-  expect(taskEfforts(offer, "llamacpp_api", "ex-local-1")).toEqual([]);
-  expect(taskEfforts(offer, "moonshot_api", "ex-moon-1")).toEqual([]);
+  expect(background("llamacpp_api", "ex-local-1")).toEqual([]);
 });
 
 test("each served task kind carries its stored setting and whether a lane still offers it", () => {
@@ -547,13 +551,37 @@ test("the declared catalogue lists every lane as not observed, none to choose", 
   ).toBeNull();
 });
 
-test("the search matches the whole typed phrase anywhere in the words, case and padding aside", () => {
+test("the search matches every typed word anywhere in the words, in any order, case and padding aside", () => {
   const entry = ["Example Alpha", "App"];
   expect(offerMatches(entry, "  ALPHA app ")).toBe(true);
   expect(offerMatches(entry, "app")).toBe(true);
   expect(offerMatches(entry, "")).toBe(true);
-  expect(offerMatches(entry, "app alpha")).toBe(false);
+  expect(offerMatches(entry, "   ")).toBe(true);
+  expect(offerMatches(entry, "app alpha")).toBe(true);
+  // Every word has to be held: one that is not keeps the entry out.
+  expect(offerMatches(entry, "app beta")).toBe(false);
   expect(offerMatches([], "a")).toBe(false);
+});
+
+test("a lane turned off that the catalog does not serve is kept as its settings record", () => {
+  const off: ProviderSettingsRecord = {
+    ...SETTINGS.providers[0]!,
+    id: "absent_cli",
+    provider: "absent",
+    transport: "cli",
+    mode: "disabled",
+  };
+  const unset: ProviderSettingsRecord = {
+    ...off,
+    id: "unserved_api",
+    mode: "unset",
+  };
+  const turned = agentOffer(words, CATALOG, LISTS, {
+    providers: [...SETTINGS.providers, off, unset],
+  });
+  expect(turned.turnedOff.map((record) => record.id)).toEqual(["absent_cli"]);
+  // A served lane turned off is an offered lane, not one of these.
+  expect(agentOffer(words, CATALOG, LISTS, null).turnedOff).toEqual([]);
 });
 
 test("lanes group by provider in first-served order, the API before the app", () => {

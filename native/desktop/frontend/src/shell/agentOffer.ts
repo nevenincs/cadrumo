@@ -109,13 +109,18 @@ export function groupedByProvider<T>(
   );
 }
 
-/** Whether the words of an entry hold what was typed: the whole query,
- * trimmed and in lower case, anywhere in the words joined. A fuzzy match
- * would let a short word like "app" match almost everything. An empty query
- * matches every entry. The one search the settings and the picker share. */
+/** Whether the words of an entry hold what was typed: each word of the
+ * query, in lower case, somewhere in the words joined, in any order. A fuzzy
+ * match would let a short word like "app" match almost everything. An empty
+ * query matches every entry. The one search the settings and the picker
+ * share. */
 export function offerMatches(words: readonly string[], query: string): boolean {
-  const typed = query.trim().toLocaleLowerCase();
-  return !typed || words.join(" ").toLocaleLowerCase().includes(typed);
+  const held = words.join(" ").toLocaleLowerCase();
+  return query
+    .toLocaleLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((typed) => held.includes(typed));
 }
 
 /** The words for each effort cadrumo-agent names (agent/spec.py `Effort`). */
@@ -130,6 +135,10 @@ const EFFORT_WORDS = {
 
 const isEffort = (value: string): value is Effort =>
   Object.hasOwn(EFFORT_WORDS, value);
+
+/** Every effort the contract names, lowest first. */
+export const EFFORTS: readonly Effort[] =
+  Object.keys(EFFORT_WORDS).filter(isEffort);
 
 export function effortWords(t: Translate, effort: Effort): string {
   return t(EFFORT_WORDS[effort]);
@@ -528,6 +537,10 @@ export type AgentOffer = {
   models: Record<string, ModelOption[]>;
   /** Every offered lane, by lane id, in served order. */
   lanes: ReadonlyMap<LaneId, OfferedLane>;
+  /** The settings records of the lanes turned off that the catalog does not
+   * serve, as the service leaves a turned-off lane out of it: they are not
+   * offered, yet still the person's to turn on. */
+  turnedOff: ProviderSettingsRecord[];
   /** The lanes a background task can run on, in served order. */
   taskLanes: OfferedLane[];
   /** The catalog's kinds of background task, with their settings. */
@@ -544,19 +557,6 @@ export type AgentOffer = {
  * lane on this computer, else the catalog's models. */
 export const taskModelsOf = (lane: OfferedLane): OfferedModel[] =>
   lane.listed ?? lane.models;
-
-/** The background efforts of `model` on `lane` among `offer`'s task lanes. */
-export function taskEfforts(
-  offer: Pick<AgentOffer, "taskLanes">,
-  lane: string,
-  model: string,
-): Effort[] {
-  const held = offer.taskLanes.find((each) => each.id === lane);
-  return (
-    (held ? taskModelsOf(held) : []).find((each) => each.model === model)
-      ?.backgroundEfforts ?? []
-  );
-}
 
 const kindsOf = (answer: ServedCatalogAnswer): DeclaredTaskKind[] =>
   isDeclared(answer) ? answer.catalog.task_kinds : answer.task_kinds;
@@ -848,6 +848,11 @@ export function agentOffer(
     providers,
     models,
     lanes: new Map(offered.map((lane) => [lane.id, lane])),
+    turnedOff: (settings?.providers ?? []).filter(
+      (record) =>
+        record.mode === "disabled" &&
+        !offered.some((lane) => lane.id === record.id),
+    ),
     taskLanes,
     tasks,
     modelLanes: catalogLanes(catalog),
@@ -862,4 +867,100 @@ export function agentOffer(
     listsUnreadable: lists?.unreadable ?? false,
     listsRevision: lists?.revision ?? null,
   };
+}
+
+/** Where a lane stands, in one word the settings show. */
+export type LaneStatus =
+  | "off"
+  | "setup_needed"
+  | "saved"
+  | "sign_in_needed"
+  | "unconfirmed"
+  | "signed_in"
+  | "not_checked"
+  | "engine_not_running"
+  | "ready";
+
+/** Why a lane stands where it does, which the settings say with the step
+ * that moves it on. Every status has one. */
+export type LaneReason =
+  | "turned_off"
+  | "record_unreadable"
+  | "app_missing"
+  | "add_key"
+  | "check_settings"
+  | "key_saved"
+  | "sign_in"
+  | "app_unconfirmed"
+  | "signed_in"
+  | "not_checked"
+  | "engine_not_running"
+  | "local_setup"
+  | "local_ready";
+
+/** What the provider settings serve of a lane that its status is read from. */
+export type LaneStanding = {
+  authKind: AuthKind;
+  mode: ProviderSettingsRecord["mode"];
+  readiness: ProviderSettingsRecord["readiness"];
+  available: boolean;
+  reason?: ProviderSettingsRecord["reason"];
+  cliState?: ProviderSettingsRecord["cli_state"];
+  cliStateCause?: string | null;
+};
+
+/**
+ * Interim (backend B1): a lane's status and its reason, read from its served
+ * settings record (mode, readiness, `available`, reason and its app's state)
+ * and, for a keyless lane on this computer, from the local AI's served setup
+ * row (`setupReady`, null without one) or its engine's measured health. The
+ * service is to serve this status on the record; until then it is decided
+ * here alone.
+ *
+ * The service never serves `readiness: "ready"` (resolution.py): a stored key
+ * is `not_verified` and `available` until its first use, so it reads as a
+ * saved key, never as ready. A lane signing in through its app is available
+ * exactly when the service found that app signed in.
+ */
+export function laneStatus(
+  lane: LaneStanding,
+  engine: AgentEngineHealth | null,
+  setupReady: boolean | null,
+): { status: LaneStatus; reason: LaneReason } {
+  if (lane.reason === "record_unreadable")
+    return { status: "setup_needed", reason: "record_unreadable" };
+  if (lane.mode === "disabled") return { status: "off", reason: "turned_off" };
+  // An app connection needs its app, whatever it signs in with.
+  if (lane.cliState === "not_installed")
+    return { status: "setup_needed", reason: "app_missing" };
+  if (lane.authKind === "none") {
+    if (setupReady !== null)
+      return setupReady
+        ? { status: "ready", reason: "local_ready" }
+        : { status: "setup_needed", reason: "local_setup" };
+    if (engine?.state === "not_running")
+      return { status: "engine_not_running", reason: "engine_not_running" };
+    if (engine?.state === "running")
+      return { status: "ready", reason: "local_ready" };
+    return { status: "not_checked", reason: "not_checked" };
+  }
+  if (
+    lane.authKind === "provider_sign_in_only" ||
+    lane.mode === "provider_sign_in"
+  ) {
+    if (lane.available) return { status: "signed_in", reason: "signed_in" };
+    // The probe could not say, and said why: that is not "signed out".
+    if (lane.cliState === "unknown" && lane.cliStateCause)
+      return { status: "unconfirmed", reason: "app_unconfirmed" };
+    if (
+      lane.readiness === "sign_in_required" ||
+      lane.cliState === "installed_signed_out"
+    )
+      return { status: "sign_in_needed", reason: "sign_in" };
+    return { status: "not_checked", reason: "not_checked" };
+  }
+  if (lane.available) return { status: "saved", reason: "key_saved" };
+  if (lane.readiness === "unusable")
+    return { status: "setup_needed", reason: "check_settings" };
+  return { status: "setup_needed", reason: "add_key" };
 }

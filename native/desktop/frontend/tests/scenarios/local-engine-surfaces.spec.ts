@@ -73,9 +73,9 @@ async function laneRow(target: Page) {
     .click();
   await expect(providerSettings(target)).toBeVisible();
   await providerSettings(target)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
   return providerSettings(target).locator('li[data-lane="llamacpp_api"]');
 }

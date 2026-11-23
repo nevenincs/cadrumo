@@ -253,16 +253,22 @@ function pageDialog() {
 /** One provider's group in the agent settings, opened, and its lanes. */
 function pageProviderGroup(provider, words) {
   const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
-  const group = document.querySelector(
-    `.provider-settings li[data-provider="${provider}"]`,
-  );
-  if (!group) return { found: false };
-  const details = group.querySelector(":scope > details");
-  if (details && !details.open) details.open = true;
+  // Each of the provider's lanes is its own row, named
+  // "<provider> · <connection>".
+  const rows = [
+    ...document.querySelectorAll(
+      `.provider-settings li[data-provider="${provider}"]`,
+    ),
+  ];
+  if (rows.length === 0) return { found: false };
+  for (const row of rows) {
+    const expander = row.querySelector('[data-slot="lane-expander"]');
+    if (expander?.getAttribute("aria-expanded") === "false") expander.click();
+  }
   return {
     found: true,
-    name: norm(group.querySelector("summary h4")?.textContent),
-    lanes: [...group.querySelectorAll("li[data-lane]")].map((lane) => {
+    name: norm(rows[0].querySelector("h4")?.firstChild?.textContent),
+    lanes: rows.map((lane) => {
       const buttons = [...lane.querySelectorAll("button")].filter(
         (el) => el.getClientRects().length > 0,
       );
@@ -270,7 +276,10 @@ function pageProviderGroup(provider, words) {
       return {
         id: lane.getAttribute("data-lane"),
         hidden: lane.hidden,
-        connection: norm(lane.querySelector("h5")?.textContent),
+        connection: norm(lane.querySelector("h4 > span")?.textContent).replace(
+          /^·\s*/,
+          "",
+        ),
         status:
           lane
             .querySelector('[data-slot="provider-status"]')
@@ -1077,7 +1086,7 @@ for (const provider of PROVIDERS) {
           const group = await readGroup(provider);
           const lane = group.lanes?.find((item) => item.id === found.lane.id);
           afterClose = lane?.status ?? "absent";
-          return lane?.status === "ready" ? { ok: true, lane } : null;
+          return lane?.status === "signed_in" ? { ok: true, lane } : null;
         },
         { timeout: PERSON_MS, what: "the person's sign-in", soft: true },
       );
@@ -1690,7 +1699,7 @@ test("PSI an attended terminal login is picked up in the same window", async (t)
   assert.ok(found.lane, found.reason);
   assert.notEqual(
     found.lane.status,
-    "ready",
+    "signed_in",
     "expected a fresh signed-out profile",
   );
   const host = JSON.parse(process.env.CADRUMO_PERSONA_HOST);
@@ -1711,7 +1720,7 @@ test("PSI an attended terminal login is picked up in the same window", async (t)
         return false;
       const group = await readGroup("claude");
       return group.lanes?.some(
-        (item) => item.id === found.lane.id && item.status === "ready",
+        (item) => item.id === found.lane.id && item.status === "signed_in",
       );
     },
     {

@@ -1,7 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import {
   agentColumn as column,
+  matrixLane,
+  matrixRows,
   openModelPicker,
   scenarioOnly,
 } from "../support/agent";
@@ -101,9 +103,9 @@ async function openSettings(target: Page) {
     .click();
   await expect(settings(target)).toBeVisible();
   await settings(target)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
 }
 
@@ -120,6 +122,19 @@ const doorButton = (scope: ReturnType<typeof column>) =>
   });
 const setupPanel = (target: Page) =>
   target.getByRole("dialog", { name: label("desktop.setup.title") });
+
+/** The picker holds the engine's lane back, says `words` for it rather
+ * than that its transport is unreachable, and offers none of its models. */
+async function expectHeldInPicker(picker: Locator, way: string, words: string) {
+  const lane = matrixLane(picker, way);
+  await expect(lane).toHaveAttribute("data-standing", "setup");
+  await expect(lane).toContainText(words);
+  await expect(lane).not.toContainText(label("desktop.agent.lane_unreachable"));
+  await expect(matrixRows(picker, way).first()).toBeVisible();
+  await expect(
+    matrixRows(picker, way).locator("[role=radio]:not([aria-disabled])"),
+  ).toHaveCount(0);
+}
 
 /** The door led to the provisioning panel, opened on the local AI row. */
 async function expectLocalAiSetup(target: Page) {
@@ -174,13 +189,7 @@ test("an engine that does not run holds its lane back before its transport, and 
 }) => {
   await open(target, bothDown());
   const picker = await openModelPicker(target);
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
-  const lane = target.locator('[role=option][data-way="llamacpp/api"]');
-  await expect(lane).toHaveAttribute("data-disabled", "true");
-  await expect(lane).toContainText(stated(REASONS.llamacpp));
-  await expect(lane).not.toContainText(label("desktop.agent.lane_unreachable"));
+  await expectHeldInPicker(picker, "llamacpp/api", stated(REASONS.llamacpp));
 });
 
 test("an engine that does not run leaves the other lanes usable and the column quiet", async ({
@@ -199,14 +208,9 @@ test("an engine that does not run leaves the other lanes usable and the column q
   ).toHaveCount(0);
   // The picker holds the engine's lane back and says why.
   const picker = await openModelPicker(target);
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
-  const lane = target.locator('[role=option][data-way="llamacpp/api"]');
-  await expect(lane).toHaveAttribute("data-disabled", "true");
-  await expect(lane).toContainText(stated("answer_unreadable"));
+  await expectHeldInPicker(picker, "llamacpp/api", stated("answer_unreadable"));
   await target.keyboard.press("Escape");
-  await target.keyboard.press("Escape");
+  await expect(picker).toBeHidden();
   // Its lane row shows the served setup row, with no engine door.
   await openSettings(target);
   await expect(laneRow(target, "llamacpp")).toContainText(startFailed());
@@ -267,16 +271,10 @@ for (const engine of ENGINES) {
     await open(target, undefined, { engine });
     await openSettings(target);
     const row = laneRow(target, engine);
-    await expect(
-      // Exact: the lane's model list is headed "Models on this computer".
-      row.getByRole("heading", {
-        name: label("desktop.providers.connection_local"),
-        exact: true,
-      }),
-    ).toBeVisible();
-    await expect(
-      settings(target).locator(`[data-lane-summary="${engine}_api"]`),
-    ).toContainText(label("desktop.providers.connection_local"));
+    // The row is named for its provider and the way it connects.
+    await expect(row.getByRole("heading", { level: 4 })).toHaveText(
+      new RegExp(` · ${label("desktop.providers.connection_local")}$`),
+    );
     await expect(row).not.toContainText(
       label("desktop.providers.connection_api"),
     );

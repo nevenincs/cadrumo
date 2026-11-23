@@ -2,9 +2,9 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import { catalogLanes } from "../../src/shell/agentOffer";
 import {
+  matrixLane,
   offeredModels,
   openModelPicker,
-  pickWay,
   scenarioOnly,
 } from "../support/agent";
 import { servedLocalLanes } from "../support/servedLocalLanes";
@@ -51,8 +51,8 @@ async function openLane(target: Page) {
     .click();
   await expect(settings(target)).toBeVisible();
   await settings(target)
-    .locator('li[data-provider="zai"] > details')
-    .evaluate((node) => ((node as HTMLDetailsElement).open = true));
+    .locator('li[data-provider="zai"] [data-slot=lane-expander]')
+    .click();
   return settings(target).locator(`[data-lane="${LOCAL}"]`);
 }
 
@@ -257,9 +257,9 @@ test("the model picker offers the local lane's list, and a model added to it joi
 }) => {
   await open(target);
   let picker = await openModelPicker(target);
-  await pickWay(target, picker, "zai/api");
   // The lane serves a model nobody put on its list: the picker leaves it out.
-  expect(await offeredModels(picker)).toEqual([
+  await expect(matrixLane(picker, "zai/api")).toBeVisible();
+  expect(await offeredModels(picker, "zai/api")).toEqual([
     "synthetic-text:1",
     "synthetic-vision:1",
   ]);
@@ -277,7 +277,9 @@ test("the model picker offers the local lane's list, and a model added to it joi
     .click();
   await expect(settings(target)).toBeHidden();
   picker = await openModelPicker(target);
-  expect(await offeredModels(picker)).toContain("synthetic-plain:1");
+  await expect
+    .poll(() => offeredModels(picker, "zai/api"))
+    .toContain("synthetic-plain:1");
 });
 
 /** The plan a model download awaits an answer on, where the lane shows it:

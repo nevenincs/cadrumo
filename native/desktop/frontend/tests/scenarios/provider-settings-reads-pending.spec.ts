@@ -46,9 +46,9 @@ test("a provider's sign-in read behind a pending status is offered without openi
   const lane = settings(target).locator(`[data-lane="${SIGN_IN_LANE.id}"]`);
   await expect(lane).toBeAttached();
   await settings(target)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
   const signIn = lane.getByRole("button", {
     name: label("desktop.providers.sign_in_action"),

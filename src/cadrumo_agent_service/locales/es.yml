@@ -74,8 +74,6 @@ desktop:
     catalog_unavailable: No se ha podido leer la lista de proveedores del agente.
     choose_another_model: Elige otro modelo
     choose_model: Elige un modelo
-    choose_provider: Elige un proveedor
-    choose_provider_first: Elige primero un proveedor.
     choose_to_start: Elige un proveedor y un modelo para empezar.
     close_documents: Cerrar los documentos
     condition_budget_exhausted: Presupuesto agotado
@@ -137,11 +135,13 @@ desktop:
     drop_release_single: Suelta para añadir 1 archivo
     drop_title: Añadir a esta conversación
     effort: Esfuerzo
+    effort_catalog_default: 'predeterminado del catálogo: {effort}'
     effort_default: Por defecto
     effort_high: Alto
     effort_low: Bajo
     effort_max: Máximo
     effort_medium: Medio
+    effort_provider_default: Predeterminado del proveedor
     effort_ultra: Ultra
     effort_xhigh: Muy alto
     engine_door_local_ai_setup: Reparar la IA local
@@ -187,6 +187,23 @@ desktop:
     model_does_not_fit_shortfall: Este modelo necesita unos {needed} tokens de contexto
       para esta conversación, más de los {context} que puede contener. Elige otro
       modelo, u otro proveedor para esta conversación.
+    model_matrix_cell: '{model}, {effort}'
+    model_matrix_clear_search: Borrar la búsqueda
+    model_matrix_count: '{count} modelos mostrados'
+    model_matrix_count_one: 1 modelo mostrado
+    model_matrix_filter_off: Desactivados
+    model_matrix_filter_on: Activados
+    model_matrix_filter_ready: Listos
+    model_matrix_filter_setup: Por configurar
+    model_matrix_filters: Mostrar proveedores
+    model_matrix_label: Modelos y esfuerzos
+    model_matrix_none_on: No hay ningún proveedor activado. Activa uno en Proveedores
+      de IA.
+    model_matrix_off_hidden: '{count} proveedores están desactivados'
+    model_matrix_off_hidden_one: 1 proveedor está desactivado
+    model_matrix_search_empty: Ningún modelo coincide con tu búsqueda.
+    model_matrix_search_label: Buscar modelos
+    model_matrix_show: Mostrar
     model_not_installed: '{name} (sin descargar)'
     model_not_installed_refused: El modelo elegido no está en este equipo. Descárgalo
       o elige otro modelo.
@@ -194,8 +211,6 @@ desktop:
     model_with_effort: '{model} ({effort})'
     model_written: Este proveedor no lista sus modelos. Escribe el nombre del modelo
       tal como lo escribe el proveedor.
-    models_to_download: Algunos modelos aún no están en este equipo. Descárgalos en
-      los ajustes de la IA local.
     more_files: +{count} más
     movement_dismiss: Descartar
     movement_shared: Al enviarlo, lo compartes con {provider}, que lo lee fuera de
@@ -209,10 +224,8 @@ desktop:
     new_conversation: Nueva conversación
     no_installed_model: Todavía no hay ningún modelo de IA descargado. Descarga uno
       para empezar.
-    no_models: No hay modelos para elegir
     no_provider: Configura un proveedor de IA para empezar.
     platform_unsupported: El agente de IA aún no está disponible en esta plataforma.
-    provider: Proveedor
     questions_answer: Responder
     questions_clear: Borrar esta respuesta
     questions_control: Escribe cada respuesta en una sola línea.
@@ -475,14 +488,11 @@ desktop:
     connection_local: En este ordenador
     console_command_label: 'Ejecuta este comando en una terminal:'
     detail_app_missing: Instala la aplicación de {provider} y luego inicia sesión.
-    detail_off: 'Desactivado: el agente no lo ofrece ni lo usa.'
-    detail_off_kept: 'Desactivado: el agente no lo ofrece ni lo usa. Su clave API
-      se conserva para cuando lo actives.'
     detail_sign_in: Inicia sesión con tu cuenta de {provider}.
-    group_intro: Elige un proveedor para configurarlo.
     icon_credits: Créditos de los iconos
     key_label: Clave de API de {provider}
     key_note: Se guarda cifrada en este equipo y no se vuelve a mostrar.
+    lane_details: Detalles de {provider} ({connection})
     load_failed: No se han podido cargar los proveedores. Vuelve a intentarlo.
     local_engine_change_failed: No se ha guardado tu cambio. Vuelve a intentarlo.
     local_engine_changing: Guardando…
@@ -543,9 +553,21 @@ desktop:
       update_app: Actualiza esta aplicación a la última versión y vuelve a intentarlo.
     reads_off_host: Tu conversación sale de este ordenador hacia el proveedor.
     reads_on_host: Tu conversación se queda en este ordenador.
+    reason_add_key: Añade una clave API de {provider} para usarlo.
     reason_check_settings: Revisa esta configuración y vuelve a intentarlo.
+    reason_key_saved: 'Se comprueba la primera vez que se usa: envía un mensaje o
+      ejecuta una tarea con él.'
+    reason_local_ready: Funciona en este ordenador. Elígelo en el agente para usarlo.
+    reason_not_checked: Todavía no se ha comprobado. Se comprueba la primera vez que
+      se usa.
     reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
+    reason_signed_in: Sesión iniciada con la aplicación de {provider}. Elígelo en
+      el agente para usarlo.
+    reason_turned_off: El agente no lo ofrece ni lo usa. Actívalo con el interruptor
+      para volver a usarlo.
     refresh: Volver a intentar
+    refused_agent_starting: El agente se está iniciando, así que todavía no se ha
+      guardado. Vuelve a intentarlo en un momento.
     refused_base_url_rejected: Revisa la dirección del servidor y vuelve a intentarlo.
     refused_busy: Todavía hay otro cambio en tus proveedores en curso. Vuelve a intentarlo
       en un momento.
@@ -565,11 +587,9 @@ desktop:
     remove_key: Quitar clave API
     replace_key: Sustituir clave API
     save: Guardar
+    save_retry: Volver a intentarlo
     saved_unread: Guardado, pero no se ha podido leer su estado. Vuelve a intentarlo.
     saving: Guardando…
-    search_empty: No hay proveedores que coincidan. Prueba otra búsqueda.
-    search_label: Buscar proveedores
-    search_placeholder: Buscar
     sign_in_action: Iniciar sesión
     sign_in_busy: Otro inicio de sesión de {provider} aún está terminando. Espera
       un momento y vuelve a intentarlo.
@@ -686,19 +706,29 @@ desktop:
     sign_out_label: Cerrar sesión en {provider}
     status_not_checked: Sin comprobar
     status_off: Desactivado
+    status_off_kept: Desactivado · clave guardada
     status_ready: Listo
-    status_saved: Guardado
+    status_saved: Clave guardada
     status_setup_needed: Sin configurar
     status_sign_in_needed: Sin sesión iniciada
+    status_signed_in: Sesión iniciada
     status_unconfirmed: Inicio de sesión sin confirmar
-    task_model_effort: Esfuerzo para {task}
+    task_model_change: Cambiar
+    task_model_change_label: Cambiar con qué se ejecuta {task}
     task_model_model: Modelo para {task}
-    task_model_reading: Usa el modelo de lectura
+    task_model_reading_chosen: 'Modelo de lectura: {model}'
+    task_model_reading_default: 'Modelo de lectura: {model}, el predeterminado hasta
+      que elijas uno'
+    task_model_reading_none: Modelo de lectura, cuando configures uno
     task_model_refused: No se ha podido cambiar con qué se ejecuta esta tarea. Vuelve
       a intentarlo.
     task_model_saved: Guardado.
+    task_model_stored_unoffered: '{model} en {lane}, que ya no se ofrece'
+    task_model_use_reading: Usar el modelo de lectura
     task_models_intro: Elige con qué modelo se ejecuta cada tipo de tarea. Una tarea
       que no configures usa el modelo con el que se leen los documentos.
+    task_models_runs_with: Se ejecuta con
+    task_models_task: Tarea
     task_models_title: Modelos por tarea
     title: Proveedores de IA
     use_in_agent: Usar {provider} ({connection}) en el agente

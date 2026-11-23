@@ -71,8 +71,6 @@ desktop:
     catalog_unavailable: Couldn't read the agent's list of providers.
     choose_another_model: Choose another model
     choose_model: Choose a model
-    choose_provider: Choose a provider
-    choose_provider_first: Choose a provider first.
     choose_to_start: Choose a provider and a model to start.
     close_documents: Close the documents
     condition_budget_exhausted: Budget used up
@@ -132,11 +130,13 @@ desktop:
     drop_release_single: Release to add 1 file
     drop_title: Add to this conversation
     effort: Effort
+    effort_catalog_default: 'catalogue default: {effort}'
     effort_default: Default
     effort_high: High
     effort_low: Low
     effort_max: Max
     effort_medium: Medium
+    effort_provider_default: Provider's default
     effort_ultra: Ultra
     effort_xhigh: Extra high
     engine_door_local_ai_setup: Repair local AI
@@ -181,6 +181,22 @@ desktop:
     model_does_not_fit_shortfall: This model needs about {needed} tokens of context
       for this conversation, more than the {context} it can hold. Choose another model,
       or another provider for this conversation.
+    model_matrix_cell: '{model}, {effort}'
+    model_matrix_clear_search: Clear search
+    model_matrix_count: '{count} models shown'
+    model_matrix_count_one: 1 model shown
+    model_matrix_filter_off: 'Off'
+    model_matrix_filter_on: 'On'
+    model_matrix_filter_ready: Ready
+    model_matrix_filter_setup: Needs setup
+    model_matrix_filters: Show providers
+    model_matrix_label: Models and efforts
+    model_matrix_none_on: No provider is on. Turn one on in AI providers.
+    model_matrix_off_hidden: '{count} providers are off'
+    model_matrix_off_hidden_one: 1 provider is off
+    model_matrix_search_empty: No model matches your search.
+    model_matrix_search_label: Search models
+    model_matrix_show: Show
     model_not_installed: '{name} (not downloaded)'
     model_not_installed_refused: The chosen model isn't on this computer. Download
       it, or choose another model.
@@ -189,8 +205,6 @@ desktop:
     model_with_effort: '{model} ({effort})'
     model_written: This provider doesn't list its models. Enter the model name exactly
       as the provider writes it.
-    models_to_download: Some models aren't on this computer yet. Download them in
-      the local AI settings.
     more_files: +{count} more
     movement_dismiss: Dismiss
     movement_shared: Sending it shares it with {provider}, which reads it off this
@@ -203,10 +217,8 @@ desktop:
     movement_unreadable: The movement couldn't be read from the Ledger.
     new_conversation: New conversation
     no_installed_model: No AI model is downloaded yet. Download one to start.
-    no_models: No models to choose from
     no_provider: Set up an AI provider to start.
     platform_unsupported: The AI agent is not yet supported on this platform.
-    provider: Provider
     questions_answer: Answer
     questions_clear: Clear this answer
     questions_control: Keep each answer on one line.
@@ -463,14 +475,11 @@ desktop:
     connection_local: On this computer
     console_command_label: 'Run this command in a terminal:'
     detail_app_missing: Install the {provider} app, then sign in.
-    detail_off: 'Off: the agent doesn''t offer or use it.'
-    detail_off_kept: 'Off: the agent doesn''t offer or use it. Its API key is kept
-      for when you turn it on.'
     detail_sign_in: Sign in with your {provider} account.
-    group_intro: Choose a provider to set it up.
     icon_credits: Icon credits
     key_label: '{provider} API key'
     key_note: It's saved encrypted on this computer and never shown again.
+    lane_details: Details for {provider} ({connection})
     load_failed: Could not load providers. Try again.
     local_engine_change_failed: Your change wasn't saved. Try again.
     local_engine_changing: Saving…
@@ -529,9 +538,20 @@ desktop:
       update_app: Update this app to the latest version, then try again.
     reads_off_host: Your conversation leaves this computer for the provider.
     reads_on_host: Your conversation stays on this computer.
+    reason_add_key: Add an API key from {provider} to use it.
     reason_check_settings: Check these settings and try again.
+    reason_key_saved: 'It''s checked when it''s first used: send a message or run
+      a task with it.'
+    reason_local_ready: Runs on this computer. Choose it in the agent to use it.
+    reason_not_checked: It hasn't been checked yet. It's checked when it's first used.
     reason_record_unreadable: The saved API key can't be read. Add it again.
+    reason_signed_in: Signed in through the {provider} app. Choose it in the agent
+      to use it.
+    reason_turned_off: The agent doesn't offer or use it. Turn it on with the switch
+      to use it again.
     refresh: Try again
+    refused_agent_starting: The agent is starting, so this wasn't saved yet. Try again
+      in a moment.
     refused_base_url_rejected: Check the server address and try again.
     refused_busy: Another change to your providers is still running. Try again in
       a moment.
@@ -550,11 +570,9 @@ desktop:
     remove_key: Remove API key
     replace_key: Replace API key
     save: Save
+    save_retry: Try again
     saved_unread: Saved, but its status couldn't be read. Try again.
     saving: Saving…
-    search_empty: No matching providers. Try another search.
-    search_label: Search providers
-    search_placeholder: Search
     sign_in_action: Sign in
     sign_in_busy: Another {provider} sign-in is still finishing. Wait a moment, then
       try again.
@@ -651,18 +669,28 @@ desktop:
     sign_out_label: Sign out of {provider}
     status_not_checked: Not checked
     status_off: 'Off'
+    status_off_kept: Off · key kept
     status_ready: Ready
-    status_saved: Saved
+    status_saved: Key saved
     status_setup_needed: Not set up
     status_sign_in_needed: Not signed in
+    status_signed_in: Signed in
     status_unconfirmed: Sign-in not confirmed
-    task_model_effort: Effort for {task}
+    task_model_change: Change
+    task_model_change_label: Change what {task} runs with
     task_model_model: Model for {task}
-    task_model_reading: Uses the reading model
+    task_model_reading_chosen: 'Reading model: {model}'
+    task_model_reading_default: 'Reading model: {model}, the default until you choose
+      one'
+    task_model_reading_none: Reading model, once one is set up
     task_model_refused: Couldn't change what this task runs with. Try again.
     task_model_saved: Saved.
+    task_model_stored_unoffered: '{model} on {lane}, which is no longer offered'
+    task_model_use_reading: Use the reading model
     task_models_intro: Choose the model each kind of task runs with. A task you leave
       unset uses the model documents are read with.
+    task_models_runs_with: Runs with
+    task_models_task: Task
     task_models_title: Models per task
     title: AI providers
     use_in_agent: Use {provider} ({connection}) in the agent
