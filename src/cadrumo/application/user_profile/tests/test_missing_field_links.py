@@ -25,6 +25,12 @@ _SHAPES: dict[str, dict[str, str]] = {
         "taxpayer_type.entity_type": "natural_person",
         "taxpayer_type.irpf_income_categories": "actividad_economica",
         "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     },
     "a stated withholding payer": {
         "taxpayer_type.entity_type": "natural_person",
