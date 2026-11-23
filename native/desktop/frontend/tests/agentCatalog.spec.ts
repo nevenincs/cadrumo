@@ -635,12 +635,8 @@ test("a lane held only by an axis the service has not measured says not checked 
   expect(held((lane) => (lane.health.configured = "unknown"))).toEqual(
     checking,
   );
-  expect(held((lane) => (lane.health.admission = "unknown"))).toEqual(
-    checking,
-  );
-  expect(held((lane) => (lane.health.transport = "unknown"))).toEqual(
-    checking,
-  );
+  expect(held((lane) => (lane.health.admission = "unknown"))).toEqual(checking);
+  expect(held((lane) => (lane.health.transport = "unknown"))).toEqual(checking);
   expect(held((lane) => (lane.health.authentication = "unknown"))).toEqual(
     checking,
   );
