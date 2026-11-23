@@ -5435,6 +5435,7 @@ desktop:
       hide_details: Amaga els detalls
       incomplete: El teu perfil està incomplet
       missing_fields: Falta informació obligatòria
+      open_field: Obre {field} al teu perfil
       open_profile: Obre el perfil
       show_details: Mostra els detalls
     open_from_form: Obre el teu perfil, on es desen

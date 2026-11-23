@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   consoleSummary,
   errorEventSummary,
+  isAutomationIpcEcho,
   isResizeObserverNotice,
   moduleName,
   redactTemplate,
@@ -96,6 +97,29 @@ test("an uncaught error without detail still says what it was", () => {
       error: new Error(),
     }),
   ).toBe(false);
+});
+
+test("only an automated window reads Tauri's echo of a WebDriver result as no failure", () => {
+  const echo =
+    "JSON error: invalid type: null, expected u32 at line 1 column 85";
+  expect(isAutomationIpcEcho([echo], true)).toBe(true);
+  // A shipped window never carries the automation mark.
+  expect(isAutomationIpcEcho([echo], false)).toBe(false);
+  // Any other parse failure, or the line with more to say, is still a failure.
+  expect(
+    isAutomationIpcEcho(
+      ["JSON error: invalid type: string, expected u32 at line 1 column 85"],
+      true,
+    ),
+  ).toBe(false);
+  expect(
+    isAutomationIpcEcho(
+      ["JSON error: invalid type: null, expected a string at line 1 column 9"],
+      true,
+    ),
+  ).toBe(false);
+  expect(isAutomationIpcEcho([echo, "detail"], true)).toBe(false);
+  expect(isAutomationIpcEcho([new Error(echo)], true)).toBe(false);
 });
 
 test("a rejected value says its kind, and a host failure its closed code", () => {

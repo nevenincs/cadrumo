@@ -6,6 +6,7 @@ import {
 import {
   consoleSummary,
   errorEventSummary,
+  isAutomationIpcEcho,
   isResizeObserverNotice,
   rejectionSummary,
 } from "./diagnosticSummary";
@@ -95,16 +96,19 @@ export function installDiagnostics(token: ShellToken | null): void {
     const original = console[method].bind(console);
     console[method] = (...args: unknown[]) => {
       original(...args);
+      const echo =
+        level === "ERROR" &&
+        isAutomationIpcEcho(args, "__cadrumoAutomationNonce" in window);
       // The stack is taken here, so its first frame is this wrapper and its
       // second the caller.
       reportDiagnostic(token, {
         event: "console",
-        level,
+        level: echo ? "WARNING" : level,
         command: null,
         code: null,
         ...consoleSummary(args, new Error().stack),
       });
-      if (level === "ERROR") notifyInternalFailure();
+      if (level === "ERROR" && !echo) notifyInternalFailure();
     };
   }
 }

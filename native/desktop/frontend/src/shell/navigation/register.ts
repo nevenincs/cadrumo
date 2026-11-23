@@ -6,11 +6,13 @@
 /** An interface that can open a register element. */
 export type Surface = "gui";
 
-/** A kind of link parameter value: opaque record ids of an exact shape. */
+/** A kind of link parameter value: opaque record ids of a fixed `length`,
+ * or a profile field path bounded by `max_length`. Exactly one is set. */
 export type ValueKind = {
   readonly name: string;
   readonly alphabet: string;
-  readonly length: number;
+  readonly length: number | null;
+  readonly max_length: number | null;
 };
 
 /** One navigable element, as the register declares it. */
@@ -91,9 +93,13 @@ export function admitsValue(
   value: string,
 ): boolean {
   const declared = register.kinds.find((each) => each.name === kind);
+  if (declared === undefined) return false;
+  const sized =
+    declared.length !== null
+      ? value.length === declared.length
+      : value.length > 0 && value.length <= (declared.max_length ?? 0);
   return (
-    declared !== undefined &&
-    value.length === declared.length &&
+    sized &&
     [...value].every((character) => declared.alphabet.includes(character))
   );
 }

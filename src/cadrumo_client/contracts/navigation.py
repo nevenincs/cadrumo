@@ -81,13 +81,19 @@ def _tuple_from_toml(value: object) -> object:
 
 
 class ValueKind(BaseModel):
-    """A kind of link parameter value and its exact shape: an alphabet and a fixed length."""
+    """A kind of link parameter value and its exact shape: an alphabet and a length.
+
+    A record id has a fixed ``length``. A profile field path is a schema
+    identifier whose length varies, so its kind bounds it with ``max_length``
+    instead. A kind declares exactly one of the two.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     name: str
     alphabet: str = Field(min_length=1)
-    length: int = Field(ge=1, le=MAX_VALUE_LENGTH)
+    length: int | None = Field(default=None, ge=1, le=MAX_VALUE_LENGTH)
+    max_length: int | None = Field(default=None, ge=1, le=MAX_VALUE_LENGTH)
 
     @field_validator("name")
     @classmethod
@@ -106,9 +112,16 @@ class ValueKind(BaseModel):
             raise ValueError("a value alphabet lists each character once")
         return value
 
+    @model_validator(mode="after")
+    def _one_length(self) -> Self:
+        if (self.length is None) == (self.max_length is None):
+            raise ValueError(f"value kind {self.name!r} declares exactly one of 'length' and 'max_length'")
+        return self
+
     def admits(self, value: str) -> bool:
         """Whether ``value`` has exactly this kind's shape."""
-        return len(value) == self.length and set(value) <= set(self.alphabet)
+        sized = len(value) == self.length if self.length is not None else 0 < len(value) <= (self.max_length or 0)
+        return sized and set(value) <= set(self.alphabet)
 
 
 class NavigationElement(BaseModel):

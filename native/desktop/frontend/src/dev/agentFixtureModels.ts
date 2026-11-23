@@ -537,7 +537,7 @@ export function fixtureOfferReads({
   const readingModel = { lane: "zai_api", model: "synthetic-text:1" };
   const lists: LocalModelListStatus = {
     unreadable: false,
-    models: [{ lane: "zai_api", model: "example-added:7b" }],
+    models: [{ lane: "zai_api", model: "synthetic-added:1" }],
     reading: reading === "none" ? null : readingModel,
     reading_source: reading,
     tasks: [...tasks],

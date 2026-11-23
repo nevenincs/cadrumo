@@ -16,7 +16,9 @@
 # ending `?select={invoice id}`. `prefer` is reserved on every element.
 # Parameters only show, select or focus; none edits or confirms anything.
 # Each `[[kind]]` declares the exact shape of its values: opaque canonical
-# record ids only, never natural keys such as an invoice number or a tax id.
+# record ids of a fixed `length`, or a profile field path, the schema's own
+# public field identifier bounded by `max_length`. Never natural keys such as
+# an invoice number or a tax id, and never a stored value.
 #
 # `retired` is append-only: an id that stops naming an element moves here and
 # is never declared again, so an old link cannot open something new.
@@ -35,6 +37,12 @@ length = 64
 name = "invoice"
 alphabet = "0123456789abcdef"
 length = 64
+
+# A profile field: its schema path, such as `censo.large_company`.
+[[kind]]
+name = "profile-field"
+alphabet = "abcdefghijklmnopqrstuvwxyz0123456789_."
+max_length = 128
 
 [[element]]
 id = "home"
@@ -136,6 +144,7 @@ id = "profile"
 label = "navigation.view.profile.label"
 keywords = "navigation.view.profile.keywords"
 surfaces = ["gui"]
+params = { field = "profile-field" }
 
 [[element]]
 id = "profile/aeat-access"

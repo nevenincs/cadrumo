@@ -41,6 +41,14 @@
       },
       "prefer": "gui",
       "link": "cadrumo://view/ledger/movements?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=gui"
+    },
+    {
+      "view_id": "profile",
+      "params": {
+        "field": "censo.large_company"
+      },
+      "prefer": null,
+      "link": "cadrumo://view/profile?field=censo.large_company"
     }
   ],
   "parse": [
@@ -527,6 +535,66 @@
       "expect": {
         "refused": "query"
       }
+    },
+    {
+      "link": "cadrumo://view/profile?field=censo.large_company",
+      "expect": {
+        "view_id": "profile",
+        "params": {
+          "field": "censo.large_company"
+        },
+        "prefer": null
+      }
+    },
+    {
+      "link": "cadrumo://view/profile?prefer=gui&field=taxpayer_type.entity_type",
+      "expect": {
+        "view_id": "profile",
+        "params": {
+          "field": "taxpayer_type.entity_type"
+        },
+        "prefer": "gui"
+      }
+    },
+    {
+      "link": "cadrumo://view/profile?field=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expect": {
+        "view_id": "profile",
+        "params": {
+          "field": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "prefer": null
+      }
+    },
+    {
+      "link": "cadrumo://view/profile?field=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expect": {
+        "refused": "param_malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/profile?field=censo-large-company",
+      "expect": {
+        "refused": "param_malformed"
+      }
+    },
+    {
+      "link": "cadrumo://view/profile?field=censo.Large_company",
+      "expect": {
+        "refused": "uppercase"
+      }
+    },
+    {
+      "link": "cadrumo://view/profile/aeat-access?field=censo.large_company",
+      "expect": {
+        "refused": "param_not_accepted"
+      }
+    },
+    {
+      "link": "cadrumo://view/ledger?select=censo.large_company",
+      "expect": {
+        "refused": "param_malformed"
+      }
     }
   ],
   "resolve": [
@@ -937,6 +1005,25 @@
       "implemented": null,
       "expect": {
         "refused": "param_malformed"
+      }
+    },
+    {
+      "link": {
+        "view_id": "profile",
+        "params": {
+          "field": "censo.large_company"
+        },
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "profile",
+        "surface": "gui",
+        "fallback": "none",
+        "notice": false,
+        "params": {
+          "field": "censo.large_company"
+        }
       }
     }
   ]
