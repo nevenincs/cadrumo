@@ -48,6 +48,7 @@ from .verification_iva_evidence import (
     append_iva_compensation_annual_source_evidence_finding,
     append_iva_selected_scope_evidence_finding,
 )
+from .verification_modification_contributions import modification_contribution_findings
 from .verification_operator_stated_outcomes import (
     append_operator_stated_outcome_findings,
     values_with_operator_stated_figures,
@@ -532,6 +533,13 @@ def _append_source_evidence_findings(
         operation=operation,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
+    )
+    findings.extend(
+        modification_contribution_findings(
+            revision=snapshot.revision,
+            casilla_values=target.casilla_values,
+            input_values_by_casilla_id=target.input_values_by_casilla_id,
+        )
     )
     append_iva_selected_scope_evidence_finding(
         work_unit=work_unit,

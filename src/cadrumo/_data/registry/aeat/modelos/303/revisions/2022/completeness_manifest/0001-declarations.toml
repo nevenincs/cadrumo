@@ -527,3 +527,12 @@ number = "iva.modificacion-bases-cuotas.operador.base"
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "iva.modificacion-bases-cuotas.operador"
 number = "iva.modificacion-bases-cuotas.operador"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "25"
+number = "25"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-recargo"
+number = "iva.modificacion-recargo"
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.modificacion-recargo.operador"
+number = "iva.modificacion-recargo.operador"

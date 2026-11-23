@@ -261,7 +261,7 @@ modelo:
             label: Taxable base of input VAT on domestic capital-goods transactions
               (part of official box 30)
           iva-base-modificacion-bases-cuotas:
-            label: Taxable base of the modification the period's facturas rectificativas
+            label: Taxable base of the modification the period's rectification invoices
               make (LIVA art. 80 and art. 89; official box 14)
           iva-base-modificacion-bases-cuotas-operador:
             label: Taxable base of the modification you state yourself, for what the
@@ -317,11 +317,18 @@ modelo:
           iva-cuota-devengada-total:
             label: Total accrued VAT amount
           iva-cuota-modificacion-bases-cuotas:
-            label: Tax amount of the modification the period's facturas rectificativas
+            label: Tax amount of the modification the period's rectification invoices
               make (LIVA art. 80 and art. 89; official box 15)
           iva-cuota-modificacion-bases-cuotas-operador:
             label: Tax amount of the modification you state yourself, for what the
               catalogue holds no document for (official box 15)
+          iva-cuota-modificacion-recargo:
+            label: Recargo de equivalencia amount of the modification the period's
+              rectification invoices make (LIVA art. 80 and art. 161; official box
+              26)
+          iva-cuota-modificacion-recargo-operador:
+            label: Recargo de equivalencia amount of the modification you state yourself,
+              for what the catalogue holds no document for (official box 26)
           iva-cuota-repercutida-general:
             help: Total output VAT calculated at the standard 21% rate.
             label: Output VAT amount at the standard rate (21%)

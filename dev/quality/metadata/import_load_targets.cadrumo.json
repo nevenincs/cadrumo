@@ -1642,6 +1642,7 @@
         "cadrumo.application.modelo.verification_gate_findings",
         "cadrumo.application.modelo.verification_iva_evidence",
         "cadrumo.application.modelo.verification_model_findings",
+        "cadrumo.application.modelo.verification_modification_contributions",
         "cadrumo.application.modelo.verification_operator_stated_outcomes",
         "cadrumo.application.modelo.verification_oss_evidence",
         "cadrumo.application.modelo.verification_preconditions",

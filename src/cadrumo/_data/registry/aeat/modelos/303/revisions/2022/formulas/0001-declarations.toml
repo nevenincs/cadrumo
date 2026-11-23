@@ -911,3 +911,29 @@ casilla_id = "iva.modificacion-bases-cuotas"
 
 [[revisions.2022.formulas.expression.args]]
 casilla_id = "iva.modificacion-bases-cuotas.operador"
+
+# Box [26] states the cuota of the modificación del recargo de equivalencia
+# (aeat-dr-303-2022, campo 50), which campo 51 adds to the total cuota
+# devengada [27]. Like boxes [14] and [15], it states one figure the record
+# keeps as two contributions: the recargo the period's facturas rectificativas
+# move, and the one the person states for what no document in the catalogue
+# covers.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-26-projection"
+target_casilla_id = "26"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "add"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.modificacion-recargo"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.modificacion-recargo.operador"

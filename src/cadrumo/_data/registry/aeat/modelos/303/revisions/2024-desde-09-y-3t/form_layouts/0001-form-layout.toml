@@ -7,7 +7,7 @@ revision_id = "2024-desde-09-y-3t"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored layout after visual inspection of all six form pages of BOE-A-2024-16129, printed99216-99221. First applicable monthly period September2024; first quarterly period third-quarter2024. Exact historical export producer and projection owners retained. Does not include later gasoline election or box112. Outstanding: annual activity descriptions; no-activity declaration; payment/refund72/73 and non-IBAN details; additional electronic activity worksheets. No completed operator or native visual review claimed." }
 generator_version = 1
-source_state_digest = "772f117a600a4b0d3d46e76e3a2492548c2ab571e67b312fe03f610899a272c5"
+source_state_digest = "d87c8a2048b12ae8d7daaa061987b8ed272cbaabacf3fc632f53e61232673c90"
 design_sources = [
     { source_ref = "aeat-dr-303-2024-late", sha256 = "276e83909d9f1632b1e7051f0593845e420f67b7240ae42b272b18631b120dc2" },
     { source_ref = "boe-modelo-303-2024-form-pdf", sha256 = "6fba5a18a81ab328bfe42249a6bc236bd790959ae1a936ec4334dab6f7b14cf5" },
@@ -207,6 +207,8 @@ placements = [
     { casilla_id = "iva.modificacion-bases-cuotas.base", kind = "working_figure" },
     { casilla_id = "iva.modificacion-bases-cuotas.operador", kind = "working_figure" },
     { casilla_id = "iva.modificacion-bases-cuotas.operador.base", kind = "working_figure" },
+    { casilla_id = "iva.modificacion-recargo", kind = "working_figure" },
+    { casilla_id = "iva.modificacion-recargo.operador", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.intracomunitaria", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.intracomunitaria.deducible", kind = "working_figure" },
     { casilla_id = "iva.autorepercutido.intracomunitaria.devengado", kind = "working_figure" },

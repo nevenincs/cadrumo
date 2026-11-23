@@ -316,6 +316,14 @@ modelo:
           iva-cuota-modificacion-bases-cuotas-operador:
             label: Cuota de la modificación que indicas tú, para lo que no consta
               documento en el catálogo (casilla oficial 15)
+          iva-cuota-modificacion-recargo:
+            label: Cuota de la modificación del recargo de equivalencia procedente
+              de las facturas rectificativas del periodo (LIVA art. 80 y art. 161;
+              casilla oficial 26)
+          iva-cuota-modificacion-recargo-operador:
+            label: Cuota de la modificación del recargo de equivalencia que indicas
+              tú, para lo que no consta documento en el catálogo (casilla oficial
+              26)
           iva-cuota-repercutida-general:
             help: Cuota total de IVA repercutido calculada al tipo general del 21%.
             label: Cuota IVA repercutido al tipo general (21%)

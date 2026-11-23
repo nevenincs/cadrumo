@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -71,11 +72,13 @@ class IssuedRectificationDeclarationRefusal(StrEnum):
     #: slot, so no rung of the return holds the figure and dropping the row
     #: would understate the modification without saying so.
     ROW_UNDECLARABLE = "issued_rectification_row_undeclarable"
-    #: The modification moves a recargo de equivalencia, which the instructions
-    #: declare in casillas 25 and 26 rather than 14 and 15. Those boxes carry no
-    #: invoice-sourced contribution yet, so the modification is held rather than
-    #: declared short of its recargo.
-    RECARGO_UNBOUND = "issued_rectification_recargo_unbound"
+    #: The modification moves a recargo de equivalencia across several rate
+    #: rows. LIVA art. 161 pairs one recargo rate with each IVA rate, and the
+    #: document states one recargo figure for the whole modification, so no
+    #: figure says how much of it each rung bears. Casilla 26 states the
+    #: recargo of the rows that carried it; splitting it by guess would file a
+    #: rung the document never stated.
+    RECARGO_SPLIT_UNRESOLVED = "issued_rectification_recargo_split_unresolved"
     #: A modification row the selected Modelo 303 edition holds no binding for:
     #: an issued domestic reverse-charge supply repercutes nothing, an
     #: intra-community supply or an export carries its own boxes, and an
@@ -121,8 +124,9 @@ def issued_rectification_observations(
     :class:`~cadrumo.core.period.Period`,
     :class:`~cadrumo.domain.calculations.registry.ledger_iva_bindings.IvaLedgerObservation`.
     """
-    if modification.recargo is not None and modification.recargo != ZERO:
-        return IssuedRectificationDeclaration(refusal=IssuedRectificationDeclarationRefusal.RECARGO_UNBOUND)
+    recargo = modification.recargo
+    if recargo is not None and recargo != ZERO and len(modification.rows) != 1:
+        return IssuedRectificationDeclaration(refusal=IssuedRectificationDeclarationRefusal.RECARGO_SPLIT_UNRESOLVED)
     priced_on = resolve_invoice_devengo(original if original is not None else rectificativa).devengo_date
     observations: list[IvaLedgerObservation] = []
     for row_index, row in enumerate(modification.rows):
@@ -135,6 +139,7 @@ def issued_rectification_observations(
             declared_on=declared_on,
             period=period,
             binding_selectors=binding_selectors,
+            recargo=recargo if recargo is not None else ZERO,
         )
         if isinstance(projected, IssuedRectificationDeclarationRefusal):
             return IssuedRectificationDeclaration(refusal=projected)
@@ -152,6 +157,7 @@ def _row_observation(
     declared_on: date,
     period: Period,
     binding_selectors: Sequence[LedgerIvaProvider],
+    recargo: Decimal,
 ) -> IvaLedgerObservation | IssuedRectificationDeclarationRefusal:
     """One rate's signed modification as a repercutido figure, or the refusal in its way.
 
@@ -181,6 +187,7 @@ def _row_observation(
         base_amount=rectification_amount_eur(rectificativa, row.base, row_index=row_index),
         iva_amount=rectification_amount_eur(rectificativa, row.cuota, row_index=row_index),
         applied_rate=iva_rate_percentage(row.iva_rate, priced_on),
+        recargo_amount=rectification_amount_eur(rectificativa, recargo, row_index=row_index),
         observation_role=IvaLedgerObservationRole.RECTIFICATION_MODIFICATION,
         rectifies_ledger_id=None if original is None else f"invoice:{original.invoice_id}",
     )

@@ -336,6 +336,12 @@ modelo:
           iva-cuota-modificacion-bases-cuotas-operador:
             label: Az általad megadott módosítás adója, arra, amihez a katalógusban
               nincs dokumentum (hivatalos 15. rovat)
+          iva-cuota-modificacion-recargo:
+            label: Az időszak helyesbítő számláiból eredő egyenértékűségi felár-módosítás
+              összege (LIVA 80. és 161. cikk; hivatalos 26. rovat)
+          iva-cuota-modificacion-recargo-operador:
+            label: Az általad megadott egyenértékűségi felár-módosítás összege, arra,
+              amihez a katalógusban nincs dokumentum (hivatalos 26. rovat)
           iva-cuota-repercutida-general:
             help: A 21%-os általános kulccsal számított felszámított IVA teljes összege.
             label: Felszámított ÁFA összeg általános kulccsal (21%)

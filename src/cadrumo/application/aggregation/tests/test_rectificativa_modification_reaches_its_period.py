@@ -84,6 +84,7 @@ _CASILLA_CUOTA = "iva.rectificacion-deducciones.interiores"
 #: The semantic carriers of the invoice-sourced half of boxes 14 and 15.
 _CASILLA_MODIFICACION_BASE = "iva.modificacion-bases-cuotas.base"
 _CASILLA_MODIFICACION_CUOTA = "iva.modificacion-bases-cuotas"
+_CASILLA_MODIFICACION_RECARGO = "iva.modificacion-recargo"
 
 
 @pytest.fixture(autouse=True)
@@ -322,3 +323,32 @@ def test_the_14_and_15_projections_add_the_invoice_half_to_the_operator_contribu
         expression = formulas[box].expression
         assert str(expression.op) == "add"
         assert [str(arg.casilla_id) for arg in expression.args] == [carrier, operator]
+
+
+def test_an_issued_minoracion_carrying_recargo_reaches_casilla_26_signed() -> None:
+    """The instructions put the recargo half of a modification in casillas 25 and 26.
+
+    LIVA art. 161 pairs one recargo rate with each IVA rate, so a modification
+    at one rate carries its recargo on that rung. Box 26 states the cuota; box
+    25, the base, stays the operator's exactly as the ordinary recargo bases
+    [16], [19] and [22] do, because a base sum cannot select only the rows that
+    bore recargo.
+    """
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=_ISSUED_AT)
+    recargo = Decimal("5.20")
+    rectificativa = _rectificativa(
+        kind=InvoiceKind.ISSUED,
+        document_received_on=None,
+        issuer_minoracion_election=str(catalogue.regularizacion_en_autoliquidacion_token),
+        issuer_minoracion_regularisation_period=_Q2,
+        recargo_amount=recargo,
+        grand_total=_BASE + _CUOTA + recargo,
+    )
+
+    side = _side((_invoice(issued_at=_ORIGINAL_ISSUED_AT, kind=InvoiceKind.ISSUED), rectificativa), period=_Q2)
+
+    assert side.source.findings == ()
+    (observation,) = side.source.observations
+    assert observation.recargo_amount == -recargo
+    values = _casilla_values(side, period=_Q2)
+    assert values[_CASILLA_MODIFICACION_RECARGO] == -recargo
