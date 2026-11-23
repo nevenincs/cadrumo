@@ -132,6 +132,22 @@ export const providerStatus = (
   ...(record.sign_out_available === true ? { signOutAvailable: true } : {}),
 });
 
+/** A settings status refusal that says where the agent's start stands, not
+ * that the read failed: `busy` while the host has not yet admitted the
+ * service, and `not_signed_in` while the admitted service has not yet taken
+ * up the signed-in person's session (the window asks only while a person is
+ * signed in). The read waits on the service's next status for it. */
+export const settingsAwaitStart = (code: string): boolean =>
+  code === "busy" || code === "not_signed_in";
+
+/** A settings status refusal that reports where the person's setup or the
+ * agent's session stands, which the settings show with the step that moves it
+ * on: a state, noted at INFO, never a fault. */
+export const settingsSetupState = (code: string): boolean =>
+  settingsAwaitStart(code) ||
+  code === "profile_locked" ||
+  code === "runtime_unavailable";
+
 export type ProviderSettingsView = {
   read: AgentRead<{
     providers: ProviderStatus[];
@@ -167,8 +183,8 @@ export type ProviderSettingsView = {
  * The providers of `reader`'s profile while `open`: read each time they open
  * (`opened` counts the openings), after each change of the person's and when
  * asked to refresh. The last answer stays on screen while it is read again,
- * so the settings load only the first time. A busy answer (the host has not
- * yet admitted the service) and an answer the service says it is still
+ * so the settings load only the first time. An answer that awaits the
+ * agent's start (`settingsAwaitStart`) and an answer the service says it is still
  * completing (`reads_pending`: the sign-in routes and the apps' states are
  * read behind it) wait on a cue, never on a timer: a status the service
  * publishes after the read was asked (`published`, which the service also
@@ -251,6 +267,11 @@ export function useProviderSettings(
     readStatus !== null &&
     answer.kind === "failed" &&
     answer.code === "busy";
+  const starting =
+    open &&
+    readStatus !== null &&
+    answer.kind === "failed" &&
+    settingsAwaitStart(answer.code);
   const pending =
     open &&
     readStatus !== null &&
@@ -282,7 +303,7 @@ export function useProviderSettings(
     if (busy) following.current ??= { since: performance.now() };
     else following.current = null;
   }, [busy]);
-  const waits = busy || pending;
+  const waits = starting || pending;
   useEffect(() => {
     if (waits && !out.current && askedUnder.current !== published)
       setState((held) => ({ ...held, again: held.again + 1 }));

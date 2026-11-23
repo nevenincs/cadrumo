@@ -27,6 +27,9 @@ import { ModelListNotice } from "../agent/ModelListNotice";
 import { ModelMatrix } from "../agent/ModelMatrix";
 import { ReadState } from "../agent/ReadState";
 
+/** A window too narrow to open the matrix beside a button: Tailwind's `sm`. */
+const NARROW = "(width < 40rem)";
+
 /** The model a task setting names, where a lane the offer has lists it. */
 function modelOf(
   offer: AgentOffer,
@@ -128,6 +131,15 @@ export function TaskAssignments({
   // A step that leads to a provider's settings moves focus there; the
   // closing popover must not take it back to the row's button.
   const ledAway = useRef(false);
+  // Where the matrix opens: by its Change button, or, in a narrow window,
+  // from the window's top edge, so the list has the window's height rather
+  // than what is left below a button low on the page.
+  const placement = useRef({
+    getBoundingClientRect: () =>
+      matchMedia(NARROW).matches || !anchor.current
+        ? new DOMRect(0, 0, innerWidth, 0)
+        : anchor.current.getBoundingClientRect(),
+  });
   const headingId = useId();
   const lists = snapshot.kind === "ready" ? snapshot.value : null;
   useWindowReturn(
@@ -287,14 +299,17 @@ export function TaskAssignments({
           if (!open) setEditing(null);
         }}
       >
-        <PopoverAnchor virtualRef={anchor} />
+        <PopoverAnchor virtualRef={placement} />
         {task && (
           <PopoverContent
             align="end"
+            side="bottom"
             aria-labelledby={headingId}
             // The matrix scrolls inside its own box; the popover holds it
             // whole, so nothing it lists is drawn past the popover's edge.
-            className="flex w-dialog-lg flex-col gap-3 overflow-hidden"
+            // Narrow, it fills the window's height and the list takes the
+            // rest.
+            className="flex w-dialog-lg flex-col gap-3 overflow-hidden max-sm:h-(--radix-popover-content-available-height)"
             onCloseAutoFocus={(event) => {
               event.preventDefault();
               if (!ledAway.current) anchor.current?.focus();

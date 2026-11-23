@@ -7,9 +7,10 @@ import { offerMatches } from "../../shell/agentOffer";
 import { useAgentOffer } from "../../shell/agentOfferContext";
 import type { AgentServiceStatus } from "../../shell/agentSession";
 import type { LocalModelHost } from "../../shell/localModels";
-import type {
-  ProviderSettings,
-  useProviderSettings,
+import {
+  settingsAwaitStart,
+  type ProviderSettings,
+  type useProviderSettings,
 } from "../../shell/providerSettings";
 import { useStrings } from "../../shell/strings";
 import { AgentAccess as AgentAccessSection } from "../settings/AgentAccess";
@@ -168,28 +169,35 @@ export function AgentSettingsPanel({
       providerMatches ||
       settings.read.kind === "loading");
   // While the settings are unread, where the service stands says why: the host
-  // answers busy until it admits the service, and a service that stopped (or
-  // never starts) published its reason, which a read then fails on.
+  // answers busy until it admits the service, the admitted service answers
+  // not signed in until it takes up the person's session, and a service that
+  // stopped (or never starts) published its reason, which a read then fails
+  // on. Only a read that failed otherwise is the section's own failure.
   const stopped =
     service?.state === "refused" || service?.state === "stopped"
       ? service
       : null;
+  const read = settings.read;
   const wait: ProviderServiceWait | null =
-    settings.read.kind === "ready"
+    read.kind === "ready" || read.kind === "unavailable"
       ? null
-      : settings.read.kind === "failed" && settings.read.code !== "busy"
-        ? stopped
-          ? {
-              state: "stopped",
-              words: serviceWords(t, stopped) ?? "",
-              ...(stopped.state === "refused" && onRetryService
-                ? { onRetry: onRetryService }
-                : {}),
-            }
-          : null
-        : settings.read.kind === "failed" || service?.state !== "ready"
+      : read.kind === "loading"
+        ? service?.state === "ready"
+          ? null
+          : { state: "starting" }
+        : read.code === "busy"
           ? { state: "starting" }
-          : null;
+          : stopped
+            ? {
+                state: "stopped",
+                words: serviceWords(t, stopped) ?? "",
+                ...(stopped.state === "refused" && onRetryService
+                  ? { onRetry: onRetryService }
+                  : {}),
+              }
+            : settingsAwaitStart(read.code)
+              ? { state: "starting" }
+              : null;
   const accessVisible =
     Boolean(agentAccess) &&
     (!query ||
