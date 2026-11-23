@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import type { AgentAccess, useAgentAccess } from "../../shell/agentAccess";
 import { offerMatches } from "../../shell/agentOffer";
 import { useAgentOffer } from "../../shell/agentOfferContext";
+import type { AgentServiceStatus } from "../../shell/agentSession";
 import type { LocalModelHost } from "../../shell/localModels";
 import type {
   ProviderSettings,
@@ -13,9 +14,14 @@ import type {
 import { useStrings } from "../../shell/strings";
 import { AgentAccess as AgentAccessSection } from "../settings/AgentAccess";
 import { LocalModels } from "../settings/LocalModels";
-import { ProviderSettings as ProviderSettingsSection } from "../settings/ProviderSettings";
+import {
+  ProviderSettings as ProviderSettingsSection,
+  ProviderSettingsWaiting,
+  type ProviderServiceWait,
+} from "../settings/ProviderSettings";
 import { TaskAssignments } from "../settings/TaskAssignments";
 import { LocalAi } from "../setup/LocalAi";
+import { serviceWords } from "./agentRefusalWords";
 import { ReadState, SectionFailure } from "./ReadState";
 
 function SettingsDisclosure({
@@ -79,6 +85,8 @@ export function AgentSettingsPanel({
   catalogFailure = null,
   onRetryCatalog,
   onLocalModelRemoved,
+  service = null,
+  onRetryService,
 }: {
   query: string;
   onQuery: (query: string) => void;
@@ -107,6 +115,12 @@ export function AgentSettingsPanel({
   catalogFailure?: string | null;
   onRetryCatalog: () => void;
   onLocalModelRemoved: () => void;
+  /** Where the agent service is, as it last published; null before its
+   * first status. */
+  service?: AgentServiceStatus | null;
+  /** Starts the service again after it published a refusal a new start can
+   * move on. */
+  onRetryService?: () => void;
 }) {
   const t = useStrings();
   const offer = useAgentOffer();
@@ -153,6 +167,29 @@ export function AgentSettingsPanel({
       providerTitleMatches ||
       providerMatches ||
       settings.read.kind === "loading");
+  // While the settings are unread, where the service stands says why: the host
+  // answers busy until it admits the service, and a service that stopped (or
+  // never starts) published its reason, which a read then fails on.
+  const stopped =
+    service?.state === "refused" || service?.state === "stopped"
+      ? service
+      : null;
+  const wait: ProviderServiceWait | null =
+    settings.read.kind === "ready"
+      ? null
+      : settings.read.kind === "failed" && settings.read.code !== "busy"
+        ? stopped
+          ? {
+              state: "stopped",
+              words: serviceWords(t, stopped) ?? "",
+              ...(stopped.state === "refused" && onRetryService
+                ? { onRetry: onRetryService }
+                : {}),
+            }
+          : null
+        : settings.read.kind === "failed" || service?.state !== "ready"
+          ? { state: "starting" }
+          : null;
   const accessVisible =
     Boolean(agentAccess) &&
     (!query ||
@@ -238,14 +275,14 @@ export function AgentSettingsPanel({
                     : undefined
                 }
               />
-            ) : settings.read.kind === "failed" &&
-              settings.read.code === "busy" ? (
-              // The host answers busy while the service starts the agent, and
-              // the settings are read again once it is published ready: this
-              // is a wait, not a failure to retry.
-              <p role="status" className="py-2 text-sm text-muted-foreground">
-                {t("desktop.providers.agent_starting")}
-              </p>
+            ) : wait ? (
+              // The settings are read again on the status the service
+              // publishes next: a wait, not a failure to retry.
+              <ProviderSettingsWaiting
+                embedded
+                wait={wait}
+                lanes={offer ? [...offer.lanes.values()] : []}
+              />
             ) : settings.read.kind === "failed" ? (
               <SectionFailure
                 words={t("desktop.providers.load_failed")}

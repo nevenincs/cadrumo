@@ -4,6 +4,8 @@ import { catalogLanes } from "../../src/shell/agentOffer";
 import {
   agentColumn as column,
   ask,
+  laneModelsNote,
+  laneModelsWords,
   matrixCell,
   matrixLane,
   matrixRows,
@@ -87,10 +89,8 @@ test("a model this computer lacks is listed but cannot be chosen, and the picker
     const row = modelRow(picker, LOCAL, entry.entry_id);
     await expect(row).toHaveAttribute("data-held", "false");
     await expect(row).toHaveAttribute("aria-disabled", "true");
-    await expect(matrixCell(picker, LOCAL, entry.entry_id)).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
+    // Its row names it, with no cell to press.
+    await expect(row.getByRole("radio")).toHaveCount(0);
     await expect(row.getByRole("rowheader")).toHaveText(
       label("desktop.agent.model_not_installed", {
         name: entry.display_name,
@@ -146,9 +146,9 @@ test("with no model on this computer the local lane cannot be chosen, and the co
   await expect(lane).toContainText(
     label("desktop.agent.lane_no_installed_model"),
   );
-  await expect(
-    matrixRows(picker, LOCAL).and(picker.locator(":not([aria-disabled])")),
-  ).toHaveCount(0);
+  // Its models are counted under its heading, none listed to be chosen.
+  await expect(matrixRows(picker, LOCAL)).toHaveCount(0);
+  await expect(laneModelsNote(picker, LOCAL)).toHaveText(laneModelsWords);
   await expect(download(lane)).toBeVisible();
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
@@ -188,10 +188,16 @@ test("a send for a model this computer no longer holds is refused in words with 
   // What is offered is read again, and the lost model is no longer chosen.
   await expect.poll(() => catalogReads(target)).toBeGreaterThan(readsBefore);
   const again = await openModelPicker(target);
-  await expect(matrixCell(again, LOCAL, chosen)).not.toHaveAttribute(
-    "aria-checked",
-    "true",
+  // It has no cell left to be chosen, and nothing on its lane is chosen: the
+  // lane lists it as not on this computer, or, holding no model now, only
+  // counts its models.
+  await expect(matrixLane(again, LOCAL)).toBeVisible();
+  await expect(modelRow(again, LOCAL, chosen).getByRole("radio")).toHaveCount(
+    0,
   );
+  await expect(
+    matrixRows(again, LOCAL).locator("[role=radio][aria-checked=true]"),
+  ).toHaveCount(0);
   await target.keyboard.press("Escape");
   await expect(again).toBeHidden();
 

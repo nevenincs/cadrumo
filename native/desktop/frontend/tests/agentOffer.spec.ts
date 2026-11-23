@@ -477,6 +477,25 @@ test("each served task kind carries its stored setting and whether a lane still 
   expect(unreadable.reading).toBeNull();
 });
 
+test("a task kind the window knows is said in its own words, not the agent's English", () => {
+  // The catalogue serves "Classification" / "Sorts things."; the offer says
+  // each known kind through its locale key instead.
+  expect(
+    offer.tasks.map((task) => [task.id, task.name, task.description]),
+  ).toEqual([
+    [
+      "classification",
+      "desktop.providers.task_kind_classification",
+      "desktop.providers.task_kind_classification_description",
+    ],
+    [
+      "extraction",
+      "desktop.providers.task_kind_extraction",
+      "desktop.providers.task_kind_extraction_description",
+    ],
+  ]);
+});
+
 test("a choice and a run convert through the offer both ways", () => {
   const chosen = {
     providerId: "claude",

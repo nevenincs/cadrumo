@@ -140,6 +140,22 @@ const isEffort = (value: string): value is Effort =>
 export const EFFORTS: readonly Effort[] =
   Object.keys(EFFORT_WORDS).filter(isEffort);
 
+/** The words for each kind of background task cadrumo-agent names
+ * (providers/background_task_kinds.py), which it serves in English. */
+const TASK_WORDS = {
+  classification: {
+    name: "desktop.providers.task_kind_classification",
+    description: "desktop.providers.task_kind_classification_description",
+  },
+  extraction: {
+    name: "desktop.providers.task_kind_extraction",
+    description: "desktop.providers.task_kind_extraction_description",
+  },
+} as const satisfies Record<
+  BackgroundTaskKind,
+  { name: string; description: string }
+>;
+
 export function effortWords(t: Translate, effort: Effort): string {
   return t(EFFORT_WORDS[effort]);
 }
@@ -827,10 +843,15 @@ export function agentOffer(
     const setting = readable
       ? (lists.tasks.find((entry) => entry.task_kind === kind.id) ?? null)
       : null;
+    // The agent serves a kind's words in English only; the window says the
+    // kinds it knows in its own language and the served words of any other.
+    const known = Object.hasOwn(TASK_WORDS, kind.id)
+      ? TASK_WORDS[kind.id]
+      : null;
     return {
       id: kind.id,
-      name: kind.display_name,
-      description: kind.description,
+      name: known ? t(known.name) : kind.display_name,
+      description: known ? t(known.description) : kind.description,
       setting,
       offered:
         setting !== null &&

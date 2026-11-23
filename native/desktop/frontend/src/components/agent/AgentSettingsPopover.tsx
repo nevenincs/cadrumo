@@ -115,7 +115,9 @@ export function AgentSettingsPopover({
         side="top"
         align="start"
         aria-label={t("desktop.agent.settings_title")}
-        className="grid w-settings grid-cols-1 gap-3"
+        // The matrix scrolls inside its own box; the popover holds it whole,
+        // so nothing it lists is drawn past the popover's edge.
+        className="flex w-settings flex-col gap-3 overflow-hidden"
       >
         <ModelMatrix
           mode="conversation"

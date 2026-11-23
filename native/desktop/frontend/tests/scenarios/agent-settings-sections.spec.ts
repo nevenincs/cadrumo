@@ -82,5 +82,7 @@ test("provider settings answered busy while the agent starts say so, and appear 
     window.__scenarioAgentPublishStatus?.({ state: "starting" }),
   );
   await page.evaluate(() => window.__scenarioAgentPublishStatus?.());
-  await expect(providers(page)).toBeVisible();
+  await expect(
+    providers(page).locator("[data-slot=lane-expander]").first(),
+  ).toBeVisible();
 });

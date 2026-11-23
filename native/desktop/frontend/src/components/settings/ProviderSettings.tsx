@@ -628,6 +628,102 @@ function LaneRow({
   );
 }
 
+/** Where the agent service stands while it cannot answer for the provider
+ * settings: still `starting` (the host answers busy until it admits the
+ * service), or `stopped` with the reason it published and, where a new start
+ * can move it on, a way to start it again. */
+export type ProviderServiceWait =
+  | { state: "starting" }
+  | { state: "stopped"; words: string; onRetry?: () => void };
+
+/**
+ * The AI providers while the agent service cannot answer for them, said once
+ * with the way on. While it starts, each connection the agent declares is
+ * drawn as waiting on it, where the catalogue has been read; a service that
+ * stopped serves no catalogue, so only its reason and the way on are said.
+ * Nothing can be changed here: the service holds the settings.
+ */
+export function ProviderSettingsWaiting({
+  lanes,
+  wait,
+  embedded = false,
+}: {
+  /** The lanes the agent declares, as the offer lists them; none while the
+   * catalogue is unread. Drawn only while the service starts. */
+  lanes: readonly OfferedLane[];
+  wait: ProviderServiceWait;
+  embedded?: boolean;
+}) {
+  const t = useStrings();
+  const titleId = useId();
+  const failed = wait.state === "stopped";
+  const ordered = groupedByProvider(
+    failed ? [] : lanes,
+    (lane) => lane.provider,
+    (lane) => lane.transport,
+  ).flat();
+  return (
+    <section
+      aria-labelledby={titleId}
+      data-service-state={wait.state}
+      className="provider-settings grid gap-2"
+    >
+      <h3
+        id={titleId}
+        className={embedded ? "sr-only" : "font-medium text-foreground"}
+      >
+        {t("desktop.providers.title")}
+      </h3>
+      <div
+        role={failed ? "alert" : "status"}
+        data-slot="providers-service"
+        className="flex flex-wrap items-center gap-2 text-sm text-foreground"
+      >
+        <span className="min-w-0 flex-1">
+          {failed ? wait.words : t("desktop.providers.agent_starting")}
+        </span>
+        {failed && wait.onRetry && (
+          <Button variant="outline" size="sm" onClick={wait.onRetry}>
+            {t("desktop.agent.retry")}
+          </Button>
+        )}
+      </div>
+      {ordered.length > 0 && (
+        <ul className="grid gap-2">
+          {ordered.map((lane) => (
+            <li
+              key={lane.id}
+              data-provider={lane.provider}
+              data-lane={lane.id}
+              data-transport={lane.transport}
+              data-auth-kind={lane.authKind}
+              className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 rounded-lg bg-card px-3 py-2"
+            >
+              <ProviderMark provider={lane.provider} size="md" />
+              <div className="grid min-w-0 gap-0.5">
+                <h4 className="min-w-0 font-medium wrap-anywhere text-foreground">
+                  {lane.name}
+                  <span className="font-normal text-muted-foreground">
+                    {" · "}
+                    {connectionWords(t, lane)}
+                  </span>
+                </h4>
+                <span
+                  data-slot="provider-status"
+                  data-status="starting"
+                  className="text-sm text-muted-foreground"
+                >
+                  {t("desktop.providers.status_starting")}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 /**
  * The AI providers of the signed-in profile, one row for each connection the
  * agent has, in the agent's order with each provider's API before its app:

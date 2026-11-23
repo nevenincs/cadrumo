@@ -187,16 +187,19 @@ desktop:
     model_does_not_fit_shortfall: Este modelo necesita unos {needed} tokens de contexto
       para esta conversación, más de los {context} que puede contener. Elige otro
       modelo, u otro proveedor para esta conversación.
+    model_matrix_availability: Disponibilidad
     model_matrix_cell: '{model}, {effort}'
     model_matrix_clear_search: Borrar la búsqueda
     model_matrix_count: '{count} modelos mostrados'
     model_matrix_count_one: 1 modelo mostrado
+    model_matrix_filter_all: Todos
     model_matrix_filter_off: Desactivados
     model_matrix_filter_on: Activados
     model_matrix_filter_ready: Listos
     model_matrix_filter_setup: Por configurar
-    model_matrix_filters: Mostrar proveedores
     model_matrix_label: Modelos y esfuerzos
+    model_matrix_lane_models: '{count} modelos'
+    model_matrix_lane_models_one: 1 modelo
     model_matrix_none_on: No hay ningún proveedor activado. Activa uno en Proveedores
       de IA.
     model_matrix_off_hidden: '{count} proveedores están desactivados'
@@ -204,6 +207,7 @@ desktop:
     model_matrix_search_empty: Ningún modelo coincide con tu búsqueda.
     model_matrix_search_label: Buscar modelos
     model_matrix_show: Mostrar
+    model_matrix_state: Estado
     model_not_installed: '{name} (sin descargar)'
     model_not_installed_refused: El modelo elegido no está en este equipo. Descárgalo
       o elige otro modelo.
@@ -476,7 +480,7 @@ desktop:
   providers:
     add_key: Añadir clave API
     address: 'Dirección: {url}'
-    agent_starting: El agente se está iniciando. Los proveedores aparecerán cuando
+    agent_starting: El agente se está iniciando. Podrás cambiar estos ajustes cuando
       esté listo.
     base_url_default: Déjala vacía para usar {url}.
     base_url_label: Dirección del servidor
@@ -712,7 +716,13 @@ desktop:
     status_setup_needed: Sin configurar
     status_sign_in_needed: Sin sesión iniciada
     status_signed_in: Sesión iniciada
+    status_starting: Esperando al agente
     status_unconfirmed: Inicio de sesión sin confirmar
+    task_kind_classification: Clasificación
+    task_kind_classification_description: Asignar a un documento o un registro una
+      etiqueta de un conjunto cerrado.
+    task_kind_extraction: Extracción
+    task_kind_extraction_description: Leer los campos estructurados de un documento.
     task_model_change: Cambiar
     task_model_change_label: Cambiar con qué se ejecuta {task}
     task_model_model: Modelo para {task}

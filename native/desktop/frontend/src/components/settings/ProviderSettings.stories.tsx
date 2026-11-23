@@ -5,7 +5,11 @@ import { fixtureOfferReads } from "@/dev/agentFixtureModels";
 import { agentOffer } from "../../shell/agentOffer";
 import { providerStatus } from "../../shell/providerSettings";
 import { useStrings } from "../../shell/strings";
-import { ProviderSettings } from "./ProviderSettings";
+import {
+  ProviderSettings,
+  ProviderSettingsWaiting,
+  type ProviderServiceWait,
+} from "./ProviderSettings";
 import type { ProviderOutcome, ProviderStatus } from "./types";
 
 // Appearance only: the agent specimen's six made-up providers as the
@@ -37,6 +41,34 @@ function Specimen(args: Args) {
     <div className="w-settings max-w-full">
       <ProviderSettings {...args} lanes={offer.lanes} />
     </div>
+  );
+}
+
+const DECLARED = fixtureOfferReads({ declared: true });
+
+/** The settings while the agent service cannot answer for them: the
+ * declared connections waiting on a start, or the reason a start ended. */
+function Waiting({ wait }: { wait: ProviderServiceWait }) {
+  const t = useStrings();
+  const offer = useMemo(() => agentOffer(t, DECLARED.catalog, null, null), [t]);
+  return (
+    <div className="w-settings max-w-full">
+      <ProviderSettingsWaiting wait={wait} lanes={[...offer.lanes.values()]} />
+    </div>
+  );
+}
+
+/** The reason a start ended, in the words the column says it with. */
+function StartFailedSpecimen() {
+  const t = useStrings();
+  return (
+    <Waiting
+      wait={{
+        state: "stopped",
+        words: t("desktop.agent.service_timeout"),
+        onRetry: NOOP,
+      }}
+    />
   );
 }
 
@@ -177,4 +209,14 @@ export const Busy: Story = {
     const save = row.querySelector<HTMLElement>("button[type=submit]");
     if (save) await userEvent.click(save);
   },
+};
+
+export const Starting: Story = {
+  name: "Agent starting: each connection waits on it",
+  render: () => <Waiting wait={{ state: "starting" }} />,
+};
+
+export const StartFailed: Story = {
+  name: "Agent start failed: its cause and Retry",
+  render: () => <StartFailedSpecimen />,
 };
