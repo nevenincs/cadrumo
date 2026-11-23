@@ -1784,7 +1784,7 @@ family = "verification_expectations"
 selector = {revision = "2022", id = "modelo-200-reconcile-when-present"}
 sequence_additions = {reconcile_when_present_casilla_ids = ["DP200014:00550", "DP200014:00552", "DP200014:bin-aplicada-maxima"], source_refs = ["aeat-dr-200-2023", "aeat-modelo-200-manual-2023"]}
 sequence_removals = {reconcile_when_present_casilla_ids = [0, 1, 5], source_refs = [0, 1]}
-sequence_order = {reconcile_when_present_casilla_ids = [6, 7, 0, 1, 2, 8, 3, 4, 5]}
+sequence_order = {reconcile_when_present_casilla_ids = [7, 8, 0, 1, 2, 9, 3, 4, 5, 6]}
 
 [[revisions."2023".family_overrides]]
 family = "bindings"
