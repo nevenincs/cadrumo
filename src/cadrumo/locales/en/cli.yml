@@ -434,6 +434,11 @@ cli:
         arrendamiento_local_negocio_help: Mark an invoice issued by the lessor as
           relating to a business premises lease. Use the situation and cadastral reference
           options to record the premises details.
+        art_80_tres_obligations_attested_help: 'Attest that the RIVA art. 24 communication
+          and remittance were made for an art. 80.Tres modification, or state with
+          --no-art-80-tres-obligations-attested that they were not. Leave it out while
+          you do not know: the modification is held, never admitted on the document
+          alone.'
         attach_document_help: Store an invoice's document (its PDF or e-invoice) with
           it.
         attach_document_source_help: Path of the document file.
@@ -447,10 +452,19 @@ cli:
         duplicate_invalid: The invoice kind and the document's facts must have the
           expected shape.
         duplicate_kind_help: 'Invoice direction: issued or received.'
+        elected_year_without_period: The year %{year} names no declaracion-liquidacion
+          on its own. Give the matching period token (0A, 1T-4T, 01-12) as well, or
+          leave both out.
         euro_rate_unavailable_message: No euro exchange rate for {currency} on {date}
           was found, so this invoice was recorded without a euro value and is left
           out of euro totals until a rate is added. State the rate with app ledger
           invoice update --fx-rate.
+        exercised_deduction_period_help: Period token of that declaracion-liquidacion
+          (0A, 1T-4T, 01-12). Give it with the year; a combined calendar string is
+          refused.
+        exercised_deduction_year_help: Filing year of the declaracion-liquidacion
+          the original deduction was exercised in (AAAA). RIVA art. 24.2.b.3 routes
+          an art. 80.Tres minoracion there; give it with the period token.
         fx_rate_help: 'Exchange rate of a foreign invoice: the euro value of one unit
           of its currency at the devengo, which is the operation date when you record
           one and otherwise the invoice date, for example 0.9250 (LIVA art. 79.Once:
@@ -481,6 +495,21 @@ cli:
         invoice_class_help: Invoice class. A rectificativa also requires --rectifies-invoice-number
           naming the invoice it corrects.
         invoice_id_help: Catalogue invoice id (or unambiguous prefix).
+        issuer_increase_election_help: 'Which route you take for an issued aumento
+          founded on a LIVA art. 80 ground or on an error fundado de derecho (art.
+          89.Cinco): incluir_en_el_periodo to declare the difference in the period
+          the rectification is made in, autoliquidacion_rectificativa to file a corrective
+          self-assessment with recargo e intereses.'
+        issuer_minoracion_election_help: 'Which route you take for an issued minoracion
+          (LIVA art. 89.Cinco): procedimiento_120_3_lgt for the art. 120.3 LGT procedure,
+          regularizacion_en_autoliquidacion to regularise it in a declaracion-liquidacion,
+          which also obliges you to reintegrate the recipient.'
+        issuer_minoracion_regularisation_period_help: Period token of that declaracion-liquidacion
+          (0A, 1T-4T, 01-12). Give it with the year; a combined calendar string is
+          refused.
+        issuer_minoracion_regularisation_year_help: Filing year of the declaracion-liquidacion
+          you regularise the issued minoracion in (AAAA). Give it with the period
+          token; LIVA art. 89.Cinco allows up to one year.
         iva_category_help: IVA treatment of the operation. Required for a renta income
           calculation to ground it.
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
@@ -525,6 +554,12 @@ cli:
           with it the verdict covers only the facts stated.
         recargo_help: Equivalence surcharge charged on top of the tax quota (LIVA
           art. 161). It is included in the invoice total, unlike withholding.
+        recipient_increase_period_help: Period token of that declaracion-liquidacion
+          (0A, 1T-4T, 01-12). Give it with the year; a combined calendar string is
+          refused.
+        recipient_increase_year_help: Filing year of the declaracion-liquidacion you
+          declare a received aumento in (AAAA). Give it with the period token; LIVA
+          art. 114.Dos.1 allows the reception period or a later one within four years.
         rectification_cause_help: Why the rectificativa modifies the base and the
           cuota, as one of the grounds the registry declares for the invoice date
           (the LIVA art. 80 apartados, error_fundado_de_derecho, or otra_modificacion).

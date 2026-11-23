@@ -26,6 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....core.field_role import FieldRole
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.invoice_legal_classification import (
     resolve_invoice_legal_classification_catalogue,
@@ -253,3 +254,127 @@ def test_an_ordinaria_row_without_the_columns_is_unchanged(tmp_path: Path, opera
     assert invoice.rectifies_invoice_number is None
     assert missing_rectification_facts(invoice) == ()
     assert invoice.base_total == Decimal("1000.00")
+
+
+_ELECTION_HEADER = (
+    "issuer_increase_election,issuer_minoracion_election,issuer_minoracion_regularisation_period,"
+    "recipient_increase_period,art_80_tres_obligations_attested,exercised_deduction_period"
+)
+
+
+def _elected_period(on: date) -> str:
+    """One declaración-liquidación in the canonical display form, named from the row's own year."""
+    return str(Period.from_year_and_code(on.year, "2T"))
+
+
+def test_a_received_row_states_the_recipient_period_election_and_it_reaches_the_record(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """LIVA art. 114.Dos.1.º lets the recipient choose the period, and the book can state that choice."""
+    issued = _issue_date()
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=issued)
+    method = str(catalogue.diferencia_token)
+    cause = str(catalogue.otra_modificacion_cause_token)
+    aumento = str(catalogue.aumento_token)
+    received = issued.replace(day=issued.day + 6)
+    elected = _elected_period(issued)
+
+    result, stored = _import(
+        f"{_HEADER},{_RECTIFICATION_HEADER},{_ELECTION_HEADER}\n"
+        f"{_SPANISH_CIF},Proveedor SL,R-0010,{issued.isoformat()},1000.00,21,ES,"
+        f"RECTIFICATIVA,R,F-0010,{method},{cause},{aumento},{received.isoformat()},"
+        f",,,{elected},,\n",
+        tmp_path,
+        kind=InvoiceKind.RECEIVED,
+        operation=operation,
+    )
+
+    assert result.refused == ()
+    invoice = stored["R-0010"]
+    assert invoice.recipient_increase_period is not None
+    assert str(invoice.recipient_increase_period) == elected
+    assert invoice.issuer_increase_election is None
+    assert invoice.art_80_tres_obligations_attested is None
+
+
+def test_an_issued_row_states_the_minoracion_route_and_the_period_it_regularises_in(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """Art. 89.Cinco letter b) names a route and the declaración-liquidación it is regularised in."""
+    issued = _issue_date()
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=issued)
+    method = str(catalogue.diferencia_token)
+    cause = str(catalogue.otra_modificacion_cause_token)
+    minoracion = str(catalogue.minoracion_token)
+    election = str(catalogue.regularizacion_en_autoliquidacion_token)
+    elected = _elected_period(issued)
+
+    result, stored = _import(
+        f"{_HEADER},{_RECTIFICATION_HEADER},{_ELECTION_HEADER}\n"
+        f"{_SPANISH_CIF},Cliente SL,R-0011,{issued.isoformat()},1000.00,21,ES,"
+        f"RECTIFICATIVA,R,F-0011,{method},{cause},{minoracion},,"
+        f",{election},{elected},,,\n",
+        tmp_path,
+        kind=InvoiceKind.ISSUED,
+        operation=operation,
+    )
+
+    assert result.refused == ()
+    invoice = stored["R-0011"]
+    assert str(invoice.issuer_minoracion_election) == election
+    assert invoice.issuer_minoracion_regularisation_period is not None
+    assert str(invoice.issuer_minoracion_regularisation_period) == elected
+
+
+def test_a_calendar_cell_in_an_elected_period_column_is_refused_under_that_column(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """A period is a filing year and a registry code, so a date cell refuses rather than resolving one."""
+    issued = _issue_date()
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=issued)
+    method = str(catalogue.diferencia_token)
+    cause = str(catalogue.otra_modificacion_cause_token)
+    aumento = str(catalogue.aumento_token)
+    received = issued.replace(day=issued.day + 6)
+
+    result, stored = _import(
+        f"{_HEADER},{_RECTIFICATION_HEADER},{_ELECTION_HEADER}\n"
+        f"{_SPANISH_CIF},Proveedor SL,R-0012,{issued.isoformat()},1000.00,21,ES,"
+        f"RECTIFICATIVA,R,F-0012,{method},{cause},{aumento},{received.isoformat()},"
+        f",,,{issued.isoformat()},,\n",
+        tmp_path,
+        kind=InvoiceKind.RECEIVED,
+        operation=operation,
+    )
+
+    assert stored == {}
+    assert [(row.row_number, row.field) for row in result.refused] == [(2, "recipient_increase_period")]
+
+
+def test_a_blank_attestation_cell_stays_unanswered_and_a_stated_denial_is_recorded(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """Absent holds the art. 80.Tres modification; a stated ``no`` is the denial that refuses it."""
+    issued = _issue_date()
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=issued)
+    method = str(catalogue.diferencia_token)
+    cause = str(catalogue.art_80_tres_cause_token)
+    aumento = str(catalogue.aumento_token)
+    received = issued.replace(day=issued.day + 6)
+    rows = (
+        f"{_SPANISH_CIF},Proveedor SL,R-0013,{issued.isoformat()},1000.00,21,ES,"
+        f"RECTIFICATIVA,R,F-0013,{method},{cause},{aumento},{received.isoformat()},,,,,,\n"
+        f"{_SPANISH_CIF},Proveedor SL,R-0014,{issued.isoformat()},1000.00,21,ES,"
+        f"RECTIFICATIVA,R,F-0014,{method},{cause},{aumento},{received.isoformat()},,,,,no,\n"
+    )
+
+    result, stored = _import(
+        f"{_HEADER},{_RECTIFICATION_HEADER},{_ELECTION_HEADER}\n{rows}",
+        tmp_path,
+        kind=InvoiceKind.RECEIVED,
+        operation=operation,
+    )
+
+    assert result.refused == ()
+    assert stored["R-0013"].art_80_tres_obligations_attested is None
+    assert stored["R-0014"].art_80_tres_obligations_attested is False

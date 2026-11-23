@@ -126,6 +126,24 @@ class FieldRole(StrEnum):
     DOCUMENT_RECEIVED_ON = "document_received_on"
     """When the recipient received a factura rectificativa (LIVA art. 114.Dos)."""
 
+    ISSUER_INCREASE_ELECTION = "issuer_increase_election"
+    """Which route the issuer takes for an aumento (LIVA art. 89.Cinco)."""
+
+    ISSUER_MINORACION_ELECTION = "issuer_minoracion_election"
+    """Which route the issuer takes for a minoración (LIVA art. 89.Cinco)."""
+
+    ISSUER_MINORACION_REGULARISATION_PERIOD = "issuer_minoracion_regularisation_period"
+    """The declaración-liquidación an issued minoración is regularised in."""
+
+    RECIPIENT_INCREASE_PERIOD = "recipient_increase_period"
+    """The declaración-liquidación a recipient declares an aumento in (LIVA art. 114.Dos.1)."""
+
+    ART_80_TRES_OBLIGATIONS_ATTESTED = "art_80_tres_obligations_attested"
+    """Whether the RIVA art. 24 communication and remittance are attested."""
+
+    EXERCISED_DEDUCTION_PERIOD = "exercised_deduction_period"
+    """The declaración-liquidación the original deduction was exercised in (RIVA art. 24.2.b.3)."""
+
     IRPF_CATEGORY = "irpf_category"
     """The IRPF treatment the row falls under."""
 

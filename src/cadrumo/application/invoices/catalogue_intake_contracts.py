@@ -127,6 +127,18 @@ class InvoiceWizardRequest(BaseModel):
     rectification_cause: _Text | None = None
     rectification_direction: _Text | None = None
     document_received_on: _Text | None = None
+    #: The elections and the attestation LIVA art. 89.Cinco, art. 114.Dos and
+    #: art. 80.Tres leave the taxpayer. The two election tokens and the three
+    #: elected declaraciones-liquidaciones travel as raw text for the same
+    #: reason as the facts above; the attestation is the one three-state
+    #: boolean here, because an unanswered attestation holds the modification
+    #: and a stated denial refuses it.
+    issuer_increase_election: _Text | None = None
+    issuer_minoracion_election: _Text | None = None
+    issuer_minoracion_regularisation_period: _Text | None = None
+    recipient_increase_period: _Text | None = None
+    exercised_deduction_period: _Text | None = None
+    art_80_tres_obligations_attested: bool | None = None
     recargo_amount: _Text | None = None
 
 

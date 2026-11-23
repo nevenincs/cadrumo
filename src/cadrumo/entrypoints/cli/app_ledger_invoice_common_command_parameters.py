@@ -14,6 +14,7 @@ from cadrumo_client.commands.shared_contracts import (
 )
 
 from ...application.ledger.operator_input_contracts import INVOICE_CLASS_INPUT
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from .app_ledger_command_spec_support import option_from_application_contract
 
 OPTIONAL_IVA_CATEGORY_OPTION: Final[OptionSpec] = OptionSpec(
@@ -282,6 +283,173 @@ the verb accepts whatever fact 0141 carries for the invoice's date and holds no
 list of its own.
 """
 
+INVOICE_RECTIFICATION_PERIOD_OPTIONS: Final[tuple[OptionSpec, ...]] = (
+    OptionSpec(
+        name="issuer_increase_election",
+        declarations=("--issuer-increase-election",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.issuer_increase_election_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="issuer_minoracion_election",
+        declarations=("--issuer-minoracion-election",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.issuer_minoracion_election_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="issuer_minoracion_regularisation_year",
+        declarations=("--issuer-minoracion-regularisation-year",),
+        value=ValueContract(DeferredTarget("builtins", "int")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.issuer_minoracion_regularisation_year_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="issuer_minoracion_regularisation_period",
+        declarations=("--issuer-minoracion-regularisation-period",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.issuer_minoracion_regularisation_period_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="recipient_increase_year",
+        declarations=("--recipient-increase-year",),
+        value=ValueContract(DeferredTarget("builtins", "int")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.recipient_increase_year_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="recipient_increase_period",
+        declarations=("--recipient-increase-period",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.recipient_increase_period_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="exercised_deduction_year",
+        declarations=("--exercised-deduction-year",),
+        value=ValueContract(DeferredTarget("builtins", "int")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.exercised_deduction_year_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(minimum=FOUR_DIGIT_YEAR_FIRST, maximum=FOUR_DIGIT_YEAR_LAST),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="exercised_deduction_period",
+        declarations=("--exercised-deduction-period",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.exercised_deduction_period_help"),
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+    OptionSpec(
+        name="art_80_tres_obligations_attested",
+        declarations=("--art-80-tres-obligations-attested", "--no-art-80-tres-obligations-attested"),
+        value=ValueContract(DeferredTarget("builtins", "bool")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.ledger.invoice.art_80_tres_obligations_attested_help"),
+        metavar=None,
+        is_flag=True,
+        flag_value=True,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    ),
+)
+"""The elections and the attestation LIVA art. 89.Cinco, art. 114.Dos and art. 80.Tres leave the taxpayer.
+
+Separate from :data:`INVOICE_RECTIFICATION_OPTIONS` because these are not facts
+every rectificativa states: which of them a document needs follows from its
+side, its cause and its direction, and the period rule is what asks for one. A
+document that needs none carries none.
+
+The two election values are stable untranslated tokens the served vocabulary
+declares. Each elected declaración-liquidación is a year and a bare AEAT period
+token, the one period grammar every other surface here speaks, so a combined
+calendar string is refused rather than read as a second grammar. Each elected
+year belongs to its own election: a minoración regularised inside the LIVA
+art. 89.Cinco one-year limit, and a recipient increase inside the art. 114.Dos
+four-year one, can both fall in a year the invoice was not issued in.
+
+The attestation is a three-state flag on purpose: absent is "not yet stated",
+which holds the modification until the person answers, while ``--no-...`` is a
+stated denial, which refuses it. Collapsing the two would admit an art. 80.Tres
+modification the RIVA art. 24 obligations were never attested for.
+"""
+
 INVOICE_INTAKE_WIZARD_CORE_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
         name="kind",
@@ -365,5 +533,6 @@ __all__ = [
     "INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS",
     "INVOICE_LIFECYCLE_METADATA_OPTIONS",
     "INVOICE_RECTIFICATION_OPTIONS",
+    "INVOICE_RECTIFICATION_PERIOD_OPTIONS",
     "OPTIONAL_IVA_CATEGORY_OPTION",
 ]

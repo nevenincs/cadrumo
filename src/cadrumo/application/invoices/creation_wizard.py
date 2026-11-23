@@ -53,6 +53,7 @@ from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode, normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.invoice_legal_classification import (
     InvoiceLegalClassificationCatalogue,
@@ -61,6 +62,8 @@ from ...domain.calculations.registry.invoice_legal_classification import (
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.invoices.enums import (
     InvoiceClass,
+    IssuerIncreaseElection,
+    IssuerMinoracionElection,
     RectificationCause,
     RectificationDirection,
     RectificationMethod,
@@ -141,6 +144,12 @@ class _ValidatedWizardFields:
     rectification_cause: RectificationCause | None
     rectification_direction: RectificationDirection | None
     document_received_on: date | None
+    issuer_increase_election: IssuerIncreaseElection | None
+    issuer_minoracion_election: IssuerMinoracionElection | None
+    issuer_minoracion_regularisation_period: Period | None
+    recipient_increase_period: Period | None
+    exercised_deduction_period: Period | None
+    art_80_tres_obligations_attested: bool | None
     recargo_amount: Decimal | None
 
 
@@ -406,6 +415,25 @@ def _validate_document_received_on(raw: str | None) -> date | None:
     return value
 
 
+def _validate_elected_period(raw: str | None, *, field: str) -> Period | None:
+    """Validate one elected declaración-liquidación, reported under its own field name.
+
+    The value is the canonical display form of a period, a filing year and a
+    bare registry period code, which :meth:`Period.from_string` is the one
+    parser for. A calendar string is refused there rather than guessed here, so
+    an election never silently lands in a period the operator did not state.
+    """
+    if raw is None:
+        return None
+    try:
+        return Period.from_string(raw)
+    except PeriodError as exc:
+        raise WizardFieldError(
+            field=field,
+            reason=f"must be a filing year and a registry period code, got {raw!r}",
+        ) from exc
+
+
 def _validate_recargo_amount(raw: str | None) -> Decimal | None:
     try:
         return _validate_retention_amount(raw)
@@ -489,6 +517,12 @@ def _validate_wizard_fields(
     rectification_cause: str | None,
     rectification_direction: str | None,
     document_received_on: str | None,
+    issuer_increase_election: str | None,
+    issuer_minoracion_election: str | None,
+    issuer_minoracion_regularisation_period: str | None,
+    recipient_increase_period: str | None,
+    exercised_deduction_period: str | None,
+    art_80_tres_obligations_attested: bool | None,
     recargo_amount: str | None,
 ) -> tuple[_ValidatedWizardFields, list[InvoiceWizardFieldError]]:
     field_errors: list[InvoiceWizardFieldError] = []
@@ -600,6 +634,43 @@ def _validate_wizard_fields(
     resolved_received_on = _collect_wizard_field(
         field_errors, lambda: _validate_document_received_on(document_received_on), fallback=None
     )
+    resolved_increase_election = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            issuer_increase_election,
+            field="issuer_increase_election",
+            choices=lambda catalogue: catalogue.issuer_increase_election_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_minoracion_election = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_declared_rectification_fact(
+            issuer_minoracion_election,
+            field="issuer_minoracion_election",
+            choices=lambda catalogue: catalogue.issuer_minoracion_election_choices,
+            on_date=rectification_on_date,
+        ),
+        fallback=None,
+    )
+    resolved_regularisation_period = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_elected_period(
+            issuer_minoracion_regularisation_period, field="issuer_minoracion_regularisation_period"
+        ),
+        fallback=None,
+    )
+    resolved_recipient_period = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_elected_period(recipient_increase_period, field="recipient_increase_period"),
+        fallback=None,
+    )
+    resolved_exercised_period = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_elected_period(exercised_deduction_period, field="exercised_deduction_period"),
+        fallback=None,
+    )
     resolved_recargo = _collect_wizard_field(
         field_errors, lambda: _validate_recargo_amount(recargo_amount), fallback=None
     )
@@ -623,6 +694,15 @@ def _validate_wizard_fields(
             rectification_cause=resolved_cause,
             rectification_direction=resolved_direction,
             document_received_on=resolved_received_on,
+            issuer_increase_election=resolved_increase_election,
+            issuer_minoracion_election=resolved_minoracion_election,
+            issuer_minoracion_regularisation_period=resolved_regularisation_period,
+            recipient_increase_period=resolved_recipient_period,
+            exercised_deduction_period=resolved_exercised_period,
+            # The attestation is a stated answer rather than a parsed value, so
+            # it is carried as the person gave it: absent holds the
+            # modification, false refuses it.
+            art_80_tres_obligations_attested=art_80_tres_obligations_attested,
             recargo_amount=resolved_recargo,
         ),
         field_errors,
@@ -697,6 +777,16 @@ def _build_wizard_invoice(
                 None if fields.rectification_direction is None else str(fields.rectification_direction)
             ),
             document_received_on=fields.document_received_on,
+            issuer_increase_election=(
+                None if fields.issuer_increase_election is None else str(fields.issuer_increase_election)
+            ),
+            issuer_minoracion_election=(
+                None if fields.issuer_minoracion_election is None else str(fields.issuer_minoracion_election)
+            ),
+            issuer_minoracion_regularisation_period=fields.issuer_minoracion_regularisation_period,
+            recipient_increase_period=fields.recipient_increase_period,
+            art_80_tres_obligations_attested=fields.art_80_tres_obligations_attested,
+            exercised_deduction_period=fields.exercised_deduction_period,
             recargo_amount=fields.recargo_amount,
             operation=operation,
         )
@@ -765,6 +855,12 @@ def create_invoice_via_wizard(
     rectification_cause: str | None = None,
     rectification_direction: str | None = None,
     document_received_on: str | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_period: str | None = None,
+    recipient_increase_period: str | None = None,
+    exercised_deduction_period: str | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
     recargo_amount: str | None = None,
     operation: PinnedAuthorityOperation | None = None,
     actor: str = "cli",
@@ -815,6 +911,22 @@ def create_invoice_via_wizard(
             rectification reduces or increases the original base and cuota.
         document_received_on: Optional raw ISO-8601 date the recipient received
             the rectificativa; refused on an issued invoice.
+        issuer_increase_election: Optional LIVA art. 89.Cinco route token for an
+            issued aumento, which the served vocabulary declares.
+        issuer_minoracion_election: Optional LIVA art. 89.Cinco route token for
+            an issued minoración, which the served vocabulary declares.
+        issuer_minoracion_regularisation_period: Optional elected
+            declaración-liquidación the issued minoración is regularised in,
+            as a filing year and a registry period code.
+        recipient_increase_period: Optional elected declaración-liquidación the
+            recipient declares an aumento in (LIVA art. 114.Dos.1.º), in the
+            same form.
+        exercised_deduction_period: Optional declaración-liquidación the
+            original deduction was exercised in, which RIVA art. 24.2.b.3 routes
+            an art. 80.Tres minoración to, in the same form.
+        art_80_tres_obligations_attested: Whether the operator attests the RIVA
+            art. 24 communication and remittance. ``None`` is unanswered, which
+            holds the modification; ``False`` is a stated denial, which refuses it.
         recargo_amount: Optional canonical euro amount added to grand total.
         operation: Exact retained authority pin, or the ordinary bundled default.
         ports: Required catalogue-creation capabilities for the active bucket.
@@ -849,6 +961,12 @@ def create_invoice_via_wizard(
         rectification_cause=rectification_cause,
         rectification_direction=rectification_direction,
         document_received_on=document_received_on,
+        issuer_increase_election=issuer_increase_election,
+        issuer_minoracion_election=issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=issuer_minoracion_regularisation_period,
+        recipient_increase_period=recipient_increase_period,
+        exercised_deduction_period=exercised_deduction_period,
+        art_80_tres_obligations_attested=art_80_tres_obligations_attested,
         recargo_amount=recargo_amount,
     )
     _raise_wizard_field_errors(field_errors)
