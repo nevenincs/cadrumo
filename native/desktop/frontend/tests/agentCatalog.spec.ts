@@ -610,6 +610,59 @@ test("a lane held back says the step the person can take, from the catalog's own
   ).not.toContain(undefined);
 });
 
+test("a lane held only by an axis the service has not measured says not checked yet, never unavailable", () => {
+  const held = (change: (lane: ServedProviderLane) => void) => {
+    const catalog = withLane("qwen", "api", (lane) => {
+      lane.health.selectable = false;
+      change(lane);
+    });
+    const way = offerOf(catalog)
+      .providers.flatMap((provider) => provider.ways)
+      .find((one) => one.id === "qwen/api");
+    return {
+      reading: catalogStillReading(catalog),
+      words: way?.unavailableReason,
+      step: way?.heldStep,
+    };
+  };
+  const checking = {
+    reading: true,
+    words: "desktop.agent.lane_not_observed",
+    step: "retry",
+  };
+  // The agent could not yet verify the configuration, or the launcher has not
+  // been measured: both settle on a later read.
+  expect(held((lane) => (lane.health.configured = "unknown"))).toEqual(
+    checking,
+  );
+  expect(held((lane) => (lane.health.admission = "unknown"))).toEqual(
+    checking,
+  );
+  expect(held((lane) => (lane.health.transport = "unknown"))).toEqual(
+    checking,
+  );
+  expect(held((lane) => (lane.health.authentication = "unknown"))).toEqual(
+    checking,
+  );
+  // A settled axis keeps its own cause, and is not being read.
+  expect(held((lane) => (lane.health.admission = "not_admitted"))).toEqual({
+    reading: false,
+    words: "desktop.agent.lane_not_admitted",
+    step: undefined,
+  });
+  // A settled cause is said before an unmeasured axis.
+  expect(
+    held((lane) => {
+      lane.health.configured = "unavailable";
+      lane.health.admission = "unknown";
+    }),
+  ).toEqual({
+    reading: false,
+    words: "desktop.agent.lane_not_configured",
+    step: undefined,
+  });
+});
+
 test("a catalog is still being read while a lane waits on the service's reading, and not while a settled cause holds it", () => {
   expect(catalogStillReading(FIXTURE_CATALOG)).toBe(false);
   // The packaged model list in place of the account's.
