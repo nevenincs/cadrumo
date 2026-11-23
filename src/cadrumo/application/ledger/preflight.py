@@ -153,7 +153,7 @@ class LedgerPreflightIssueReason(StrEnum):
     INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
     INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT = "invoice_rectificativa_period_needs_fact"
     INVOICE_RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE = "invoice_rectificativa_deduction_row_undeclarable"
-    INVOICE_RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND = "invoice_rectificativa_issued_modification_unbound"
+    INVOICE_RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE = "invoice_rectificativa_issued_row_undeclarable"
     INVOICE_USED_GOODS_MARGIN_UNMODELLED = "invoice_used_goods_margin_unmodelled"
 
 
@@ -463,10 +463,10 @@ _INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
             "{derived}, and casillas 40 and 41 cannot hold it: the invoice it corrects resolves to no single "
             "record of the catalogue, or a row carries a base with no deducible cuota"
         ),
-        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND.value: (
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE.value: (
             "invoice {number} is an issued factura rectificativa this period declares, whose modification is "
-            "{derived}; casillas 14 and 15 are operator input in this Modelo 303 edition, so the modification "
-            "reaches no casilla from the invoice and the period would be filed short"
+            "{derived}, and casillas 14 and 15 cannot hold it: a row carries a rate no tier of that date holds, "
+            "or the modification moves a recargo de equivalencia, which casillas 25 and 26 hold"
         ),
         LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED.value: (
             "issued invoice {number} is under the régimen especial de los bienes usados, whose taxable base is "

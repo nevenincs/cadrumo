@@ -146,10 +146,21 @@ class IvaLedgerObservationRole(StrEnum):
     :attr:`SETTLEMENT`.  That keeps normal IVA bindings on one role while
     reserving :attr:`OPERATION_INFORMATIONAL` for Modelo 303 boxes 62, 63, 74,
     and 75.
+
+    :attr:`RECTIFICATION_MODIFICATION` is the repercutido side of a factura
+    rectificativa: the signed modification of bases and cuotas the Modelo 303
+    instructions put in casillas 14 and 15, and in 25 and 26 where the
+    operation bore recargo de equivalencia. It is a role rather than a
+    deduction family because an issued modification is devengado and carries no
+    deduction at all, so fact 0085, which answers in deduction kinds and
+    evidence authorities, has nothing to say about it. Keeping it off
+    :attr:`SETTLEMENT` is what stops the modification reaching the ordinary
+    rate boxes [01]/[03] beside the operations it corrects.
     """
 
     OPERATION_INFORMATIONAL = "operation_informational"
     SETTLEMENT = "settlement"
+    RECTIFICATION_MODIFICATION = "rectification_modification"
 
 
 class IvaCashAccountingPaymentEvidence(BaseModel):

@@ -213,11 +213,18 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # No domestic inversión del sujeto pasivo rows in this observation
         # set, so every interior reverse-charge binding, devengado and the
         # deducible half feeding [28]-[31], resolves to zero.
+        "modelo-303-iva-autorepercutido-interior-devengado-base": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-base": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-base": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-cuota": Decimal("0"),
+        # No row carries the rectification-modification role, so the two halves
+        # of Modificación de bases y cuotas [14]/[15] resolve to zero, and so
+        # does the recargo de equivalencia that same role moves into [26].
+        "modelo-303-iva-modificacion-bases-cuotas-base": Decimal("0"),
+        "modelo-303-iva-modificacion-bases-cuotas-cuota": Decimal("0"),
+        "modelo-303-iva-modificacion-recargo-cuota": Decimal("0"),
         # No row carries the rectification deduction kind, so the three parts
         # of Rectificación de deducciones [40]/[41] resolve to zero.
         "modelo-303-iva-rectificacion-deducciones-interiores-base": Decimal("0"),

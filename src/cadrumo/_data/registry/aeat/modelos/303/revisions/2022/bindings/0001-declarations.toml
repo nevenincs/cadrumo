@@ -776,3 +776,67 @@ required_text = ["modelo 303"]
 
 [revisions.2022.bindings.aggregation]
 op = "sum"
+
+# Base of official box [14], the modificación de bases imponibles the 2022
+# diseño de registro prints as "Liquidación (3) - Regimen General - IVA
+# Devengado - Modificación bases y cuotas - Base imponible [14]"
+# (aeat-dr-303-2022, campo 38). It selects the rectification-modification role
+# rather than the settlement role every ordinary devengado binding selects,
+# which is what keeps a correction of a sale out of the rate boxes the sale
+# itself is declared in. Its population is the three cuota-bearing domestic
+# rate categories the régimen general block covers; a modification of an
+# operation that bears no cuota by law, or of an intra-community supply or an
+# export, has its own legal question and is refused rather than folded in here.
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-modificacion-bases-cuotas-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["rectification_modification"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+# Cuota of official box [15], the same population's cuota, printed as
+# "Modificación bases y cuotas - Cuota [15]" (aeat-dr-303-2022, campo 39) and
+# added to the total cuota devengada [27] by campo 51. Base and cuota select
+# the same rows so the pair stays one population.
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-modificacion-bases-cuotas-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["rectification_modification"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+# Cuota of official box [26], the recargo de equivalencia half of the
+# modificación de bases y cuotas. The 2022 diseño prints the row as
+# "Liquidación (3) - Regimen General - IVA Devengado - Modificaciones bases y
+# cuotas del recargo de equivalencia - Cuota [26]" (aeat-dr-303-2022, campo 50)
+# and campo 51 adds it to the total cuota devengada [27]. It reads the recargo
+# the modification moves off the same rows casillas 14 and 15 read, which is
+# why it selects the rectification-modification role and the recargo fact
+# together. Its base, box [25], stays the operator's, exactly as the ordinary
+# recargo bases [16], [19] and [22] do: a base sum cannot select only the
+# recargo-bearing rows, and inventing that selection would put a base in the
+# recargo row that bore none.
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-modificacion-recargo-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["rectification_modification"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"

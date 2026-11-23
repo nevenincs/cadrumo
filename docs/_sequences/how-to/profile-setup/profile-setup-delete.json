@@ -31,7 +31,7 @@
           "display_name": "docs-sequence-sandbox",
           "earliest_safe_erase_date": null,
           "fingerprint": {
-            "digest": "623ece202bc254b63a05ce131aeb9bfafb4f3f57abed06adc0eb36f8dad1f2fc",
+            "digest": "c045b399498d7a81c619af7eb11b521ce0d8d81c58f34f8e0977b9e32983c515",
             "file_count": 4,
             "schema_version": 1,
             "total_bytes": 1850
@@ -80,7 +80,7 @@
           "display_name": "docs-sequence-sandbox",
           "earliest_safe_erase_date": null,
           "fingerprint": {
-            "digest": "623ece202bc254b63a05ce131aeb9bfafb4f3f57abed06adc0eb36f8dad1f2fc",
+            "digest": "c045b399498d7a81c619af7eb11b521ce0d8d81c58f34f8e0977b9e32983c515",
             "file_count": 4,
             "schema_version": 1,
             "total_bytes": 1850

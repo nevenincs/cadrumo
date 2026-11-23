@@ -300,6 +300,10 @@ class PublicLedgerPreflightIssue(BaseModel):
     transaction_id: str | Literal["__period__"]
     reason: LedgerPreflightIssueReason
     detail: str
+    missing_facts: tuple[str, ...] = ()
+    derived_modification_base: str | None = None
+    derived_modification_cuota: str | None = None
+    derived_modification_recargo: str | None = None
 
 
 class PublicProjectionModeloBindingRequirement(BaseModel):

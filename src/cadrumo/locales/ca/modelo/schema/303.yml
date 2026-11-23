@@ -261,6 +261,12 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Base imposable IVA suportat en operacions interiors amb béns d'inversió
               (part de la casella oficial 30)
+          iva-base-modificacion-bases-cuotas:
+            label: Base imposable de la modificació procedent de les factures rectificatives
+              del període (LIVA art. 80 i art. 89; casella oficial 14)
+          iva-base-modificacion-bases-cuotas-operador:
+            label: Base imposable de la modificació que fas constar tu, per al que
+              no consta document al catàleg (casella oficial 14)
           iva-base-repercutida-general:
             label: Base imposable de l'IVA repercutit al tipus general (21%) (part
               de la casella oficial 07)
@@ -313,6 +319,19 @@ modelo:
               del promotor (casella oficial 03)
           iva-cuota-devengada-total:
             label: Total quota d'IVA meritada
+          iva-cuota-modificacion-bases-cuotas:
+            label: Quota de la modificació procedent de les factures rectificatives
+              del període (LIVA art. 80 i art. 89; casella oficial 15)
+          iva-cuota-modificacion-bases-cuotas-operador:
+            label: Quota de la modificació que fas constar tu, per al que no consta
+              document al catàleg (casella oficial 15)
+          iva-cuota-modificacion-recargo:
+            label: Quota de la modificació del recàrrec d'equivalència procedent de
+              les factures rectificatives del període (LIVA art. 80 i art. 161; casella
+              oficial 26)
+          iva-cuota-modificacion-recargo-operador:
+            label: Quota de la modificació del recàrrec d'equivalència que fas constar
+              tu, per al que no consta document al catàleg (casella oficial 26)
           iva-cuota-repercutida-general:
             help: Quota total d'IVA repercutit calculada al tipus general del 21%.
             label: Quota IVA repercutit al tipus general (21%)

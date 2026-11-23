@@ -13,18 +13,21 @@ from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
+from ...core.aggregation import BindingSourceKind
 from ...core.i18n.translatable import Translatable as tr
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period, PeriodKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_selector_utils import provider_member
+from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.invoice_legal_classification import (
     resolve_invoice_legal_classification_catalogue,
 )
 from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...domain.calculations.registry.iva_deduction_catalogue import resolve_iva_deduction_catalogue
-from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation, LedgerIvaProvider
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import IvaRate, iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -56,6 +59,10 @@ from .errors import AggregationValidationError
 from .invoice_devengo import (
     invoice_devengo_in_period,
     resolve_invoice_devengo,
+)
+from .invoice_rectification_issued_observations import (
+    IssuedRectificationDeclarationRefusal,
+    issued_rectification_observations,
 )
 from .invoice_rectification_observations import (
     RectificationDeclarationRefusal,
@@ -791,9 +798,8 @@ class ScreenedRectificativa:
             blocked, because one modification reaches exactly one period.
         declaration_refusal: why a received modification declared in this
             period reached no casilla 40/41 observation, when it did not.
-        issued_declaration_unbound: an issued modification whose decided period
-            is this one. Casillas 14 and 15 carry no invoice-sourced binding
-            yet, so the period is blocked rather than declared short.
+        issued_declaration_refusal: why an issued modification declared in this
+            period reached no casilla 14/15 observation, when it did not.
     """
 
     invoice: Invoice
@@ -801,7 +807,7 @@ class ScreenedRectificativa:
     decided: DecidedRectificationPeriod
     declared_in_period: bool = False
     declaration_refusal: RectificationDeclarationRefusal | None = None
-    issued_declaration_unbound: bool = False
+    issued_declaration_refusal: IssuedRectificationDeclarationRefusal | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -891,9 +897,9 @@ class _ScreenedInvoiceIvaResult:
     rectificativa_declared_in_period: bool = False
     #: Why a received modification declared in this period reached no casilla.
     rectificativa_declaration_refusal: RectificationDeclarationRefusal | None = None
-    #: An issued modification whose decided period is this one, which casillas
-    #: 14 and 15 carry no invoice-sourced binding for yet.
-    rectificativa_issued_unbound: bool = False
+    #: Why an issued modification declared in this period reached no casilla
+    #: 14/15 observation, when it did not.
+    rectificativa_issued_refusal: IssuedRectificationDeclarationRefusal | None = None
     used_goods_margin_unmodelled: bool = False
 
 
@@ -997,7 +1003,7 @@ class _FlaggedInvoices:
                     decided=screened.rectificativa_period,
                     declared_in_period=screened.rectificativa_declared_in_period,
                     declaration_refusal=screened.rectificativa_declaration_refusal,
-                    issued_declaration_unbound=screened.rectificativa_issued_unbound,
+                    issued_declaration_refusal=screened.rectificativa_issued_refusal,
                 )
             )
         if screened.used_goods_margin_unmodelled:
@@ -1150,14 +1156,17 @@ def _screened_rectificativa_result(
     declared_here = decided.period is not None and decided.period == period
     observations: tuple[IvaLedgerObservation, ...] = ()
     refusal: RectificationDeclarationRefusal | None = None
-    issued_unbound = False
+    issued_refusal: IssuedRectificationDeclarationRefusal | None = None
     if declared_here and derived.modification is not None:
         if invoice.kind is InvoiceKind.ISSUED:
-            # Casillas 14, 15, 25 and 26 are operator input in every authored
-            # 303 edition: no binding reads an invoice-sourced modification
-            # yet. Declaring nothing silently would file the period short, so
-            # it blocks and names that.
-            issued_unbound = True
+            observations, issued_refusal = _issued_rectification_declaration(
+                invoice,
+                modification=derived.modification,
+                catalogue=catalogue,
+                decided=decided,
+                period=period,
+                operation=operation,
+            )
         else:
             observations, refusal = _received_rectification_declaration(
                 invoice,
@@ -1179,8 +1188,77 @@ def _screened_rectificativa_result(
         rectificativa_period=decided,
         rectificativa_declared_in_period=declared_here,
         rectificativa_declaration_refusal=refusal,
-        rectificativa_issued_unbound=issued_unbound,
+        rectificativa_issued_refusal=issued_refusal,
     )
+
+
+def _issued_rectification_declaration(
+    invoice: Invoice,
+    *,
+    modification: RectificationModification,
+    catalogue: Sequence[Invoice],
+    decided: DecidedRectificationPeriod,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[IvaLedgerObservation, ...], IssuedRectificationDeclarationRefusal | None]:
+    """Project an issued modification into casillas 14 and 15, or say why it reached none.
+
+    The original is passed where the catalogue resolves exactly one. Unlike the
+    received side it is not required: casillas 14 and 15 hold every category's
+    modification, so nothing about the box depends on the original; it supplies
+    only the devengo date the rate is read on.
+    """
+    originals = rectified_invoices(invoice, catalogue)
+    declaration = issued_rectification_observations(
+        invoice,
+        modification=modification,
+        original=originals[0] if len(originals) == 1 else None,
+        period=period,
+        declared_on=_issued_declaration_date(decided=decided, period=period),
+        binding_selectors=_modification_binding_selectors(period=period, operation=operation),
+    )
+    return declaration.observations, declaration.refusal
+
+
+def _modification_binding_selectors(
+    *,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> tuple[LedgerIvaProvider, ...]:
+    """The selected Modelo 303 edition's ledger IVA selectors, or none when it cannot be read.
+
+    Fail closed on purpose: with no selectors every modification row is held,
+    which is the right answer for an edition whose modification casillas are
+    still operator input and for a year whose edition cannot be resolved at
+    all. Admitting the rows instead would emit observations that reach no
+    casilla, and a cuota-less row is excluded from the unrouted-observation
+    screen as well, so the period would be filed short in silence.
+    """
+    try:
+        revision = operation.reading_snapshot(
+            "303",
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        ).revision
+    except RegistryError:
+        return ()
+    return tuple(
+        provider_member(binding, LedgerIvaProvider)
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.LEDGER_IVA_AGGREGATION
+    )
+
+
+def _issued_declaration_date(*, decided: DecidedRectificationPeriod, period: Period) -> date:
+    """The date inside the decided period an issued modification is declared on.
+
+    The issuer's routes name a period rather than a day: the art. 89.Cinco
+    inclusion is the period the rectification is made in, and the elected
+    regularisation is a declaración-liquidación the operator chose. The
+    observation only needs a date the period holds.
+    """
+    del decided
+    return period.start_date
 
 
 def _received_rectification_declaration(

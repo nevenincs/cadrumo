@@ -949,7 +949,7 @@ export type LedgerPreflightIssueReason =
   | "invoice_rectificativa_modification_unmodelled"
   | "invoice_rectificativa_period_needs_fact"
   | "invoice_rectificativa_deduction_row_undeclarable"
-  | "invoice_rectificativa_issued_modification_unbound"
+  | "invoice_rectificativa_issued_row_undeclarable"
   | "invoice_used_goods_margin_unmodelled";
 
 /**

@@ -34,6 +34,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from ...core.decimal.constants import ZERO
 from ...core.i18n.translatable import Translatable as tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...domain.calculations.registry.iva_deduction_catalogue import resolve_iva_deduction_catalogue
@@ -58,9 +59,10 @@ __all__ = [
     "ReceivedRectificationDeclaration",
     "RectificationDeclarationRefusal",
     "received_rectification_observations",
+    "rectification_amount_eur",
+    "rectification_declaration_date",
 ]
 
-_ZERO = Decimal("0")
 _RECTIFICATION_KIND_KEY = "kind.rectification"
 _RECTIFICATION_AUTHORITY_ROLE = "rectification_evidence"
 
@@ -167,9 +169,9 @@ def _row_observation(
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerObservation | None:
     """One rate's signed modification as a rectificación de deducciones, or ``None`` when no box holds it."""
-    base_amount = _eur(rectificativa, row.base, row_index=row_index)
-    iva_amount = _eur(rectificativa, row.cuota, row_index=row_index)
-    if iva_amount == _ZERO:
+    base_amount = rectification_amount_eur(rectificativa, row.base, row_index=row_index)
+    iva_amount = rectification_amount_eur(rectificativa, row.cuota, row_index=row_index)
+    if iva_amount == ZERO:
         # Fact 0085 requires a rectification to carry signed non-zero base AND
         # cuota, and casillas 40 and 41 declare rectified DEDUCIBLE cuotas. A
         # row that moves only a base therefore has no box here.
@@ -187,7 +189,7 @@ def _row_observation(
         return None
     return IvaLedgerObservation(
         ledger_id=f"invoice:{rectificativa.invoice_id}:rectification:{row_index}",
-        transaction_date=_declaration_date(declared_on, period),
+        transaction_date=rectification_declaration_date(declared_on, period),
         category=category,
         rate_kind=classification.rate_kind,
         flow_direction=flow,
@@ -201,7 +203,7 @@ def _row_observation(
     )
 
 
-def _declaration_date(declared_on: date, period: Period) -> date:
+def rectification_declaration_date(declared_on: date, period: Period) -> date:
     """The date the observation carries, which must sit inside the period it is declared in.
 
     The route's own date is used where the period holds it, which is every
@@ -213,7 +215,7 @@ def _declaration_date(declared_on: date, period: Period) -> date:
     return declared_on if period.has_date_span() and period.contains(declared_on) else period.start_date
 
 
-def _eur(invoice: Invoice, amount: Decimal, *, row_index: int) -> Decimal:
+def rectification_amount_eur(invoice: Invoice, amount: Decimal, *, row_index: int) -> Decimal:
     """One signed modification amount in EUR, refusing an invoice that resolves no rate."""
     converted = invoice.line_amount_eur(amount)
     if converted is None:

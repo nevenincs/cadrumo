@@ -859,3 +859,81 @@ args = [
     { op = "add", args = [{ casilla_id = "80" }, { casilla_id = "81" }, { casilla_id = "93" }, { casilla_id = "94" }, { casilla_id = "83" }, { casilla_id = "84" }, { casilla_id = "125" }, { casilla_id = "126" }, { casilla_id = "127" }, { casilla_id = "128" }, { casilla_id = "86" }, { casilla_id = "95" }, { casilla_id = "96" }, { casilla_id = "97" }, { casilla_id = "98" }] },
     { op = "add", args = [{ casilla_id = "79" }, { casilla_id = "99" }] },
 ]
+
+# Box [14] states the modificación de bases imponibles, which the 2022 diseño
+# prints as "Liquidación (3) - Regimen General - IVA Devengado - Modificación
+# bases y cuotas - Base imponible [14]" (campo 38) and every later design
+# prints the same way. The box holds ONE figure that the record keeps as two
+# contributions: the modification the period's facturas rectificativas make,
+# and the modification the person states for what no document in the catalogue
+# covers. They are added here rather than merged earlier so neither can be
+# mistaken for the other, and so a typed figure that describes a document the
+# catalogue already holds can be found and refused.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-14-projection"
+target_casilla_id = "14"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "add"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.modificacion-bases-cuotas.base"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.modificacion-bases-cuotas.operador.base"
+
+# Box [15] states the same modification's cuota (aeat-dr-303-2022, campo 39),
+# which campo 51 adds to the total cuota devengada [27]. Its two contributions
+# are the cuota halves of the two [14] states.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-15-projection"
+target_casilla_id = "15"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "add"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.modificacion-bases-cuotas"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.modificacion-bases-cuotas.operador"
+
+# Box [26] states the cuota of the modificación del recargo de equivalencia
+# (aeat-dr-303-2022, campo 50), which campo 51 adds to the total cuota
+# devengada [27]. Like boxes [14] and [15], it states one figure the record
+# keeps as two contributions: the recargo the period's facturas rectificativas
+# move, and the one the person states for what no document in the catalogue
+# covers.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-26-projection"
+target_casilla_id = "26"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "add"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.modificacion-recargo"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.modificacion-recargo.operador"

@@ -31,7 +31,11 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 )
 from cadrumo.application.invoices.catalogue_read_operation import INVOICE_VIEW_OPERATION_DEFINITION_ID
 from cadrumo.application.invoices.catalogue_remove_operation import INVOICE_REMOVE_OPERATION_DEFINITION_ID
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.invoice_legal_classification import (
+    resolve_invoice_legal_classification_catalogue,
+)
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.business_premises import SituacionInmueble
 from cadrumo.tests.cli_envelope import require_error_document
@@ -469,3 +473,79 @@ def test_catalogue_create_refuses_a_situacion_outside_the_record_design(
         assert result.exit_code == 2, result.output
         after = catalogue_after_password_login(session.profile_id, authority_operation)
         assert len(after.invoices) == len(before.invoices)
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_records_the_recipient_period_election_from_its_year_and_token(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path, run_cadrumo_cli
+) -> None:
+    """LIVA art. 114.Dos.1.º leaves the recipient a choice, and the CLI can now state it.
+
+    The elected declaración-liquidación is given as a filing year and a bare
+    AEAT period token, the one period grammar every other verb speaks, and
+    reaches the record as the period it names.
+    """
+    with native_invoice_runtime_session(
+        tmp_path, invoke_cli=run_cadrumo_cli, operation_ids=_RUNTIME_OPERATIONS
+    ) as session:
+        catalogue = resolve_invoice_legal_classification_catalogue(effective_date=date(_YEAR, 3, 10))
+        result = session.invoke_password(
+            "app", "ledger", "invoice", "add",
+            "--kind", "received",
+            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
+            "--counterparty-name", "Proveedor Rectificativa SL",
+            "--invoice-number", "2026-ELECCION-001",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--invoice-class", "RECTIFICATIVA",
+            "--series", "R",
+            "--rectifies-invoice-number", "2026-0100",
+            "--rectification-method", str(catalogue.diferencia_token),
+            "--rectification-cause", str(catalogue.otra_modificacion_cause_token),
+            "--rectification-direction", str(catalogue.aumento_token),
+            "--document-received-on", date(_YEAR, 3, 20).isoformat(),
+            "--recipient-increase-year", str(_YEAR),
+            "--recipient-increase-period", "2T",
+            output_format="text",
+        )  # fmt: skip
+        assert result.exit_code == 0, result.output
+        invoice_id = line_value(result.output, "invoice_id")
+
+        stored = catalogue_after_password_login(session.profile_id, authority_operation).invoices.get(invoice_id)
+        assert stored is not None
+        assert stored.recipient_increase_period == Period.from_year_and_code(_YEAR, "2T")
+        assert stored.issuer_minoracion_election is None
+        assert stored.art_80_tres_obligations_attested is None
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_refuses_an_elected_year_with_no_period_token(tmp_path: Path, run_cadrumo_cli) -> None:
+    """A year names no declaración-liquidación on its own, so the half-stated pair refuses."""
+    with native_invoice_runtime_session(
+        tmp_path, invoke_cli=run_cadrumo_cli, operation_ids=_RUNTIME_OPERATIONS
+    ) as session:
+        catalogue = resolve_invoice_legal_classification_catalogue(effective_date=date(_YEAR, 3, 10))
+        result = session.invoke_password(
+            "app", "ledger", "invoice", "add",
+            "--kind", "received",
+            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
+            "--counterparty-name", "Proveedor Rectificativa SL",
+            "--invoice-number", "2026-ELECCION-002",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--invoice-class", "RECTIFICATIVA",
+            "--series", "R",
+            "--rectifies-invoice-number", "2026-0101",
+            "--rectification-method", str(catalogue.diferencia_token),
+            "--rectification-cause", str(catalogue.otra_modificacion_cause_token),
+            "--rectification-direction", str(catalogue.aumento_token),
+            "--document-received-on", date(_YEAR, 3, 20).isoformat(),
+            "--recipient-increase-year", str(_YEAR),
+            output_format="text",
+        )  # fmt: skip
+
+        assert result.exit_code != 0, result.output

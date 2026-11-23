@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 import typer
 
 from ...application.modelo.export_contracts import modelo_export_readiness_refusal
@@ -18,6 +16,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.ids import RevisionId
 from .action_rendering import resolved_precondition_action_json_cell
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_cli_precondition_action
+from .decimal_parsing import optional_decimal_text
 from .modelo_behavior_support import resolve_year_period
 from .modelo_query_results import (
     LedgerIssuePayload,
@@ -151,9 +150,9 @@ def modelo_readiness_commands_readiness_result(
                 reason=issue.reason.value,
                 detail=issue.detail,
                 missing_facts=list(issue.missing_facts),
-                derived_modification_base=_decimal_text(issue.derived_modification_base),
-                derived_modification_cuota=_decimal_text(issue.derived_modification_cuota),
-                derived_modification_recargo=_decimal_text(issue.derived_modification_recargo),
+                derived_modification_base=optional_decimal_text(issue.derived_modification_base),
+                derived_modification_cuota=optional_decimal_text(issue.derived_modification_cuota),
+                derived_modification_recargo=optional_decimal_text(issue.derived_modification_recargo),
             )
             for issue in report.ledger_issues
         ],
@@ -308,11 +307,6 @@ def _readiness_notices(
 
 def _ledger_ready_but_bindings_missing(report: ProjectionModeloReadiness) -> bool:
     return report.ledger_ready is True and not report.binding_ready and bool(report.missing_bindings)
-
-
-def _decimal_text(value: Decimal | None) -> str | None:
-    """Render an amount as the JSON projection renders it, ``None`` kept."""
-    return None if value is None else str(value)
 
 
 __all__ = ["modelo_readiness"]

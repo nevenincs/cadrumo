@@ -88,6 +88,9 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
             "record",
             "rectificacion",
             "records",
+            # The rectification_method token the registry declares in
+            # 0141-invoice-legal-classification-catalogue, named as typed.
+            "sustitucion",
             "retencion",
             "revision",
             "super",

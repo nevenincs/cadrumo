@@ -3231,9 +3231,11 @@ application:
           számla ehhez az időszakhoz tartozik, és a levonás helyesbítése nem helyezhető
           el: a helyesbített számla nem egyetlen nyilvántartási tétel, vagy egy sor
           adóalapot visz levonható adó nélkül'
-        invoice_rectificativa_issued_modification_unbound: egy kiállított helyesbítő
-          számla ehhez az időszakhoz tartozik, és ennek a Modelo 303-nak a módosítási
-          rubrikáit kézzel írod be, ezért az összegei nem jutnak el oda a számláról
+        invoice_rectificativa_issued_row_undeclarable: 'egy kiállított helyesbítő
+          számla ehhez az időszakhoz tartozik, és a módosítása nem helyezhető el:
+          egy sor olyan adókulcsot visz, amelyhez azon a napon egyetlen sáv sem tartozik,
+          vagy a helyesbítés egyenértékűségi felárat mozgat, amelyet a 25. és 26.
+          rubrika visz, és oda még egyetlen számla sem jut el'
         invoice_rectificativa_modification_unmodelled: 'a helyesbítő számla (factura
           rectificativa) nyilvántartása nem adja meg, milyen módosítást végez: hogyan
           adja meg az összegeit, és ha azokat helyettesíti, melyik egyetlen számlát
@@ -3892,6 +3894,24 @@ application:
         alapján (súlyozott szám: %{weighted_count}) jogosult lehetsz a madridi születési
         vagy örökbefogadási kedvezményre.'
       missing_required_casilla: A kötelező [%{casilla_id}] rovat üres.
+      modification_recargo_base_missing: A 26. rubrika %{recargo_value} EUR egyenértékűségi
+        felár-módosítást visz, a(z) %{casilla_id}. rubrika pedig, amely az adóalapja,
+        üres. Az adóalapot te adod meg, ugyanúgy, mint a többi felársornál. Ennek
+        az időszaknak az adóalap-módosítása %{modification_base_value} EUR; add meg
+        azt a részét, amelyre a felárat felszámították, és számolj újra.
+      modification_typed_beside_invoice_sourced: A(z) %{casilla_id}. rubrika már %{invoice_sourced_value}
+        EUR-t visz az időszak helyesbítő számláiból, és te ezen felül %{typed_value}
+        EUR-t írtál a(z) %{contribution_casilla_id} rubrikába. A beírt összeg olyan
+        módosításra való, amelyhez a katalógusodban nincs dokumentum, és a nyilvántartás
+        nem mondja meg, mely ügyletekre vonatkozik, így a rubrika ugyanazt a dokumentumot
+        kétszer is viheti. Vedd ki, vagy rögzítsd a hozzá tartozó dokumentumot, és
+        számolj újra.
+      modification_value_stored_on_computed_box: A(z) %{casilla_id}. rubrika %{stored_value}
+        EUR-t őriz, amit még azelőtt írtál be, hogy ez a rubrika a helyesbítő számlákat
+        olvasta volna. A rubrika mostantól az ő összegük és a tiéd összege, így ez
+        az összeg sem eldobva, sem felhasználva nincs. Írd be újra a(z) %{contribution_casilla_id}
+        rubrikába, arra a módosításra, amelyhez a katalógusodban nincs dokumentum,
+        és számolj újra.
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id}, %{filing_year}:
         a profilodban megadott %{declared} érték meghaladja az objektív becslés (estimación
         objetiva, módulos) %{threshold} határát.'

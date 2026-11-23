@@ -455,6 +455,11 @@ cli:
         arrendamiento_local_negocio_help: Jelöld, ha az ingatlan bérbeadója által
           kibocsátott számla üzleti célú helyiség bérbeadásához kapcsolódik. A fekvés
           és a kataszteri azonosító mezővel rögzítheted az ingatlan adatait.
+        art_80_tres_obligations_attested_help: 'Nyilatkozz arról, hogy a RIVA 24.
+          cikke szerinti közlés és megküldés megtörtént a 80.Tres szerinti módosításhoz,
+          vagy a --no-art-80-tres-obligations-attested kapcsolóval arról, hogy nem.
+          Hagyd ki, amíg nem tudod: a módosítás visszatartva marad, és soha nem fogadja
+          el csak a dokumentum alapján.'
         attach_document_help: Egy számla dokumentumát (a PDF-et vagy az e-számlát)
           a számlával együtt tárolja.
         attach_document_source_help: A dokumentumfájl elérési útja.
@@ -468,10 +473,18 @@ cli:
         duplicate_invalid: A számla típusának és a dokumentum adatainak a várt alakúnak
           kell lenniük.
         duplicate_kind_help: 'A számla iránya: `issued` vagy `received`.'
+        elected_year_without_period: A(z) %{year} év önmagában egyetlen bevallást
+          sem azonosít. Add meg a hozzá tartozó időszak-tokent is (0A, 1T-4T, 01-12),
+          vagy hagyd ki mindkettőt.
         euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
           {date} napra, ezért a számla euróérték nélkül került rögzítésre, és kimarad
           az eurós összesítésekből, amíg árfolyam nem kerül hozzá. Add meg az árfolyamot
           az app ledger invoice update --fx-rate paranccsal.
+        exercised_deduction_period_help: Ennek a bevallásnak az időszak-tokenje (0A,
+          1T-4T, 01-12). Add meg az évvel együtt; az összevont naptári írásmódot elutasítja.
+        exercised_deduction_year_help: Annak a bevallásnak az éve, amelyben az eredeti
+          levonást gyakorolták (ÉÉÉÉ). A RIVA 24.2.b.3 oda irányítja a 80.Tres szerinti
+          csökkentést; add meg az időszak-tokennel együtt.
         fx_rate_help: 'Devizás számla árfolyama: a pénzneme egy egységének euróértéke
           a teljesítés napján, vagyis a művelet napján, ha megadod, egyébként a számla
           keltének napján, például 0.9250 (LIVA 79.Once cikk: a Banco de España a
@@ -504,6 +517,21 @@ cli:
         invoice_class_help: A számla osztálya. A rectificativa emellett a --rectifies-invoice-number
           megadását is megköveteli, amely a javított számlát nevezi meg.
         invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
+        issuer_increase_election_help: 'Melyik utat választod a LIVA 80. cikke szerinti
+          okra vagy error fundado de derecho esetre alapozott kibocsátott növelésnél
+          (89.Cinco): incluir_en_el_periodo, ha a különbséget a helyesbítés időszakának
+          bevallásában vallod be, autoliquidacion_rectificativa, ha helyesbítő bevallást
+          adsz be pótlékkal és kamattal.'
+        issuer_minoracion_election_help: 'Melyik utat választod kibocsátott csökkentésnél
+          (LIVA 89.Cinco): procedimiento_120_3_lgt az LGT 120.3 szerinti eljáráshoz,
+          regularizacion_en_autoliquidacion, ha bevallásban rendezed, ami egyben arra
+          is kötelez, hogy a címzettnek visszatérítsd.'
+        issuer_minoracion_regularisation_period_help: Ennek a bevallásnak az időszak-tokenje
+          (0A, 1T-4T, 01-12). Add meg az évvel együtt; az összevont naptári írásmódot
+          elutasítja.
+        issuer_minoracion_regularisation_year_help: Annak a bevallásnak az éve, amelyben
+          a kibocsátott csökkentést rendezed (ÉÉÉÉ). Add meg az időszak-tokennel együtt;
+          a LIVA 89.Cinco legfeljebb egy évet engedélyez.
         iva_category_help: Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás
           megalapozhassa.
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
@@ -552,6 +580,11 @@ cli:
           azonosítója; ezzel az ítélet csak a megadott adatokra vonatkozik.
         recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
           cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
+        recipient_increase_period_help: Ennek a bevallásnak az időszak-tokenje (0A,
+          1T-4T, 01-12). Add meg az évvel együtt; az összevont naptári írásmódot elutasítja.
+        recipient_increase_year_help: Annak a bevallásnak az éve, amelyben a befogadott
+          növelést bevallod (ÉÉÉÉ). Add meg az időszak-tokennel együtt; a LIVA 114.Dos.1
+          a kézhezvétel időszakát vagy négy éven belül egy későbbit engedélyez.
         rectification_cause_help: Miért helyesbíti a számla az adóalapot és az adót;
           a nyilvántartás által a számla dátumára meghirdetett jogalapok egyike (a
           LIVA 80. cikkének bekezdései, error_fundado_de_derecho vagy otra_modificacion).

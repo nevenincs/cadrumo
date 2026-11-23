@@ -53,6 +53,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.parsing.codes import normalise_iso_4217_currency
+from ...core.period import Period
 from ...domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -93,6 +94,7 @@ from .operation_invoice_catalogue import (
     view_invoice_catalogue,
 )
 from .operation_invoice_intake import submit_invoice_import, submit_invoice_wizard
+from .period_parsing import optional_canonical_period
 
 
 def snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceRecordPayload:
@@ -323,6 +325,15 @@ def invoice_add(
     rectification_cause: str | None = None,
     rectification_direction: str | None = None,
     document_received_on: str | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_year: int | None = None,
+    issuer_minoracion_regularisation_period: str | None = None,
+    recipient_increase_year: int | None = None,
+    recipient_increase_period: str | None = None,
+    exercised_deduction_year: int | None = None,
+    exercised_deduction_period: str | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
     recargo: str | None = None,
     fx_rate: str | None = None,
     iva_category: IvaCategory | None = None,
@@ -386,6 +397,15 @@ def invoice_add(
             rectification_cause=rectification_cause,
             rectification_direction=rectification_direction,
             document_received_on=document_received_on,
+            issuer_increase_election=issuer_increase_election,
+            issuer_minoracion_election=issuer_minoracion_election,
+            issuer_minoracion_regularisation_year=issuer_minoracion_regularisation_year,
+            issuer_minoracion_regularisation_period=issuer_minoracion_regularisation_period,
+            recipient_increase_year=recipient_increase_year,
+            recipient_increase_period=recipient_increase_period,
+            exercised_deduction_year=exercised_deduction_year,
+            exercised_deduction_period=exercised_deduction_period,
+            art_80_tres_obligations_attested=art_80_tres_obligations_attested,
             recargo=recargo,
             fx_rate=fx_rate,
             arrendamiento_local_negocio=arrendamiento_local_negocio,
@@ -450,6 +470,15 @@ def invoice_wizard(
     rectification_cause: str | None = None,
     rectification_direction: str | None = None,
     document_received_on: str | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_year: int | None = None,
+    issuer_minoracion_regularisation_period: str | None = None,
+    recipient_increase_year: int | None = None,
+    recipient_increase_period: str | None = None,
+    exercised_deduction_year: int | None = None,
+    exercised_deduction_period: str | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
     recargo: str | None = None,
     iva_category: IvaCategory | None = None,
     notes: str = "",
@@ -493,6 +522,14 @@ def invoice_wizard(
         rectification_cause=rectification_cause,
         rectification_direction=rectification_direction,
         document_received_on=document_received_on,
+        issuer_increase_election=issuer_increase_election,
+        issuer_minoracion_election=issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=_elected_period_text(
+            issuer_minoracion_regularisation_period, year=issuer_minoracion_regularisation_year
+        ),
+        recipient_increase_period=_elected_period_text(recipient_increase_period, year=recipient_increase_year),
+        exercised_deduction_period=_elected_period_text(exercised_deduction_period, year=exercised_deduction_year),
+        art_80_tres_obligations_attested=art_80_tres_obligations_attested,
         recargo_amount=recargo,
     )
     invoice = snapshot_invoice_payload(wizard_result.invoice)
@@ -821,6 +858,15 @@ def invoice_update(
     rectification_cause: str | None = None,
     rectification_direction: str | None = None,
     document_received_on: str | None = None,
+    issuer_increase_election: str | None = None,
+    issuer_minoracion_election: str | None = None,
+    issuer_minoracion_regularisation_year: int | None = None,
+    issuer_minoracion_regularisation_period: str | None = None,
+    recipient_increase_year: int | None = None,
+    recipient_increase_period: str | None = None,
+    exercised_deduction_year: int | None = None,
+    exercised_deduction_period: str | None = None,
+    art_80_tres_obligations_attested: bool | None = None,
     fx_rate: str | None = None,
 ) -> None:
     """Correct one persisted invoice without re-keying it.
@@ -852,6 +898,18 @@ def invoice_update(
         "document_received_on": (
             None if document_received_on is None else parse_iso_date(document_received_on, label="document-received-on")
         ),
+        # The two election tokens travel as stated text, as the three facts
+        # above do. The three periods are parsed here, because the patch
+        # carries a typed period and a declaracion-liquidacion is a year and a
+        # registry code rather than a calendar string.
+        "issuer_increase_election": issuer_increase_election,
+        "issuer_minoracion_election": issuer_minoracion_election,
+        "issuer_minoracion_regularisation_period": _elected_period(
+            issuer_minoracion_regularisation_period, year=issuer_minoracion_regularisation_year
+        ),
+        "recipient_increase_period": _elected_period(recipient_increase_period, year=recipient_increase_year),
+        "exercised_deduction_period": _elected_period(exercised_deduction_period, year=exercised_deduction_year),
+        "art_80_tres_obligations_attested": art_80_tres_obligations_attested,
         "declared_fx_rate": None if fx_rate is None else parse_fraction(fx_rate, label="fx-rate"),
     }
     patch = CatalogueInvoicePatch.model_validate(
@@ -928,6 +986,15 @@ def _invoice_add_request(
     rectification_cause: str | None,
     rectification_direction: str | None,
     document_received_on: str | None,
+    issuer_increase_election: str | None,
+    issuer_minoracion_election: str | None,
+    issuer_minoracion_regularisation_year: int | None,
+    issuer_minoracion_regularisation_period: str | None,
+    recipient_increase_year: int | None,
+    recipient_increase_period: str | None,
+    exercised_deduction_year: int | None,
+    exercised_deduction_period: str | None,
+    art_80_tres_obligations_attested: bool | None,
     recargo: str | None,
     fx_rate: str | None,
     arrendamiento_local_negocio: bool,
@@ -970,6 +1037,14 @@ def _invoice_add_request(
         document_received_on=(
             None if document_received_on is None else parse_iso_date(document_received_on, label="document-received-on")
         ),
+        issuer_increase_election=issuer_increase_election,
+        issuer_minoracion_election=issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=_elected_period_text(
+            issuer_minoracion_regularisation_period, year=issuer_minoracion_regularisation_year
+        ),
+        recipient_increase_period=_elected_period_text(recipient_increase_period, year=recipient_increase_year),
+        exercised_deduction_period=_elected_period_text(exercised_deduction_period, year=exercised_deduction_year),
+        art_80_tres_obligations_attested=art_80_tres_obligations_attested,
         recargo_amount=public_amount(recargo, label="recargo"),
         business_premises_lease=InvoiceAddBusinessPremisesLease.from_inputs(
             lease_selected=arrendamiento_local_negocio,
@@ -980,6 +1055,25 @@ def _invoice_add_request(
         declared_fx_rate=_declared_fx_rate(fx_rate),
     )
     return request
+
+
+def _elected_period(period: str | None, *, year: int | None) -> Period | None:
+    """One elected declaración-liquidación from its year and bare AEAT token, or ``None``.
+
+    The pair is read by the one CLI period grammar, so a calendar shape refuses
+    with the message naming the AEAT tokens, a token with no year refuses there,
+    and a year with no token refuses here rather than selecting a cadence the
+    operator did not state.
+    """
+    if period is None and year is not None:
+        raise bad(tr("cli.app.ledger.invoice.elected_year_without_period", year=str(year)))
+    return optional_canonical_period(period, year=year)
+
+
+def _elected_period_text(period: str | None, *, year: int | None) -> str | None:
+    """The same elected period as the display string the public request schema carries."""
+    resolved = _elected_period(period, year=year)
+    return None if resolved is None else str(resolved)
 
 
 def _declared_fx_rate(raw: str | None) -> PublicDecimal | None:

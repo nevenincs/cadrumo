@@ -236,6 +236,6 @@ def test_the_ledger_reports_every_rectificativa_hold_calculation_raises() -> Non
         InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED,
         InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_NEEDS_FACT,
         InvoiceIvaFindingReason.RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE,
-        InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND,
+        InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE,
     ):
         assert LedgerPreflightIssueReason(reason.value).value == reason.value

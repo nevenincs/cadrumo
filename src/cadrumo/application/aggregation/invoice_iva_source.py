@@ -110,11 +110,12 @@ class InvoiceIvaFindingReason(StrEnum):
     #: single catalogue record, so the deduction family that routes the box is
     #: unknown, or a row carries a base the deducible-cuota boxes cannot hold.
     RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE = "invoice_rectificativa_deduction_row_undeclarable"
-    #: An ISSUED modification whose period is this one. Casillas 14, 15, 25 and
-    #: 26 are operator input in every authored 303 edition, so no binding reads
-    #: an invoice-sourced modification yet and declaring nothing would file the
-    #: period short.
-    RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND = "invoice_rectificativa_issued_modification_unbound"
+    #: An ISSUED modification whose period is this one and whose casilla 14/15
+    #: observation could not be built: a row carries a rate the dated tier
+    #: table places in no slot, or the modification moves a recargo de
+    #: equivalencia, which casillas 25 and 26 hold and no binding reads yet.
+    #: Declaring the rest silently would file the period short.
+    RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE = "invoice_rectificativa_issued_row_undeclarable"
     #: An issued invoice under the régimen especial de los bienes usados. Its
     #: taxable base is the margin de beneficio, IVA included (LIVA art. 137),
     #: and its cuota is never stated on the invoice (art. 138), so no rate row
@@ -512,8 +513,7 @@ def _rectificativa_finding(screened: ScreenedRectificativa) -> InvoiceIvaFinding
     Four blocking outcomes, each naming a different thing the person does: a
     record that supports no modification at all, a modification no period holds
     yet, a received modification this period declares whose casilla could not
-    be built, and an issued modification this period declares that no binding
-    reads.
+    be built, and an issued one whose casilla could not be built.
 
     ``None`` is the two non-blocking outcomes. A modification declared in THIS
     period and projected into its observations needs no finding: it is
@@ -541,9 +541,9 @@ def _rectificativa_finding(screened: ScreenedRectificativa) -> InvoiceIvaFinding
             rectification_period_need=decided.need,
             rectification_period_refusal=decided.refusal,
         )
-    if screened.issued_declaration_unbound:
+    if screened.issued_declaration_refusal is not None:
         return InvoiceIvaFinding(
-            reason=InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND,
+            reason=InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE,
             invoice_id=screened.invoice.invoice_id,
             rectification_modification=modification,
         )

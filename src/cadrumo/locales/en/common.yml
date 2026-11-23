@@ -4322,7 +4322,7 @@ desktop:
       invoice_recargo_not_declarable: Surcharge
       invoice_recargo_split_unresolved: Surcharge
       invoice_rectificativa_deduction_row_undeclarable: Corrected deduction
-      invoice_rectificativa_issued_modification_unbound: Issued correction
+      invoice_rectificativa_issued_row_undeclarable: Issued correction
       invoice_rectificativa_modification_unmodelled: Rectificativa
       invoice_rectificativa_period_needs_fact: Correction period
       invoice_used_goods_margin_unmodelled: Used goods
@@ -4358,8 +4358,8 @@ desktop:
         VAT rates
       invoice_rectificativa_deduction_row_undeclarable: The invoice it corrects is
         not a single record, or a line has no deductible cuota
-      invoice_rectificativa_issued_modification_unbound: Type the modification into
-        the Modelo 303 casillas yourself
+      invoice_rectificativa_issued_row_undeclarable: A line's rate has no tier on
+        that date, or the correction moves a recargo de equivalencia
       invoice_rectificativa_modification_unmodelled: State how it expresses its figures,
         and which invoice it replaces
       invoice_rectificativa_period_needs_fact: The correction is known; its period
