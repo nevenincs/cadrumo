@@ -35,8 +35,8 @@ from .read_access import resolve_ledger_request_read_access
 from .removal_receipt_projection import LedgerRemovalBlockerProjection, project_removal_blockers
 
 LEDGER_SEALED_READ_OPERATION_DEFINITION_ID = "ledger.sealed.read"
-LEDGER_SEALED_READ_MAX_SEALS = 8
-"""The most sealing declarations one row names; ``seal_count`` says how many there are."""
+LEDGER_SEALED_READ_SEAL_SAMPLE = 8
+"""How many of a row's sealing declarations it names as a sample; ``seal_count`` says how many there are."""
 
 _TransactionId = Annotated[str, Field(min_length=1, max_length=128)]
 
@@ -63,13 +63,13 @@ class LedgerSealedRow(BaseModel):
     transaction_id: _TransactionId
     state: Literal["sealed", "open", "not_found"]
     seal_count: int = Field(ge=0)
-    seals: Annotated[tuple[LedgerRemovalBlockerProjection, ...], Field(max_length=LEDGER_SEALED_READ_MAX_SEALS)] = ()
+    seals: Annotated[tuple[LedgerRemovalBlockerProjection, ...], Field(max_length=LEDGER_SEALED_READ_SEAL_SAMPLE)] = ()
 
     @model_validator(mode="after")
     def _consistent(self) -> LedgerSealedRow:
         if (self.state == "sealed") != (self.seal_count > 0):
             raise ValueError("a sealed row names its declarations and only a sealed row does")
-        if len(self.seals) != min(self.seal_count, LEDGER_SEALED_READ_MAX_SEALS):
+        if len(self.seals) != min(self.seal_count, LEDGER_SEALED_READ_SEAL_SAMPLE):
             raise ValueError("a row names every sealing declaration up to the bound")
         return self
 
@@ -102,7 +102,7 @@ def sealed_rows(
                 transaction_id=transaction_id,
                 state="sealed" if found else "open",
                 seal_count=len(found),
-                seals=project_removal_blockers(found[:LEDGER_SEALED_READ_MAX_SEALS]),
+                seals=project_removal_blockers(found[:LEDGER_SEALED_READ_SEAL_SAMPLE]),
             )
         )
     return tuple(rows)

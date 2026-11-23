@@ -26,8 +26,8 @@ from .classify_requests import (
 LEDGER_BATCH_UPDATE_OPERATION_DEFINITION_ID = "ledger.update.batch"
 LEDGER_BATCH_UPDATE_PREVIEW_OPERATION_DEFINITION_ID = "ledger.update.batch.preview"
 LEDGER_BATCH_UPDATE_PLAN_CHANGED_REFUSAL_CODE = "REFUSED_LEDGER_BATCH_PLAN_CHANGED"
-LEDGER_BATCH_UPDATE_MAX_ROWS = 2000
-"""The most movements one batch edit names."""
+LEDGER_BATCH_UPDATE_MAX_ROWS = 2048
+"""The most movements one batch edit request carries: a capacity of the request, not of any form."""
 LEDGER_BATCH_UPDATE_MAX_ROW_MESSAGES = 4
 LEDGER_BATCH_GROUP_LABEL_MAX = 64
 
