@@ -24,7 +24,7 @@ import type { CallPlan, HostCall } from "./hostCall";
 import { modelListState } from "./modelListState";
 import { hostCall, observedInvoke } from "./hostCall";
 import { refuseIfEnded, sessionBound } from "./sessionGate";
-import type { ProviderSettings } from "./providerSettings";
+import { settingsSetupState, type ProviderSettings } from "./providerSettings";
 import type {
   ProviderSignInSnapshot,
   ProviderSettingsAnswer,
@@ -510,7 +510,14 @@ function tauriProviderSettings(
       : unavailable();
   return {
     status: (plan) =>
-      command<ProviderSettingsAnswer>("provider_settings_status", {}, plan),
+      command<ProviderSettingsAnswer>(
+        "provider_settings_status",
+        {},
+        {
+          ...plan,
+          state: settingsSetupState,
+        },
+      ),
     observeConsoleLogin: (changed) => listen("provider-login-changed", changed),
     async set({ provider, revision, secret, base_url }) {
       if (!token) return unavailable();
