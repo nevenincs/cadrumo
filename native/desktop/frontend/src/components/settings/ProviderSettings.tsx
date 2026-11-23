@@ -15,6 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import iconArtwork from "virtual:desktop-provider-icons";
 import type { AgentEngineHealth } from "../../shell/agentSession";
+import {
+  groupedByProvider,
+  offerMatches,
+  type OfferedLane,
+} from "../../shell/agentOffer";
 import type { SetupRow } from "../../ipc/componentSetup";
 import { engineNotRunningWords } from "../../shell/engineHealth";
 import { connectionWords } from "../../shell/providerConnection";
@@ -530,20 +535,18 @@ type ProviderGroup = {
   lanes: ProviderStatus[];
 };
 
-/** Keep each provider's API and app connections together, but independent. */
+/** Keep each provider's API and app connections together, but independent:
+ * in the order the provider's first lane was served, its API lane first. */
 function providerGroups(providers: readonly ProviderStatus[]): ProviderGroup[] {
-  const groups = new Map<string, ProviderGroup>();
-  for (const lane of inListOrder(providers)) {
-    const group = groups.get(lane.provider);
-    if (group) group.lanes.push(lane);
-    else
-      groups.set(lane.provider, {
-        provider: lane.provider,
-        name: lane.name,
-        lanes: [lane],
-      });
-  }
-  return [...groups.values()];
+  return groupedByProvider(
+    providers,
+    (lane) => lane.provider,
+    (lane) => lane.transport,
+  ).map((lanes) => ({
+    provider: lanes[0]?.provider ?? "",
+    name: lanes[0]?.name ?? "",
+    lanes,
+  }));
 }
 
 function ProviderGroupRow({
@@ -617,19 +620,6 @@ function ProviderGroupRow({
   );
 }
 
-/** The lanes with a provider's lanes together, in the order the provider's
- * first lane was served, its API lane before the other. */
-function inListOrder(providers: readonly ProviderStatus[]) {
-  const groups = new Map<string, ProviderStatus[]>();
-  for (const lane of providers)
-    groups.set(lane.provider, [...(groups.get(lane.provider) ?? []), lane]);
-  return [...groups.values()].flatMap((lanes) =>
-    [...lanes].sort(
-      (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
-    ),
-  );
-}
-
 /**
  * The AI providers of the signed-in profile, one card for each connection the
  * agent has: named and drawn as the agent's provider list names and draws it,
@@ -656,7 +646,7 @@ export function ProviderSettings({
   consoleSignInCommand,
   identity = null,
   localModels,
-  engines = {},
+  lanes,
   query = "",
   searching = false,
   embedded = false,
@@ -699,8 +689,9 @@ export function ProviderSettings({
   /** The model controls of a keyless lane, where the host offers them: a
    * lane on this computer has no key or sign-in, only its models. */
   localModels?: (lane: ProviderStatus) => ReactNode;
-  /** What the service measured of each local engine's lane, by way id. */
-  engines?: Readonly<Record<string, AgentEngineHealth>>;
+  /** What the agent offers of each lane, by lane id: what the service
+   * measured of a local engine's lane among it. */
+  lanes?: ReadonlyMap<string, OfferedLane>;
   query?: string;
   searching?: boolean;
   embedded?: boolean;
@@ -729,24 +720,23 @@ export function ProviderSettings({
   const selectedMethods = selectedProvider
     ? (signInMethods[selectedProvider.provider] ?? [])
     : [];
-  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const searchingQuery = query.trim() !== "";
   const engineOf = (lane: ProviderStatus) =>
-    lane.authKind === "none" ? (engines[lane.id] ?? null) : null;
+    lane.authKind === "none" ? (lanes?.get(lane.id)?.engine ?? null) : null;
   // A lane whose engine runs on this computer is as ready as the local AI set up to run
   // it, which the setup row serves.
   const localAi = useProvisioning().localAiRow;
   const setupOf = (lane: ProviderStatus) => (engineOf(lane) ? localAi : null);
   const groups = providerGroups(providers);
   const laneMatches = (group: ProviderGroup, lane: ProviderStatus) =>
-    !normalizedQuery ||
-    [
-      group.name,
-      connectionWords(t, lane),
-      statusWords(t, connectionStatus(lane, engineOf(lane), setupOf(lane))),
-    ]
-      .join(" ")
-      .toLocaleLowerCase()
-      .includes(normalizedQuery);
+    offerMatches(
+      [
+        group.name,
+        connectionWords(t, lane),
+        statusWords(t, connectionStatus(lane, engineOf(lane), setupOf(lane))),
+      ],
+      query,
+    );
   const groupMatches = (group: ProviderGroup) =>
     group.lanes.some((lane) => laneMatches(group, lane));
   const matches = groups.some(groupMatches);
@@ -773,7 +763,7 @@ export function ProviderSettings({
             engineOf={engineOf}
             setupOf={setupOf}
             searchMatch={groupMatches(group)}
-            searching={searching || Boolean(normalizedQuery)}
+            searching={searching || searchingQuery}
             t={t}
             renderLane={(lane) => (
               <WayRow

@@ -4,22 +4,23 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { ServedCatalogAnswer } from "../../shell/agentCatalogContract";
-import { catalogChoices, effortWords } from "../../shell/agentCatalog";
+import {
+  agentOffer,
+  effortWords,
+  heldModel,
+  taskEfforts,
+  taskModelsOf,
+  type AgentOffer,
+  type OfferedLane,
+  type OfferedTask,
+} from "../../shell/agentOffer";
 import type { TaskModelChoice } from "../../shell/agentSession";
 import { described, labelled } from "../../shell/compose";
-import { addedTo, listRefusalWords } from "../../shell/localModelLanes";
+import { listRefusalWords } from "../../shell/localModelLanes";
 import { useLocalModels, type LocalModelHost } from "../../shell/localModels";
-import type { TaskModelEntry } from "../../shell/localModelsContract";
 import { modelListState, useWindowReturn } from "../../shell/modelListState";
 import { connectionWords } from "../../shell/providerConnection";
 import { useStrings, type Translate } from "../../shell/strings";
-import {
-  taskEfforts,
-  taskKindRows,
-  taskLanes,
-  type TaskKindRow,
-  type TaskLaneOption,
-} from "../../shell/taskModels";
 import type { ProviderOption, ProviderWay } from "../agent/types";
 import { ModelListNotice } from "../agent/ModelListNotice";
 import { ReadState } from "../agent/ReadState";
@@ -35,7 +36,7 @@ const READING = "";
 /** A lane a task can be set to, with the picker's own standing of it: why it
  * cannot run yet, where the catalog says so. */
 type LaneStanding = {
-  lane: TaskLaneOption;
+  lane: OfferedLane;
   provider: ProviderOption;
   way: ProviderWay;
 };
@@ -84,29 +85,18 @@ export function TaskModels({
       ? retry
       : null,
   );
-  const rows = useMemo(
-    () => (catalog && lists ? taskKindRows(catalog, lists) : []),
-    [catalog, lists],
+  // The kinds, the lanes and the picker's standing of each lane, from one
+  // offer of the catalogue and the lists read here.
+  const offer = useMemo(
+    () => (catalog && lists ? agentOffer(t, catalog, lists, null) : null),
+    [catalog, lists, t],
   );
-  const lanes = useMemo(
-    () => (catalog && lists ? taskLanes(catalog, lists) : []),
-    [catalog, lists],
-  );
-  // The picker's standing of each lane, from the same catalogue and lists.
-  const standings = useMemo((): LaneStanding[] => {
-    if (!catalog || !lists) return [];
-    const offer = catalogChoices(t, catalog, {
-      lanes: lists.local_lanes,
-      added: (lane) => addedTo(lists, lane),
-    });
-    return lanes.flatMap((lane) => {
-      const provider = offer.providers.find(
-        (held) => held.id === lane.provider,
-      );
-      const way = provider?.ways.find((held) => held.id === lane.way);
-      return provider && way ? [{ lane, provider, way }] : [];
-    });
-  }, [catalog, lists, lanes, t]);
+  const rows = offer?.tasks ?? [];
+  const standings = (offer?.taskLanes ?? []).flatMap((lane): LaneStanding[] => {
+    const provider = offer?.providers.find((held) => held.id === lane.provider);
+    const way = provider?.ways.find((held) => held.id === lane.wayId);
+    return provider && way ? [{ lane, provider, way }] : [];
+  });
   const held = standings.filter(({ way }) => !way.selectable);
   const chooseTask = host.chooseTask;
   if (!chooseTask) return null;
@@ -128,7 +118,7 @@ export function TaskModels({
         slot="task-models-catalog"
       />
     );
-  if (!lists || !catalog)
+  if (!lists || !offer)
     return <ReadState read={{ kind: "loading" }} icon="settings" />;
   const choose = (kind: string, choice: TaskModelChoice | null) =>
     void change(kind, (revision) => chooseTask(kind, choice, revision));
@@ -206,7 +196,7 @@ export function TaskModels({
             <TaskModelRow
               key={row.id}
               row={row}
-              lanes={lanes}
+              offer={offer}
               selectable={selectable}
               busy={busy !== null || lists.unreadable}
               words={
@@ -236,14 +226,14 @@ export function TaskModels({
 
 function TaskModelRow({
   row,
-  lanes,
+  offer,
   selectable,
   busy,
   words,
   onChoose,
 }: {
-  row: TaskKindRow;
-  lanes: readonly TaskLaneOption[];
+  row: OfferedTask;
+  offer: AgentOffer;
   /** Whether a task can run on the lane now, as the picker says. */
   selectable: (lane: string) => boolean;
   busy: boolean;
@@ -255,16 +245,8 @@ function TaskModelRow({
   const effortId = useId();
   const descriptionId = useId();
   const setting = row.setting;
-  // A stored setting the catalogue no longer offers is still what the kind
-  // is set to, so it stays shown, named as stored.
-  const offered = (entry: TaskModelEntry) =>
-    lanes.some(
-      (lane) =>
-        lane.id === entry.lane &&
-        lane.models.some((model) => model.id === entry.model),
-    );
   const efforts = setting
-    ? taskEfforts(lanes, setting.lane, setting.model)
+    ? taskEfforts(offer, setting.lane, setting.model)
     : [];
   const storedEffort =
     setting?.effort && !efforts.some((effort) => effort === setting.effort)
@@ -296,7 +278,7 @@ function TaskModelRow({
             // An effort carries over where the new model takes it.
             const effort =
               setting?.effort &&
-              taskEfforts(lanes, lane, model).some(
+              taskEfforts(offer, lane, model).some(
                 (held) => held === setting.effort,
               )
                 ? setting.effort
@@ -307,13 +289,15 @@ function TaskModelRow({
           <option value={READING}>
             {t("desktop.providers.task_model_reading")}
           </option>
-          {setting && !offered(setting) && (
+          {/* A stored setting the catalogue no longer offers is still what
+              the kind is set to, so it stays shown, named as stored. */}
+          {setting && !row.offered && (
             <option value={optionOf(setting.lane, setting.model)}>
               {`${setting.lane} · ${setting.model}`}
             </option>
           )}
-          {lanes
-            .filter((lane) => lane.models.length > 0)
+          {offer.taskLanes
+            .filter((lane) => taskModelsOf(lane).length > 0)
             .map((lane) => (
               <optgroup
                 key={lane.id}
@@ -321,14 +305,14 @@ function TaskModelRow({
                 disabled={!selectable(lane.id) || undefined}
                 data-lane={lane.id}
               >
-                {lane.models.map((model) => (
+                {taskModelsOf(lane).map((model) => (
                   <option
-                    key={model.id}
-                    value={optionOf(lane.id, model.id)}
-                    disabled={!model.installed || undefined}
-                    data-installed={model.installed ? undefined : "false"}
+                    key={model.model}
+                    value={optionOf(lane.id, model.model)}
+                    disabled={!heldModel(model) || undefined}
+                    data-installed={heldModel(model) ? undefined : "false"}
                   >
-                    {model.installed
+                    {heldModel(model)
                       ? model.name
                       : t("desktop.agent.model_not_installed", {
                           name: model.name,

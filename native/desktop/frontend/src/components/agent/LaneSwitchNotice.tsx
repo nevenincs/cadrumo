@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { SelectionChangeFacts } from "../../errors";
-import { effortWords } from "../../shell/agentCatalog";
+import { effortWords } from "../../shell/agentOffer";
 import type {
   ConversationCarry,
   SelectedModel,

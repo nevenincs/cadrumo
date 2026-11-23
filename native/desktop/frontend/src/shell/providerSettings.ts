@@ -131,6 +131,8 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
 export type ProviderSettingsView = {
   read: AgentRead<{
     providers: ProviderStatus[];
+    /** The same lanes as served, record by record. */
+    records: readonly ProviderSettingsRecord[];
     signInProviders: string[];
     signInMethods: Readonly<Record<string, readonly ProviderSignInMethod[]>>;
     consoleSignInCommand?: string;
@@ -310,6 +312,7 @@ export function useProviderSettings(
       kind: "ready",
       value: {
         providers: served.providers.map(providerStatus),
+        records: served.providers,
         signInProviders: Array.isArray(served.sign_in_providers)
           ? [...new Set<string>(served.sign_in_providers)]
           : [],

@@ -57,6 +57,7 @@ from .filing_window_projection import (
 )
 from .models import (
     ModeloDeadline,
+    ModeloEnrollment,
     ObligationStatus,
     Recovery,
     Schedule,
@@ -365,7 +366,8 @@ class DeadlineEngine:
     ) -> tuple[list[ModeloDeadline], list[UndeterminedObligation]]:
         """Project every applicable dated window, in window order, and the windows left undecided.
 
-        A window whose admission reads an unanswered Modelo IVA yes/no fact is
+        A window whose admission reads an unanswered yes/no fact (a Modelo IVA
+        block path, or an enrolment fact such as the large-company condition) is
         judged under every answer of those facts: owed under all of them it is
         an obligation, owed under none it is dropped, and otherwise it is
         undetermined. An unanswered fact is never read as "no", which a
@@ -374,7 +376,7 @@ class DeadlineEngine:
         obligations: list[ModeloDeadline] = []
         undetermined: list[UndeterminedObligation] = []
         for modelo, revision, window in windows:
-            deciding = unanswered_iva_deciding_paths(profile, revision, window)
+            deciding = unanswered_deciding_paths(profile, revision, window)
             outcomes = [
                 self._obligation_for_window(
                     profile=candidate,
@@ -384,7 +386,7 @@ class DeadlineEngine:
                     reference_today=reference_today,
                     operation=operation,
                 )
-                for candidate in _iva_answer_candidates(profile, deciding)
+                for candidate in _answer_candidates(profile, deciding)
             ]
             owed = [outcome for outcome in outcomes if outcome is not None]
             if outcomes and len(owed) == len(outcomes):
@@ -788,61 +790,89 @@ def _overdue_recovery_or_none(
         return None
 
 
-def unanswered_iva_deciding_paths(
+def unanswered_deciding_paths(
     profile: TaxpayerProfile,
     revision: RevisionSelectionMetadata,
     window: DeadlineWindowDefinition,
 ) -> tuple[str, ...]:
-    """Return the unanswered Modelo IVA block paths that decide whether ``window`` is owed.
+    """Return the unanswered yes/no profile paths that decide whether ``window`` is owed.
 
     The window's own applicability conditions and the filing schedules that
-    admit its period are what decide it. Only a read projection names
-    unanswered block paths, so every other profile returns nothing.
+    admit its period are what decide it. Two kinds of fact can be unanswered:
+    a Modelo IVA block path a read projection names as unanswered, and an
+    enrolment fact such as the large-company condition that switches the IVA
+    cadence to monthly, which stays ``None`` until the taxpayer states it.
 
     Args:
-        profile: The :class:`TaxpayerProfile` whose unanswered IVA block paths are read.
+        profile: The :class:`TaxpayerProfile` whose unanswered paths are read.
         revision: The selected registry revision of the window's modelo.
         window: The deadline window whose obligation is being decided.
     """
-    if not profile.iva_block_unanswered_paths:
-        return ()
     period = _window_registry_period(window)
     fields = [condition.field for condition in window.applicability_conditions]
     for schedule in revision.filing_schedules:
         if period in schedule.periods:
             fields.extend(condition.field for condition in schedule.profile_conditions)
+    read = tuple(dict.fromkeys(fields))
+    enrolment = tuple(
+        field
+        for field in read
+        if field.startswith(_ENROLMENT_PREFIX)
+        and field.removeprefix(_ENROLMENT_PREFIX) in ModeloEnrollment.model_fields
+        and getattr(profile.enrollment, field.removeprefix(_ENROLMENT_PREFIX)) is None
+    )
+    return (*_unanswered_iva_paths(profile, read), *enrolment)
+
+
+_ENROLMENT_PREFIX = "enrollment."
+_IVA_PREFIX = "iva."
+
+
+def _unanswered_iva_paths(profile: TaxpayerProfile, fields: tuple[str, ...]) -> tuple[str, ...]:
+    if not profile.iva_block_unanswered_paths:
+        return ()
     if profile.iva is None:
         # No block was built, so every block-owned fact the window reads is unknown.
         from ..calculations.registry.schedules import resolve_profile_fact
 
         return tuple(
             field
-            for field in dict.fromkeys(fields)
+            for field in fields
             if field in MODELO_IVA_BLOCK_CLAIMING_PATHS and resolve_profile_fact(profile, field) is None
         )
-    return tuple(field for field in dict.fromkeys(fields) if field in profile.iva_block_unanswered_paths)
+    return tuple(field for field in fields if field in profile.iva_block_unanswered_paths)
 
 
-def _iva_answer_candidates(profile: TaxpayerProfile, deciding: tuple[str, ...]) -> tuple[TaxpayerProfile, ...]:
+def _answer_candidates(profile: TaxpayerProfile, deciding: tuple[str, ...]) -> tuple[TaxpayerProfile, ...]:
     """Return ``profile`` under every yes/no answer of the ``deciding`` paths.
 
-    Empty when no block was built, since a missing territory or composition has
-    no yes/no answers to try; ``profile`` itself when nothing is undecided.
+    Empty when an IVA path decides but no block was built, since a missing
+    territory or composition has no yes/no answers to try; ``profile`` itself
+    when nothing is undecided.
     """
     if not deciding:
         return (profile,)
-    if profile.iva is None:
+    iva_paths = [path for path in deciding if path.startswith(_IVA_PREFIX)]
+    if iva_paths and profile.iva is None:
         return ()
-    fields = [path.removeprefix("iva.") for path in deciding]
-    return tuple(
-        profile.model_copy(
-            update={
-                "iva": profile.iva.model_copy(update=dict(zip(fields, answers, strict=True))),
-                "iva_block_unanswered_paths": (),
-            },
-        )
-        for answers in product((False, True), repeat=len(fields))
-    )
+    candidates: list[TaxpayerProfile] = []
+    for answers in product((False, True), repeat=len(deciding)):
+        chosen = dict(zip(deciding, answers, strict=True))
+        update: dict[str, object] = {}
+        if iva_paths and profile.iva is not None:
+            update["iva"] = profile.iva.model_copy(
+                update={path.removeprefix(_IVA_PREFIX): chosen[path] for path in iva_paths},
+            )
+            update["iva_block_unanswered_paths"] = ()
+        enrolment = {
+            path.removeprefix(_ENROLMENT_PREFIX): answer
+            for path, answer in chosen.items()
+            if path.startswith(_ENROLMENT_PREFIX)
+        }
+        if enrolment:
+            update["enrollment"] = profile.enrollment.model_copy(update=enrolment)
+        candidates.append(profile.model_copy(update=update))
+    return tuple(candidates)
 
 
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:

@@ -6,8 +6,6 @@ import {
   withEngineHealth,
 } from "../src/dev/fixtures/agentCatalog";
 import {
-  catalogChoices,
-  catalogStillReading,
   intendedProvider,
   laneSelection,
   modelDisplayName,
@@ -17,7 +15,11 @@ import {
   selectionRecord,
   startingSelection,
 } from "../src/shell/agentCatalog";
-import type { ServedProviderLane } from "../src/shell/agentCatalogContract";
+import type {
+  ServedCatalogAnswer,
+  ServedProviderLane,
+} from "../src/shell/agentCatalogContract";
+import { agentOffer, catalogStillReading } from "../src/shell/agentOffer";
 import { connectionWords } from "../src/shell/providerConnection";
 
 // How the agent column deduces its choices from cadrumo-agent's provider
@@ -25,7 +27,9 @@ import { connectionWords } from "../src/shell/providerConnection";
 // host's, and its providers, lanes and models are all made up. Words are left as their keys.
 
 const words = (key: string) => key;
-const choices = catalogChoices(words, FIXTURE_CATALOG);
+const offerOf = (catalog: ServedCatalogAnswer) =>
+  agentOffer(words, catalog, null, null);
+const choices = offerOf(FIXTURE_CATALOG);
 const localProvider = (offered: typeof choices) =>
   offered.providers.find((provider) => provider.id === "zai")!;
 
@@ -79,7 +83,7 @@ test("a catalog whose every lane states its engine outside the contract is not u
       },
     },
   );
-  const offered = catalogChoices(words, engines);
+  const offered = offerOf(engines);
   expect(offered.providers).toEqual([]);
   expect(offered.incompatible).toBe(true);
   expect(offeredSelection(offered, null)).toBeNull();
@@ -114,7 +118,7 @@ test("a model's default effort is the provider's to apply, so a selection holds 
   });
   if (!start) return;
   // No effort is sent, so the service applies the model's own.
-  expect(selectionRecord(FIXTURE_CATALOG, start)).toEqual({
+  expect(selectionRecord(choices, start)).toEqual({
     provider: "qwen",
     transport: "cli",
     model: "fixture-ultra",
@@ -122,7 +126,7 @@ test("a model's default effort is the provider's to apply, so a selection holds 
 });
 
 test("a run is named by provider, transport, model and effort, and nothing else", () => {
-  const record = selectionRecord(FIXTURE_CATALOG, {
+  const record = selectionRecord(choices, {
     providerId: "kimi",
     wayId: "kimi/api",
     modelId: "fixture-deep",
@@ -134,7 +138,7 @@ test("a run is named by provider, transport, model and effort, and nothing else"
     model: "fixture-deep",
     effort: "max",
   });
-  const cli = selectionRecord(FIXTURE_CATALOG, {
+  const cli = selectionRecord(choices, {
     providerId: "qwen",
     wayId: "qwen/cli",
     modelId: "fixture-tiered",
@@ -147,7 +151,7 @@ test("a run is named by provider, transport, model and effort, and nothing else"
   expect(Object.keys(cli ?? {})).toEqual(["provider", "transport", "model"]);
   // An effort the model does not take is not sent with it.
   expect(
-    selectionRecord(FIXTURE_CATALOG, {
+    selectionRecord(choices, {
       providerId: "kimi",
       wayId: "kimi/api",
       modelId: "fixture-quick",
@@ -156,7 +160,7 @@ test("a run is named by provider, transport, model and effort, and nothing else"
   ).toBeUndefined();
   // A model the way does not list is not a run.
   expect(
-    selectionRecord(FIXTURE_CATALOG, {
+    selectionRecord(choices, {
       providerId: "kimi",
       wayId: "kimi/api",
       modelId: "fixture-beta-only",
@@ -203,9 +207,7 @@ test("a provider that lists no models has its model written, with the efforts it
     modelId,
     ...(effort ? { effort } : {}),
   });
-  expect(
-    selectionRecord(FIXTURE_CATALOG, select("  a-model  ", "max")),
-  ).toEqual({
+  expect(selectionRecord(choices, select("  a-model  ", "max"))).toEqual({
     provider: "zhipu",
     transport: "cli",
     model: "a-model",
@@ -213,10 +215,10 @@ test("a provider that lists no models has its model written, with the efforts it
   });
   // An effort the row does not declare is not sent, and no model is no run.
   expect(
-    selectionRecord(FIXTURE_CATALOG, select("a-model", "low"))?.effort,
+    selectionRecord(choices, select("a-model", "low"))?.effort,
   ).toBeUndefined();
-  expect(selectionRecord(FIXTURE_CATALOG, select("   "))).toBeNull();
-  expect(selectionRecord(FIXTURE_CATALOG, select("bad\u0007id"))).toBeNull();
+  expect(selectionRecord(choices, select("   "))).toBeNull();
+  expect(selectionRecord(choices, select("bad\u0007id"))).toBeNull();
 });
 
 test("a lane that is held back stays, saying why, and cannot be chosen", () => {
@@ -268,7 +270,7 @@ test("provider selection requires live authentication and configuration axes", (
   // A stale/incorrect selectable bit cannot turn an unauthenticated installed
   // CLI into a runnable choice.
   cli.health = { ...cli.health, authentication: "unauthenticated" };
-  const signedOut = catalogChoices(words, catalog).providers.find(
+  const signedOut = offerOf(catalog).providers.find(
     (provider) => provider.id === "qwen",
   );
   expect(
@@ -278,13 +280,13 @@ test("provider selection requires live authentication and configuration axes", (
   // API auth may be not applicable only when the agent also says the lane has
   // configured credentials and all other health checks passed.
   api.health = { ...api.health, authentication: "not_applicable" };
-  const apiWay = catalogChoices(words, catalog)
+  const apiWay = offerOf(catalog)
     .providers.find((provider) => provider.id === "qwen")
     ?.ways.find((way) => way.transport === "api");
   expect(apiWay?.selectable).toBe(true);
 
   api.health = { ...api.health, configured: "unknown" };
-  const unconfigured = catalogChoices(words, catalog)
+  const unconfigured = offerOf(catalog)
     .providers.find((provider) => provider.id === "qwen")
     ?.ways.find((way) => way.transport === "api");
   expect(unconfigured?.selectable).toBe(false);
@@ -305,7 +307,7 @@ test("person-facing capabilities are localized; machinery proofs are skipped", (
     { capability: "subagent_limits", state: "proven" },
   ];
 
-  const provider = catalogChoices(words, catalog).providers.find(
+  const provider = offerOf(catalog).providers.find(
     (held) => held.id === "kimi",
   );
   const capabilities = provider?.ways[0]?.capabilities ?? [];
@@ -331,7 +333,7 @@ test("generation-scoped proofs are not presented as lane-wide capabilities", () 
     { capability: "subagent_cancel", generation: "v1", state: "proven" },
   ];
 
-  const provider = catalogChoices(words, catalog).providers.find(
+  const provider = offerOf(catalog).providers.find(
     (held) => held.id === "kimi",
   );
   expect(provider?.ways[0]?.capabilities).toEqual([
@@ -382,7 +384,7 @@ test("a model the catalog says this computer lacks is listed, marked and never c
     modelId: missing.entry_id,
   };
   // A run never names it, and a kept choice of it is not restored.
-  expect(selectionRecord(FIXTURE_CATALOG, chosen)).toBeNull();
+  expect(selectionRecord(choices, chosen)).toBeNull();
   const restored = restoredSelection(choices, [chosen]);
   expect(restored?.modelId).not.toBe(missing.entry_id);
   expect(offeredSelection(choices, chosen)?.modelId).not.toBe(missing.entry_id);
@@ -390,11 +392,11 @@ test("a model the catalog says this computer lacks is listed, marked and never c
 
 test("whether a lane has a model to download is the service's model_download, not a model the window finds missing", () => {
   const served = (lanes: (lane: ServedProviderLane) => ServedProviderLane) =>
-    catalogChoices(words, {
+    offerOf({
       ...FIXTURE_CATALOG,
       providers: (FIXTURE_CATALOG.providers ?? []).map(lanes),
     });
-  const localWay = (catalog: ReturnType<typeof catalogChoices>) =>
+  const localWay = (catalog: ReturnType<typeof offerOf>) =>
     catalog.providers
       .flatMap((provider) => provider.ways)
       .find((way) => way.id === LOCAL);
@@ -436,7 +438,7 @@ test("a way starts with a model this computer holds, even where the catalog reco
   );
   const missing = absent()[0]!;
   local!.catalog.recommended_entry_id = missing.entry_id;
-  const offered = catalogChoices(words, catalog);
+  const offered = offerOf(catalog);
   const provider = offered.providers.find((held) => held.id === "zai")!;
   const way = provider.ways.find((held) => held.id === LOCAL)!;
   const start = startingSelection(provider, way, offered.models[LOCAL] ?? []);
@@ -453,7 +455,7 @@ test("with no model of the local lane on this computer, the lane cannot be chose
   for (const entry of servedLocal()?.catalog.models ?? [])
     presence.mark(entry.model, false);
   const served = presence.report(FIXTURE_CATALOG);
-  const offered = catalogChoices(words, served);
+  const offered = offerOf(served);
   const local = offered.providers
     .flatMap((provider) => provider.ways)
     .find((way) => way.id === LOCAL);
@@ -472,7 +474,7 @@ test("with no model of the local lane on this computer, the lane cannot be chose
     modelId: servedLocal()!.catalog.models![0]!.entry_id,
   };
   expect(restoredSelection(offered, [kept])?.wayId).not.toBe(LOCAL);
-  expect(selectionRecord(served, kept)).toBeNull();
+  expect(selectionRecord(offered, kept)).toBeNull();
   // A lane held for another reason keeps that reason.
   expect(
     offered.providers
@@ -525,7 +527,7 @@ test("a keyless lane is worded as on this computer and a keyed one by how it is 
 });
 
 test("a declared lane carries what the declared catalogue states it authenticates with", () => {
-  const declared = catalogChoices(words, FIXTURE_DECLARED_CATALOG);
+  const declared = offerOf(FIXTURE_DECLARED_CATALOG);
   const ways = declared.providers.flatMap((provider) => provider.ways);
   expect(ways.find((way) => way.id === "llamacpp/api")?.authKind).toBe("none");
   expect(ways.find((way) => way.id === "kimi/api")?.authKind).toBe("api_key");
@@ -536,7 +538,7 @@ test("the provider the person is on is the one kept, even where none of its ways
   const presence = fixtureModelPresence();
   for (const entry of servedLocal()?.catalog.models ?? [])
     presence.mark(entry.model, false);
-  const offered = catalogChoices(words, presence.report(FIXTURE_CATALOG));
+  const offered = offerOf(presence.report(FIXTURE_CATALOG));
   const kept = (providerId: string, wayId: string) => ({
     providerId,
     wayId,
@@ -588,8 +590,7 @@ test("a lane held back says the step the person can take, from the catalog's own
   expect(way(choices, "deepseek/cli")?.heldStep).toBeUndefined();
   expect(way(choices, "antigravity/cli")?.heldStep).toBeUndefined();
   // A lane whose models were not read: ask again.
-  const unread = catalogChoices(
-    words,
+  const unread = offerOf(
     withLane("qwen", "api", (lane) => {
       lane.health.selectable = false;
       lane.health.catalog = "unknown";
@@ -603,7 +604,7 @@ test("a lane held back says the step the person can take, from the catalog's own
   // A lane that can be chosen has none.
   expect(way(choices, "kimi/api")?.heldStep).toBeUndefined();
   // A declared lane is not yet observed: ask again.
-  const declared = catalogChoices(words, FIXTURE_DECLARED_CATALOG);
+  const declared = offerOf(FIXTURE_DECLARED_CATALOG);
   expect(
     declared.providers.flatMap((held) => held.ways).map((one) => one.heldStep),
   ).not.toContain(undefined);
@@ -685,8 +686,7 @@ test("a choice the catalog stops offering for a while is offered again, whole, w
     modelId: "fixture-chat",
   };
   expect(restoredSelection(choices, [chosen])).toEqual(chosen);
-  const away = catalogChoices(
-    words,
+  const away = offerOf(
     withLane("qwen", "api", (lane) => {
       lane.health.selectable = false;
       lane.health.catalog = "unknown";
@@ -709,19 +709,19 @@ test("a model is named as the picker names it in its lane, and by its id only wh
     (held) => held.model === "fixture-deep",
   );
   expect(listed?.display_name).toBeTruthy();
-  expect(modelDisplayName(FIXTURE_CATALOG, "kimi/api", "fixture-deep")).toBe(
+  expect(modelDisplayName(choices, "kimi/api", "fixture-deep")).toBe(
     listed?.display_name,
   );
   // The same id on a lane that does not list it, a lane the catalog does not
   // serve, and no lane at all each give the id back.
-  expect(modelDisplayName(FIXTURE_CATALOG, "qwen/api", "fixture-deep")).toBe(
+  expect(modelDisplayName(choices, "qwen/api", "fixture-deep")).toBe(
     "fixture-deep",
   );
-  expect(modelDisplayName(FIXTURE_CATALOG, "none/api", "fixture-deep")).toBe(
+  expect(modelDisplayName(choices, "none/api", "fixture-deep")).toBe(
     "fixture-deep",
   );
-  expect(modelDisplayName(FIXTURE_CATALOG, null, "fixture-deep")).toBe(
-    "fixture-deep",
-  );
-  expect(modelDisplayName(FIXTURE_DECLARED_CATALOG, "kimi/api", "x")).toBe("x");
+  expect(modelDisplayName(choices, null, "fixture-deep")).toBe("fixture-deep");
+  expect(
+    modelDisplayName(offerOf(FIXTURE_DECLARED_CATALOG), "kimi/api", "x"),
+  ).toBe("x");
 });

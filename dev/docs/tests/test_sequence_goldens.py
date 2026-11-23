@@ -742,7 +742,9 @@ class TestBothSurfacesRedOnDivergence:
         assert discovery_problems == ()
 
         started = time.monotonic()
-        clean = check_sequences_in_subprocess(page=page)
+        # Both runs execute every sequence: a verdict the clean run records would
+        # otherwise let the bounded run finish from the cache before its deadline.
+        clean = check_sequences_in_subprocess(page=page, reuse_verdicts=False)
         clean_duration = time.monotonic() - started
         capsys.readouterr()
         assert clean == (), f"the bound is measured against a CLEAN run of this page: {clean}"
@@ -753,6 +755,7 @@ class TestBothSurfacesRedOnDivergence:
                 "check",
                 "--page",
                 page,
+                "--execute-all",
                 "--timeout",
                 str(timeout),
             ],

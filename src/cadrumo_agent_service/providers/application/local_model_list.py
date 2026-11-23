@@ -45,6 +45,7 @@ from cadrumo.core.time.clock import now
 
 from ..domain.catalog import (
     BackgroundInput,
+    BackgroundOption,
     EffortLevel,
     LiveCatalogModel,
     ModelCapability,
@@ -209,6 +210,21 @@ def task_model_usability(
     if _installed(entry, task.model, live_models) is False:
         return TaskModelUsability.NOT_INSTALLED
     return TaskModelUsability.USABLE
+
+
+def model_offers_effort(
+    live_models: LiveCatalogModels, provider: str, transport: str, model: str, effort: EffortLevel
+) -> bool:
+    """Return whether the live catalogue says the lane honours effort and lists ``effort`` for ``model``.
+
+    The one rule a task setting's effort is judged by, when it is saved and
+    when a run starts: a lane or model the catalogue does not state effort for
+    offers none.
+    """
+    background = live_models.lane_background(provider, transport)
+    if background is None or BackgroundOption.EFFORT not in background.options:
+        return False
+    return effort in background.model_efforts.get(model, ())
 
 
 def _choice_is_usable(
@@ -389,9 +405,11 @@ class LocalModelListService:
 
         The kind must be one the agent's catalogue serves, and the lane one
         it reports to this profile; a model on a lane on this computer must be
-        on that lane's list, as the picker offers it. Whether the lane honours
-        ``effort`` for the model is decided when a run starts, against what
-        the running agent states then. A kind with no setting runs on the
+        on that lane's list, as the picker offers it. An ``effort`` is stored
+        only when the running agent's catalogue states the lane honours it for
+        the model, by the rule a run applies again when it starts, since the
+        agent may have changed by then; ``None`` is the provider's default
+        and needs no statement. A kind with no setting runs on the
         model documents are read with. Storing the setting already stored
         answers the record unchanged.
         """
@@ -410,6 +428,8 @@ class LocalModelListService:
         record, read = current
         added = () if record is None else record.models
         if model is not None and not self._task_model_is_offered(catalog, model, added):
+            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
+        if model is not None and effort is not None and not self._task_effort_is_offered(catalog, model, effort):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         setting = (
             None if model is None else TaskModel(task_kind=task_kind, lane=model.lane, model=model.model, effort=effort)
@@ -431,6 +451,14 @@ class LocalModelListService:
         if entry is None:
             return False
         return entry.auth_kind is not ProviderAuthKind.NONE or _model_is_listed(entry, model.model, added)
+
+    def _task_effort_is_offered(self, catalog: ProviderCatalog, model: ListedModel, effort: str) -> bool:
+        entry = next((held for held in engine_lanes(catalog, self.selected_engine) if held.id == model.lane), None)
+        if entry is None:
+            return False
+        return model_offers_effort(
+            self._live_models.snapshot(), entry.provider, entry.transport.value, model.model, effort
+        )
 
     def engine_status(self) -> LocalEngineResult:
         """Return the local engine setting, or a typed refusal."""
@@ -692,6 +720,7 @@ __all__ = [
     "engine_lanes",
     "listed_models",
     "local_lanes",
+    "model_offers_effort",
     "serves_engine_lane",
     "task_model_usability",
 ]

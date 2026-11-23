@@ -5,7 +5,8 @@ import { Specimen } from "@/dev/catalogue/Frame";
 import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { catalogChoices, offeredSelection } from "../../shell/agentCatalog";
+import { offeredSelection } from "../../shell/agentCatalog";
+import { agentOffer } from "../../shell/agentOffer";
 import type { ServedProviderCatalog } from "../../shell/agentCatalogContract";
 import { useStrings } from "../../shell/strings";
 import { AgentSettingsPopover } from "./AgentSettingsPopover";
@@ -41,7 +42,10 @@ const catalogIn = (locale: string | undefined): ServedProviderCatalog => ({
 
 function Settings({ start }: { start?: Partial<AgentSelection> }) {
   const t = useStrings();
-  const choices = useMemo(() => catalogChoices(t, catalogIn(t.locale)), [t]);
+  const choices = useMemo(
+    () => agentOffer(t, catalogIn(t.locale), null, null),
+    [t],
+  );
   const [selection, setSelection] = useState<AgentSelection>(() => ({
     ...(offeredSelection(choices, null) ?? {
       providerId: "",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { AgentServiceStatus } from "../../shell/agentSession";
-import type { CatalogLane } from "../../shell/localModelLanes";
+import type { CatalogLane } from "../../shell/agentOffer";
 import { Icon } from "../ui/icon";
 import { Spinner } from "../ui/spinner";
 import { serviceWords } from "../agent/agentRefusalWords";

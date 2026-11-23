@@ -12,7 +12,7 @@ import { failureCode } from "../errors";
 import type { AgentRead } from "./agentViews";
 import { useAgentStatus } from "./agentLive";
 import { modelListState, useWindowReturn } from "./modelListState";
-import { catalogLanes, type CatalogLane } from "./localModelLanes";
+import { catalogLanes, type CatalogLane } from "./agentOffer";
 import { localModelHostOf, type LocalModelHost } from "./localModels";
 import type { ProviderSettings } from "./providerSettings";
 

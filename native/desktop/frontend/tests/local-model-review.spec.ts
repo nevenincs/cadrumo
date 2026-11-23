@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import type { SetupRun } from "../src/ipc/componentSetup";
 import { FIXTURE_CATALOG } from "../src/dev/fixtures/agentCatalog";
-import { catalogLanes, type CatalogLane } from "../src/shell/localModelLanes";
+import { catalogLanes, type CatalogLane } from "../src/shell/agentOffer";
 import { planIsFor } from "../src/shell/localModels";
 import { catalogue } from "./support/strings";
 

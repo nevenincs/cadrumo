@@ -351,11 +351,10 @@ class AgentServiceAdministration(ABC):
         # the tree takes; a request answers that it is busy instead of waiting
         # for its caller's deadline.
         if not self._guard.acquire(timeout=LIFECYCLE_ADMISSION_SECONDS):
-            if action in {"sign_in", "connect", "sign_out"}:
-                # A sign-in or sign-out refused while another attempt or a tree change holds the
-                # lifecycle is shown to the person, so it carries its cause and log line.
-                return refuse(ServiceRefusalCode.BUSY, cause="agent_tree_running", provider=arguments.get("provider"))
-            return {"kind": "refused", "code": "busy"}
+            # Every change admitted here is one a person made in the window (a key saved,
+            # a lane turned on, a sign-in, a model chosen), so one refused while another
+            # attempt or a tree change holds the lifecycle carries its cause and log line.
+            return refuse(ServiceRefusalCode.BUSY, cause="agent_tree_running", provider=arguments.get("provider"))
         try:
             return self._admin(action, **arguments)
         finally:
