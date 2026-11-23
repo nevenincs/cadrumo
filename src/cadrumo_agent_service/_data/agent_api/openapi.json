@@ -7816,6 +7816,7 @@
             "anyOf": [
               {
                 "type": "integer",
+                "maximum": 8192.0,
                 "exclusiveMinimum": 0.0
               },
               {
@@ -7833,7 +7834,7 @@
           "llamacpp_default_context"
         ],
         "title": "ModelArtefacts",
-        "description": "How each local engine obtains one model.\n\nEach engine's artefact is null where the catalog declares no way to obtain\nthe model for that engine.\n\nAttributes:\n    ollama: The registry name the Ollama engine pulls the model as.\n    llamacpp: What the llama.cpp engine fetches: a registry name, whose\n        manifest carries a projector layer where the model reads images, or\n        a Hugging Face model with its projector.\n    llamacpp_default_context: The context size, in tokens, a llama.cpp load of\n        the model asks for, or null where none is declared. It never exceeds\n        the model's context length, and is declared only with a llama.cpp\n        artefact."
+        "description": "How each local engine obtains one model.\n\nEach engine's artefact is null where the catalog declares no way to obtain\nthe model for that engine.\n\nAttributes:\n    ollama: The registry name the Ollama engine pulls the model as.\n    llamacpp: What the llama.cpp engine fetches: a registry name, whose\n        manifest carries a projector layer where the model reads images, or\n        a Hugging Face model with its projector.\n    llamacpp_default_context: The context size, in tokens, a llama.cpp load of\n        the model asks for, or null where none is declared. It never exceeds\n        :data:`LLAMACPP_CONTEXT_CEILING` or the model's context length, and\n        is declared only with a llama.cpp artefact."
       },
       "ModelDeletedResponse": {
         "properties": {
