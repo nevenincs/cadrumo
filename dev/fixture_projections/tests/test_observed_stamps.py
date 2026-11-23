@@ -10,6 +10,7 @@ falls back to the whole product source, and a failed run never stamps.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -111,7 +112,13 @@ def _workspace(root: Path, family: FixtureFamily) -> Workspace:
 
 
 def _edit(root: Path, member: str, text: str) -> None:
-    (root / member).write_text(text, encoding="utf-8")
+    # A same-size rewrite inside the source's mtime second leaves its cached .pyc
+    # valid, so the re-run producer would import the old code; move the mtime on.
+    path = root / member
+    before = path.stat().st_mtime_ns if path.exists() else 0
+    path.write_text(text, encoding="utf-8")
+    after = path.stat()
+    os.utime(path, ns=(after.st_atime_ns, max(after.st_mtime_ns, before + 2_000_000_000)))
 
 
 def _writes(root: Path) -> list[str]:

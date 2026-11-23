@@ -40,6 +40,7 @@ from ...application.user_profile.section_rows import (
 )
 from ...core.config import override_settings
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.contribuyente.inmueble_facts import ARRENDAMIENTO_SECTION, INMUEBLE_SECTION
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -308,7 +309,7 @@ def test_an_expense_concept_without_a_property_is_refused(world: _World, ports: 
 def test_an_expense_concept_the_registry_does_not_declare_is_refused(world: _World, ports: LedgerActionPorts) -> None:
     created = _row(world, ports, direction=TransactionDirection.OUTGOING)
 
-    with pytest.raises(Exception, match="bogus_concepto") as refused:
+    with pytest.raises(RegistryValidationError, match="bogus_concepto") as refused:
         resolve_classification_patch_values(
             LedgerClassifyPatch(gasto_capital_inmobiliario="bogus_concepto"),
             ("gasto_capital_inmobiliario",),

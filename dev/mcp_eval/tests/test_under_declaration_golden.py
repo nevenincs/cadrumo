@@ -145,6 +145,9 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
     binding, so it is not passed as ``--binding``: the calculate path refuses a
     truth value on the Decimal channel, and the profile resolver reads it from
     the seeded ``taxpayer_type.new_entity_first_two_profit_periods = False``.
+    The art. 29.1 rate reads the preceding período impositivo's INCN, a prior
+    return the profile does not hold, so the operator states it; the persona's
+    preceding period ran twelve months, so it is the profile's twelve-month INCN.
     """
     _seed_legal_entity_profile(runtime_profile)
     stated = {fact.path: fact.value for fact in persona_profile_facts(_LEGAL_ENTITY_PERSONA_ID)}
@@ -162,6 +165,7 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
             "--casilla", "DP200012:00500=140000.00",
             "--binding", f"modelo-200-profile-legal-entity-form={stated['taxpayer_type.legal_entity_form']}",
             "--binding", f"modelo-200-profile-incn-prior-12-months={stated['taxpayer_type.incn_prior_12_months']}",
+            "--binding", f"modelo-200-incn-periodo-impositivo-anterior={stated['taxpayer_type.incn_prior_12_months']}",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",

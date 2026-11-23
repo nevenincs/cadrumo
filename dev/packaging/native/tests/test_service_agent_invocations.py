@@ -222,7 +222,7 @@ def _status_and_sign_out(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> lis
     monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(_agent_executable(tmp_path)))
     probe = AgentProviderAuthStatusProbe(context=lambda: (tmp_path, "key"))
     probe.refresh()
-    assert probe.log_out(_PROVIDER, root=tmp_path) is False
+    assert probe.log_out(_PROVIDER, root=tmp_path) == "logout_agent_unavailable"
     assert len(recorded) == 2
     return [("agent-auth", call) for call in recorded]
 
