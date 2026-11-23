@@ -42,6 +42,7 @@ export function agentSending({
   carryFrom,
   changeAsk,
   catalog,
+  offer,
   selection,
   newest,
   ready,
@@ -64,6 +65,8 @@ export function agentSending({
   /** A message held back until the person confirms its change of model. */
   changeAsk: AgentColumnView["changeAsk"];
   catalog: ReturnType<typeof useAgentCatalog>["catalog"];
+  /** What the agent offers, once the catalog is read. */
+  offer: ReturnType<typeof useAgentCatalog>["offer"];
   /** What the next message runs with. */
   selection: AgentSelection | null;
   /** The conversation's newest reply, where read. */
@@ -208,10 +211,10 @@ export function agentSending({
     chosen: AgentSelection,
     references: ComposerReferences,
   ) => {
-    if (!session || catalog.kind !== "ready") return;
+    if (!session || catalog.kind !== "ready" || !offer) return;
     pendingPrompt.current = null;
     change({ changeAsk: null });
-    const runs = selectionRecord(catalog.value, chosen);
+    const runs = selectionRecord(offer, chosen);
     if (!runs) {
       giveBack(text, "agent_selection_unavailable");
       return;
@@ -347,9 +350,9 @@ export function agentSending({
   // A selection the catalog names in full: a model not yet chosen or written
   // cannot be run.
   const runnable =
-    catalog.kind === "ready" &&
+    offer !== null &&
     selection !== null &&
-    selectionRecord(catalog.value, selection) !== null;
+    selectionRecord(offer, selection) !== null;
   const send =
     answering && questionnaire
       ? (text: string) => void answer(questionnaire, { kind: "message", text })

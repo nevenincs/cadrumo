@@ -1,24 +1,26 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { catalogReadBusy } from "../../shell/catalogReadPolicy";
 import {
-  catalogChoices,
-  catalogStillReading,
   intendedProvider,
   laneSelection,
-  laneEngines,
   ranSelection,
   readingSelection,
   restoredSelection,
   selectionRecord,
 } from "../../shell/agentCatalog";
+import {
+  agentOffer,
+  catalogStillReading,
+  laneIdOf,
+} from "../../shell/agentOffer";
 import { useRememberedChoice } from "../../shell/agentChoice";
 import type {
   AgentServiceStatus,
   AgentSession,
 } from "../../shell/agentSession";
 import type { ServedCatalogAnswer } from "../../shell/agentCatalogContract";
+import type { ProviderSettingsAnswer } from "../../shell/providerSettingsContract";
 import { useAgentRead } from "../../shell/agentViews";
-import { addedTo, catalogLanes } from "../../shell/localModelLanes";
 import { modelListState, useWindowReturn } from "../../shell/modelListState";
 import {
   useReadingModel,
@@ -43,6 +45,7 @@ export function useAgentCatalog({
   readingHost,
   setupSettled,
   settingsChanges,
+  settings,
   opened,
   listChanges,
   pickerOpened,
@@ -60,6 +63,8 @@ export function useAgentCatalog({
   setupSettled: string | null;
   /** Changes made in the provider settings. */
   settingsChanges: number;
+  /** The provider settings as last read; null while unread. */
+  settings: Pick<ProviderSettingsAnswer, "providers"> | null;
   /** How many times the settings were opened. */
   opened: number;
   /** Changes made to the local lists. */
@@ -131,18 +136,6 @@ export function useAgentCatalog({
   useEffect(() => {
     if (setupSettled) setCatalogAgain((count) => count + 1);
   }, [setupSettled]);
-  // The catalog's lanes with their models, whose list a lane on this computer
-  // shows in its provider settings.
-  const localLanes = useMemo(
-    () => (catalog.kind === "ready" ? catalogLanes(catalog.value) : []),
-    [catalog],
-  );
-  // Whether each local engine's lane has its engine running, as the catalog
-  // states it, which the lane's provider settings say.
-  const engines = useMemo(
-    () => (catalog.kind === "ready" ? laneEngines(catalog.value) : {}),
-    [catalog],
-  );
   // A service still busy starting the agent, or still busy just after it
   // became ready, answers the catalog late; a session the runtime keeps
   // suspended is the same wait: it is not a sign-out and it comes back.
@@ -200,17 +193,15 @@ export function useAgentCatalog({
         }
       : null,
   );
-  const offer = useMemo(() => {
-    if (catalog.kind !== "ready") return null;
-    const lists =
-      stored === null
-        ? null
-        : {
-            lanes: stored.local_lanes,
-            added: (lane: string) => addedTo(stored, lane),
-          };
-    return catalogChoices(t, catalog.value, lists);
-  }, [catalog, t, stored]);
+  // What the agent offers, from the catalog, the lists and the settings,
+  // worked out once for every surface of the column.
+  const offer = useMemo(
+    () =>
+      catalog.kind === "ready"
+        ? agentOffer(t, catalog.value, stored, settings)
+        : null,
+    [catalog, t, stored, settings],
+  );
   // Only a choice the picker still offers is the one documents are read
   // with; one it no longer offers, such as a model taken off its list, is not.
   const restoredRemembered =
@@ -219,11 +210,11 @@ export function useAgentCatalog({
     remembered &&
     restoredRemembered?.wayId === remembered.wayId &&
     restoredRemembered.modelId === remembered.modelId &&
-    catalog.kind === "ready"
-      ? selectionRecord(catalog.value, remembered)
+    offer
+      ? selectionRecord(offer, remembered)
       : null;
   const wantedLane = offeredRemembered
-    ? `${offeredRemembered.provider}_${offeredRemembered.transport}`
+    ? laneIdOf(offeredRemembered.provider, offeredRemembered.transport)
     : null;
   const wantedModel = offeredRemembered?.model ?? null;
   if (
@@ -239,14 +230,12 @@ export function useAgentCatalog({
   // default it serves, stands in for a choice the person has not made, so
   // the picker shows what a reading runs with rather than a start of its own.
   const servedReading =
-    stored?.unreadable === false && stored.reading && catalog.kind === "ready"
-      ? readingSelection(catalog.value, stored.reading)
+    stored?.unreadable === false && stored.reading && offer
+      ? readingSelection(offer, stored.reading)
       : null;
   const heldChoices = [
     chosen,
-    ranWith && catalog.kind === "ready"
-      ? ranSelection(catalog.value, ranWith)
-      : null,
+    ranWith && offer ? ranSelection(offer, ranWith) : null,
     remembered,
     servedReading,
   ];
@@ -271,8 +260,6 @@ export function useAgentCatalog({
      * place of offering the local lanes' lists, and the way to read them
      * again; null once they are read. */
     lists: { failure: lists.failure, retry: retryLists },
-    localLanes,
-    engines,
     offer,
     selection,
     provider,

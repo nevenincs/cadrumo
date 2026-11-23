@@ -7,7 +7,8 @@ import {
   FIXTURE_SKILLS,
   MANY_FIXTURE_SKILLS,
 } from "@/dev/fixtures/agentSkills";
-import { catalogChoices, offeredSelection } from "../../shell/agentCatalog";
+import { offeredSelection } from "../../shell/agentCatalog";
+import { agentOffer } from "../../shell/agentOffer";
 import { SOURCE_LOCALE, translator } from "../../shell/strings";
 import { Composer } from "./Composer";
 import type {
@@ -33,7 +34,12 @@ export const KEEP_DRAFT = () => false;
 // The specimen's providers and models are the scenario host's catalog, as
 // the column deduces its choices from it: every model in it is made up and
 // named as a fixture.
-const CHOICES = catalogChoices(translator(SOURCE_LOCALE), FIXTURE_CATALOG);
+const CHOICES = agentOffer(
+  translator(SOURCE_LOCALE),
+  FIXTURE_CATALOG,
+  null,
+  null,
+);
 
 export const PROVIDERS: ProviderOption[] = CHOICES.providers;
 

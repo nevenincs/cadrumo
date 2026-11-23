@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
-import { catalogLanes } from "../../src/shell/localModelLanes";
+import { catalogLanes } from "../../src/shell/agentOffer";
 import {
   agentColumn as column,
   ask,

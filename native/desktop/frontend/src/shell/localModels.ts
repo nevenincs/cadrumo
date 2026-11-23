@@ -7,7 +7,7 @@ import type {
   LocalModelListStatus,
   LocalPlacement,
 } from "./localModelsContract";
-import type { CatalogLane, LaneModel } from "./localModelLanes";
+import type { CatalogLane, LaneModel } from "./agentOffer";
 import type { AskedModel } from "./provisioning";
 
 // The models the person added by name to the local lanes' model lists, read
