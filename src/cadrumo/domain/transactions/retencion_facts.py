@@ -373,11 +373,12 @@ def urban_rent_retencion_rates(
 class PremiosRetencionTerms(BaseModel):
     """Frozen projection of the authority's retención terms for premios en metálico.
 
+    Both values and their legal applicability remain in registry facts.
+
     Attributes:
-        ``rate`` is the selected retención rate on the prize amount;
-        ``exclusion_threshold_eur`` is the base de retención at or below which a
-        prize bears no retención. Their values and legal applicability remain in
-        registry facts.
+        rate: The selected retención rate on the prize amount.
+        exclusion_threshold_eur: The base de retención at or below which a
+            prize bears no retención.
     """
 
     model_config = STRICT_FROZEN_CONFIG
