@@ -14,7 +14,7 @@ import type {
   SetupSnapshot,
 } from "../ipc/componentSetup";
 import type { Setup } from "../shell/host";
-import { catalogLanes } from "../shell/localModelLanes";
+import { catalogLanes } from "../shell/agentOffer";
 import {
   FIXTURE_CATALOG,
   type FixtureModelPresence,

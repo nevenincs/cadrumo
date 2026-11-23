@@ -4,7 +4,6 @@ import {
   withEngineHealth,
   type FixtureEngineHealth,
 } from "../src/dev/fixtures/agentCatalog";
-import { catalogChoices, laneEngines } from "../src/shell/agentCatalog";
 import type {
   EngineHealthResponse,
   ServedProviderLane,
@@ -14,7 +13,7 @@ import {
   engineDoorWords,
   engineNotRunningWords,
 } from "../src/shell/engineHealth";
-import { catalogLanes } from "../src/shell/localModelLanes";
+import { agentOffer, catalogLanes } from "../src/shell/agentOffer";
 
 // What the catalog states of a local engine: only the API lane of an engine
 // states one, a running engine names neither a reason nor a door, one that
@@ -25,6 +24,17 @@ import { catalogLanes } from "../src/shell/localModelLanes";
 
 const words = (key: string, values?: Record<string, string | number>) =>
   values ? `${key}${JSON.stringify(values)}` : key;
+
+const offerOf = (catalog: Parameters<typeof catalogLanes>[0]) =>
+  agentOffer(words, catalog, null, null);
+
+/** The engine health the offer states, by lane id: only a measured lane. */
+const enginesOf = (catalog: Parameters<typeof catalogLanes>[0]) =>
+  Object.fromEntries(
+    [...offerOf(catalog).lanes.values()].flatMap((lane) =>
+      lane.engine ? [[lane.id, lane.engine]] : [],
+    ),
+  );
 
 const DOWN = {
   engine: "llamacpp",
@@ -112,7 +122,7 @@ test("an engine that does not run is said before the transport and its lane cann
     llamacpp: DOWN,
     ollama: { ...DOWN, engine: "ollama" },
   });
-  const offered = catalogChoices(words, catalog);
+  const offered = offerOf(catalog);
   for (const provider of ["llamacpp", "ollama"]) {
     const way = offered.providers
       .find((held) => held.id === provider)
@@ -136,7 +146,7 @@ test("an engine that does not run is said before the transport and its lane cann
 });
 
 test("a running engine, or none stated, leaves the lane as it was and says nothing", () => {
-  const offered = catalogChoices(words, served({ llamacpp: UP, ollama: null }));
+  const offered = offerOf(served({ llamacpp: UP, ollama: null }));
   for (const provider of ["llamacpp", "ollama"]) {
     const way = offered.providers
       .find((held) => held.id === provider)
@@ -170,20 +180,20 @@ test("the words name the reason by a whole key, and only a known door has any", 
 
 test("a lane with a malformed engine answer is not offered, here or in the model lists", () => {
   const catalog = served({ llamacpp: { ...DOWN, door: null } });
-  const offered = catalogChoices(words, catalog);
+  const offered = offerOf(catalog);
   expect(offered.providers.some((held) => held.id === "llamacpp")).toBe(false);
   expect(offered.providers.some((held) => held.id === "ollama")).toBe(true);
   expect(
     catalogLanes(catalog).some((held) => held.provider === "llamacpp"),
   ).toBe(false);
-  expect(laneEngines(catalog)).not.toHaveProperty("llamacpp_api");
+  expect(enginesOf(catalog)).not.toHaveProperty("llamacpp_api");
 });
 
 test("the engines stated are keyed by lane", () => {
-  expect(laneEngines(served({ llamacpp: DOWN, ollama: null }))).toEqual({
+  expect(enginesOf(served({ llamacpp: DOWN, ollama: null }))).toEqual({
     llamacpp_api: DOWN,
   });
-  expect(laneEngines(FIXTURE_CATALOG)).toEqual({
+  expect(enginesOf(FIXTURE_CATALOG)).toEqual({
     llamacpp_api: UP,
     ollama_api: { ...UP, engine: "ollama" },
   });

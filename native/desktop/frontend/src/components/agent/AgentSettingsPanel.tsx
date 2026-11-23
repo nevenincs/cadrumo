@@ -4,8 +4,8 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import type { AgentAccess, useAgentAccess } from "../../shell/agentAccess";
 import type { ServedCatalogAnswer } from "../../shell/agentCatalogContract";
-import type { AgentEngineHealth } from "../../shell/agentSession";
-import type { CatalogLane } from "../../shell/localModelLanes";
+import { offerMatches } from "../../shell/agentOffer";
+import { useAgentOffer } from "../../shell/agentOfferContext";
 import type { LocalModelHost } from "../../shell/localModels";
 import type {
   ProviderSettings,
@@ -75,8 +75,6 @@ export function AgentSettingsPanel({
   writeClipboard,
   onSignInTerminal,
   localModelHost,
-  localLanes,
-  engines,
   localProviderId,
   catalogStatus,
   catalogFailure = null,
@@ -104,10 +102,6 @@ export function AgentSettingsPanel({
   ) => Promise<string | undefined>;
   /** The local model lists, where the agent runs and the host offers them. */
   localModelHost: LocalModelHost | null;
-  /** The catalog's lanes with their models. */
-  localLanes: CatalogLane[];
-  /** What the catalog states of each local engine's lane, by lane id. */
-  engines: Readonly<Record<string, AgentEngineHealth>>;
   /** The provider lane on this computer, the local AI. */
   localProviderId: string | undefined;
   catalogStatus: "ready" | "loading" | "failed";
@@ -120,6 +114,7 @@ export function AgentSettingsPanel({
   onLocalModelRemoved: () => void;
 }) {
   const t = useStrings();
+  const offer = useAgentOffer();
   const searchId = useId();
   const panel = useRef<HTMLDivElement>(null);
   // The way on for a lane a task cannot run on yet is in that provider's
@@ -143,7 +138,7 @@ export function AgentSettingsPanel({
   };
   const query = settingsQuery.trim().toLocaleLowerCase();
   const titleMatches = (title: string) =>
-    Boolean(query) && title.toLocaleLowerCase().includes(query);
+    Boolean(query) && offerMatches([title], query);
   const providerTitleMatches = titleMatches(t("desktop.providers.title"));
   const accessTitleMatches = titleMatches(t("desktop.automation_access.title"));
   const tasksTitleMatches = titleMatches(
@@ -209,13 +204,14 @@ export function AgentSettingsPanel({
                 onSignOut={settings.signOut}
                 onRefresh={settings.refresh}
                 onSignInTerminal={onSignInTerminal}
-                engines={engines}
+                lanes={offer?.lanes}
                 localModels={
                   localModelHost
                     ? (lane) => {
                         const listed =
-                          localLanes.find((held) => held.id === lane.id) ??
-                          null;
+                          offer?.modelLanes.find(
+                            (held) => held.id === lane.id,
+                          ) ?? null;
                         // The lane on this computer is the local AI: its
                         // program and its model list together.
                         return lane.id === localProviderId ? (
