@@ -911,3 +911,123 @@ async fn a_sign_in_after_a_sign_out_is_not_answered_as_signed_out_meanwhile() {
     .unwrap();
     supervisor.close().await.unwrap();
 }
+
+fn fenced() -> Result<Observation> {
+    Err(
+        ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+            .with_reason("sign_in_mutation_in_progress"),
+    )
+}
+
+async fn until_state(supervisor: &Supervisor, state: State) {
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while supervisor.status().state != state {
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn an_unanswered_first_sign_in_observation_is_refused_as_timed_out_past_the_start_bound() {
+    // A launcher's service is read as starting until the sign-in is observed;
+    // an observation that never answers must not keep it starting for ever.
+    let observe: Observe = Arc::new(|| Box::pin(std::future::pending()));
+    let launch: Launch = Arc::new(|_, _| panic!("an unobserved sign-in cannot authorize launch"));
+    let diagnostics = Arc::new(Diagnostics::default());
+    let supervisor = Supervisor::new(
+        observe,
+        every(Duration::from_millis(1)),
+        Some(launch),
+        diagnostics.clone(),
+    )
+    .timeout_within(Duration::from_millis(80));
+    supervisor.status();
+    assert!(matches!(
+        supervisor.admin_now(),
+        super::AdminWait::StillStarting
+    ));
+    until_state(
+        &supervisor,
+        State::Refused {
+            code: Refusal::Timeout,
+        },
+    )
+    .await;
+    assert!(matches!(
+        supervisor.admin_now(),
+        super::AdminWait::NotStarting
+    ));
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert_eq!(
+        refusals(&diagnostics),
+        [Refusal::Timeout],
+        "refused once, not repeatedly"
+    );
+    tokio::time::timeout(Duration::from_secs(1), supervisor.close())
+        .await
+        .unwrap()
+        .unwrap();
+}
+
+#[tokio::test]
+async fn a_sign_in_fenced_past_the_start_bound_is_refused_as_timed_out_and_starts_once_decided() {
+    let source = Arc::new(Mutex::new(fenced()));
+    let (supervisor, attempts, diagnostics) = awaiting(&source, Duration::from_millis(80));
+    supervisor.status();
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    // Within the bound a fenced sign-in is waited for as starting.
+    assert_eq!(supervisor.status().state, State::Stopped);
+    assert!(refusals(&diagnostics).is_empty());
+    until_state(
+        &supervisor,
+        State::Refused {
+            code: Refusal::Timeout,
+        },
+    )
+    .await;
+    // Still fenced: the refusal stands, published once, and nothing is started.
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert_eq!(
+        supervisor.status().state,
+        State::Refused {
+            code: Refusal::Timeout
+        }
+    );
+    assert_eq!(refusals(&diagnostics), [Refusal::Timeout]);
+    assert_eq!(attempts.load(Ordering::SeqCst), 0);
+    // A decided sign-in starts the agent as usual.
+    *lock(&source) = observed(true, true, Some("A"));
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while attempts.load(Ordering::SeqCst) == 0 {
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+    supervisor.close().await.unwrap();
+}
+
+#[tokio::test]
+async fn a_sign_in_fenced_within_the_start_bound_is_waited_for_without_a_refusal() {
+    let source = Arc::new(Mutex::new(fenced()));
+    let (supervisor, attempts, diagnostics) = awaiting(&source, Duration::from_secs(60));
+    supervisor.status();
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert_eq!(supervisor.status().state, State::Stopped);
+    assert!(matches!(
+        supervisor.admin_now(),
+        super::AdminWait::StillStarting
+    ));
+    assert!(refusals(&diagnostics).is_empty());
+    *lock(&source) = observed(true, true, Some("A"));
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while attempts.load(Ordering::SeqCst) == 0 {
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    })
+    .await
+    .unwrap();
+    supervisor.close().await.unwrap();
+}
