@@ -16,13 +16,12 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..errors import RegistryFailureCondition, RegistryValidationError
-from ..schema import ModeloRevision
 from ..schema_references import TemporalProjectionDirection, reachable_authority_grade
 from .authored_editions import (
-    authored_revisions_where,
+    EditionBelowFilingGrade,
+    authored_editions_below_filing_grade,
     newest_authored_edition,
     projected_exercise,
-    revision_first_exercise,
     supported_exercises_with_projection,
 )
 
@@ -117,13 +116,19 @@ def test_a_projection_caps_a_declared_grade_at_calculation_and_keeps_a_lower_one
         assert ladder.index(reached) <= ladder.index(RegistryAuthorityGrade.CALCULATION)
 
 
-_HELD_BELOW_FILING = tuple(
-    (modelo, revision)
-    for modelo in ("100", "200")
-    for revision in authored_revisions_where(
-        modelo, lambda revision: revision.effective_authority_grade is not RegistryAuthorityGrade.FILING
-    )
-)
+def _newest_held_edition_per_modelo() -> tuple[EditionBelowFilingGrade, ...]:
+    """Each modelo's newest authored annual edition the authority serves below filing grade, read from the registry.
+
+    Editions rise to filing grade as their evidence lands, so the subjects come
+    from the one shared search rather than from named modelos.
+    """
+    newest: dict[str, EditionBelowFilingGrade] = {}
+    for edition in authored_editions_below_filing_grade(_PERIOD):
+        newest.setdefault(edition.modelo, edition)
+    return tuple(newest.values())
+
+
+_HELD_BELOW_FILING = _newest_held_edition_per_modelo()
 
 
 def test_an_edition_is_held_below_filing_grade_so_the_reading_check_has_teeth() -> None:
@@ -132,17 +137,16 @@ def test_an_edition_is_held_below_filing_grade_so_the_reading_check_has_teeth() 
     )
 
 
-@pytest.mark.parametrize(("modelo", "revision"), _HELD_BELOW_FILING, ids=lambda item: str(getattr(item, "id", item)))
+@pytest.mark.parametrize(
+    "edition", _HELD_BELOW_FILING, ids=lambda edition: f"{edition.modelo}-{edition.filing_year}-{edition.revision_id}"
+)
 def test_an_authored_year_of_an_edition_held_below_filing_is_read_at_its_declared_grade(
-    operation: PinnedAuthorityOperation, modelo: str, revision: ModeloRevision
+    operation: PinnedAuthorityOperation, edition: EditionBelowFilingGrade
 ) -> None:
-    year = revision_first_exercise(modelo, str(revision.id))
+    snapshot = operation.reading_snapshot(edition.modelo, filing_year=edition.filing_year, period=_PERIOD)
 
-    snapshot = operation.reading_snapshot(modelo, filing_year=year, period=_PERIOD)
-
-    assert snapshot.revision.id == revision.id
+    assert str(snapshot.revision.id) == edition.revision_id
     assert snapshot.revision_projection_direction is TemporalProjectionDirection.AUTHORED
-    assert snapshot.effective_authority_grade is revision.effective_authority_grade
-    assert snapshot.effective_authority_grade is operation.reachable_authority_grade(
-        modelo, filing_year=year, period=_PERIOD
-    )
+    assert snapshot.effective_authority_grade is snapshot.revision.effective_authority_grade
+    assert snapshot.effective_authority_grade is edition.grade
+    assert snapshot.effective_authority_grade is not RegistryAuthorityGrade.FILING
