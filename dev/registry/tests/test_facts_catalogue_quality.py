@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import runpy
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -378,3 +380,35 @@ def test_live_gate_reports_provider_compile_failure_and_main_blocks_on_findings(
         lambda _root: findings,
     )
     assert main(["--registry-root", str(tmp_path)]) == 1
+
+
+def test_the_module_entry_point_runs_the_gate_to_its_verdict(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``python -m`` executes the module top to bottom, so every helper must exist before the guard calls main."""
+
+    def broken_compile(registry_root: Path) -> tuple[GovernedFact, ...]:
+        raise ValueError("broken catalogue")
+
+    provider = FactProviderRegistration(
+        provider_id="broken-provider",
+        owned_directories=("facts",),
+        compile=broken_compile,
+        collect_fingerprints=lambda _root: (),
+        reset=lambda: None,
+    )
+    _declare_supported_years(tmp_path)
+    monkeypatch.setattr("dev.registry.compiler.fact_providers.FACT_PROVIDER_REGISTRATIONS", (provider,))
+    monkeypatch.setattr(sys, "argv", ["facts_catalogue_quality", "--registry-root", str(tmp_path)])
+
+    with pytest.raises(SystemExit) as exited:
+        runpy.run_module("dev.registry.analysis.facts_catalogue_quality", run_name="__main__")
+
+    assert exited.value.code == 1
+    assert capsys.readouterr().out.splitlines() == [
+        "invalid_provider provider=broken-provider fact= variant= detail=compile failed: ValueError: broken catalogue",
+        "invalid_provider provider=broken-provider fact= variant= "
+        "detail=registered provider has no compiled facts result",
+    ]

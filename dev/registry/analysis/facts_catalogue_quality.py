@@ -515,10 +515,6 @@ def main(argv: list[str] | None = None) -> int:
     return 1 if findings else 0
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
-
-
 def _compile_live_providers(
     registrations: tuple[FactProviderRegistration, ...], registry_root: Path
 ) -> tuple[dict[str, tuple[GovernedFact, ...]], list[FactQualityFinding]]:
@@ -560,3 +556,7 @@ def _resolved_provenance_findings(
                 detail=f"compiled projection provenance failed: {type(error).__name__}: {error}",
             ),
         )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
