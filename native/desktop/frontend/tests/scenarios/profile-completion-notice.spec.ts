@@ -162,3 +162,38 @@ test("an undeclared taxpayer model names every missing fact at once, by the prof
     ),
   ).toBeVisible();
 });
+
+test("each missing fact links to its own field: the profile opens with that field focused and its editor open", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=user-profile&calendar=undeclared_taxpayer&latency=0&bar=off&lang=en",
+  );
+  await page
+    .locator(".rail")
+    .getByRole("button", { name: label("desktop.calendar.title"), exact: true })
+    .click();
+  const calendar = page.locator(".calendar-page");
+  await calendar
+    .getByRole("button", { name: label("desktop.profile.notice.show_details") })
+    .click();
+  const link = calendar.getByRole("link", {
+    name: label("desktop.profile.notice.open_field", { field: "Entity type" }),
+  });
+  // The link carries the path the backend served, never one the window derived.
+  await expect(link).toHaveAttribute(
+    "href",
+    "cadrumo://view/profile?field=taxpayer_type.entity_type",
+  );
+  await link.focus();
+  await page.keyboard.press("Enter");
+
+  const profile = page.locator(".user-profile-page");
+  const editor = page.getByRole("dialog", { name: "Entity type", exact: true });
+  await expect(editor).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(editor).toHaveCount(0);
+  const field = profile.locator('[data-nav="taxpayer_type.entity_type"]');
+  await expect(field).toBeFocused();
+  await expect(field).toBeInViewport();
+});

@@ -33,7 +33,8 @@ def test_the_projection_carries_every_element_kind_and_retired_id() -> None:
             "params": dict(element.params),
         }
     assert projection["kinds"] == [
-        {"name": kind.name, "alphabet": kind.alphabet, "length": kind.length} for kind in register.kinds
+        {"name": kind.name, "alphabet": kind.alphabet, "length": kind.length, "max_length": kind.max_length}
+        for kind in register.kinds
     ]
     assert projection["retired"] == list(register.retired)
     assert projection["surfaces"] == ["gui"]

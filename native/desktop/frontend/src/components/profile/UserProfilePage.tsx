@@ -21,7 +21,10 @@ import type { Host } from "../../shell/host";
 import type { ProfileView } from "../../shell/layout";
 import type { LedgerProfileStep } from "../../shell/ledger";
 import { facts } from "../../shell/compose";
-import { useNavigationGuard } from "../../shell/navigation/hooks";
+import {
+  useNavigationGuard,
+  useViewParams,
+} from "../../shell/navigation/hooks";
 import { useCensoSync, type CensoSnapshot } from "../../shell/profileCenso";
 import {
   columns,
@@ -543,6 +546,33 @@ export const UserProfilePage = memo(function UserProfilePage({
     answerStep.current(profileStep);
     onProfileStepHandled();
   }, [profileStep, data, shown, onProfileStepHandled]);
+
+  // A link naming one field (`field` is its served profile path) reveals and
+  // focuses that detail and opens its editor; a detail of a section holding
+  // no entry yet opens that first entry, as a field step does.
+  const [linkedField, setLinkedField] = useState<string | null>(null);
+  useViewParams("profile", (params) => setLinkedField(params.field ?? null));
+  const answerField = useRef<(path: string) => void>(() => {});
+  useLayoutEffect(() => {
+    answerField.current = (path) => {
+      const owner = data?.sections.find(
+        (section) => section.key === path.slice(0, path.indexOf(".")),
+      );
+      if (owner?.repeatable && entries(owner).length === 0 && writable) {
+        editEntry(owner, null);
+        return;
+      }
+      showDetail(path);
+      const row = rowById(path);
+      // After the detail has the focus, so closing the editor returns there.
+      if (row && writable) afterDraw(() => editRow(row));
+    };
+  });
+  useEffect(() => {
+    if (linkedField === null || !data || !shown) return;
+    answerField.current(linkedField);
+    setLinkedField(null);
+  }, [linkedField, data, shown]);
   const changePassword = host.profiles?.changePassword;
   const profileActions: PageAction[] = [
     ...(host.censo

@@ -103,7 +103,7 @@ async def test_an_exact_id_answers_every_fact_of_the_view_with_its_label_in_the_
             "id": "ledger/invoices",
             "parent": "ledger",
             "surfaces": ["gui"],
-            "params": {"select": {"kind": "invoice", "alphabet": "0123456789abcdef", "length": 64}},
+            "params": {"select": {"kind": "invoice", "alphabet": "0123456789abcdef", "length": 64, "max_length": None}},
             "keywords": keywords.split(),
             "label": lookup_translation("navigation.view.ledger.invoices.label", locale="ca"),
             "label_key": "navigation.view.ledger.invoices.label",

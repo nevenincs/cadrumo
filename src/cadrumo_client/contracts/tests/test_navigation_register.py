@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import lookup_translation
@@ -18,6 +19,7 @@ from ..navigation import (
     NavigationRegisterError,
     NavigationSurface,
     SurfaceImplementation,
+    ValueKind,
     ViewLink,
     ViewOpened,
     ViewRefused,
@@ -240,6 +242,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "ledger": {"select": "transaction"},
         "ledger/movements": {"select": "transaction"},
         "ledger/invoices": {"select": "invoice"},
+        "profile": {"field": "profile-field"},
     }
 
 
@@ -352,12 +355,32 @@ def test_an_element_added_without_growing_the_baseline_breaks_it() -> None:
     ]
 
 
-def test_the_shipped_value_kinds_are_content_derived_sha256_ids() -> None:
+def test_the_shipped_value_kinds_are_sha256_ids_and_profile_field_paths() -> None:
     register = load_navigation_register()
-    assert {(kind.name, kind.alphabet, kind.length) for kind in register.kinds} == {
-        ("transaction", "0123456789abcdef", 64),
-        ("invoice", "0123456789abcdef", 64),
+    assert {(kind.name, kind.alphabet, kind.length, kind.max_length) for kind in register.kinds} == {
+        ("transaction", "0123456789abcdef", 64, None),
+        ("invoice", "0123456789abcdef", 64, None),
+        ("profile-field", "abcdefghijklmnopqrstuvwxyz0123456789_.", None, 128),
     }
+
+
+@pytest.mark.parametrize(
+    "shape",
+    [{}, {"length": 8, "max_length": 8}],
+    ids=["neither", "both"],
+)
+def test_a_value_kind_declares_exactly_one_length(shape: dict[str, int]) -> None:
+    with pytest.raises(ValidationError):
+        ValueKind.model_validate({"name": "sample", "alphabet": "abc", **shape})
+
+
+def test_a_bounded_kind_admits_values_up_to_its_bound_and_refuses_empty() -> None:
+    kind = ValueKind.model_validate({"name": "sample", "alphabet": "ab.", "max_length": 3})
+    assert kind.admits("a")
+    assert kind.admits("a.b")
+    assert not kind.admits("")
+    assert not kind.admits("abab")
+    assert not kind.admits("a-b")
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
