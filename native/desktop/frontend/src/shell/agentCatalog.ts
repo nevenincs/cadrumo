@@ -1,437 +1,31 @@
 import type {
   AgentSelection,
-  Choice,
-  HeldStep,
   ModelOption,
   ProviderOption,
   ProviderWay,
 } from "@/components/agent/types";
-import type {
-  Effort,
-  EngineDoor,
-  ServedCatalogAnswer,
-  ServedCatalogModel,
-  ServedDeclaredLane,
-  ServedDeclaredProviderCatalog,
-  ServedProviderLane,
-} from "./agentCatalogContract";
-import type { AgentEngineHealth, AgentSelectionRecord } from "./agentSession";
-import { parseEngineHealth } from "./agentSession";
+import type { AgentSelectionRecord } from "./agentSession";
 import type { LocalModelListEntry } from "./localModelsContract";
-import { engineNotRunningWords } from "./engineHealth";
-import type { Translate } from "./strings";
 import type { AgentRanWith } from "./agentSnapshotContract";
+import { heldModel, type AgentOffer, type OfferedLane } from "./agentOffer";
 
-// The agent column's choices, deduced from cadrumo-agent's provider catalog
-// alone. The column adds only the words for the catalog's known values; it
-// names no provider, model, effort or capability of its own, and this is the
-// one place any of it is worked out.
-//
-// A provider is the catalog's `provider_id` and a way into it is its
-// `transport`, so the lanes of one provider are grouped under it, and the
-// list the person chooses from has a row for each lane, named as the lane is
-// (`display_name`). The person is never shown the transport. Both are served
-// explicitly by cadrumo-agent's ProviderCatalogResponse
-// (api/schemas/provider_catalog.py), from the lane's own definitions, and the
-// service refuses a catalog that departs from its schema. A lane whose engine
-// health breaks the pairing the schema leaves open is not offered, and a
-// catalog of only such lanes is shown as incompatible.
-//
-// A lane is a way into one model list, and the pair (provider, transport) is
-// its identity, as ExecutionLane.selection_key has it. `execution_mode` says
-// how the lane runs and is not part of that identity.
-//
-// A run takes a provider, a transport, a model and an effort, and nothing
-// else (AgentSpec, agent/spec.py): the execution mode and the catalog entry
-// are the service's to resolve, and a model's native controls are not part of
-// it, so none is offered. A capability proof may name a tool server or a
-// multi-agent generation. This way-level summary only shows proofs that apply
-// across the lane, never a model- or generation-specific proof.
-//
-// While no agent is ready the service answers with the agent's declared
-// catalog instead, in an envelope (`kind: "declared"`). It says which lanes
-// exist and nothing of whether one can run here, so every lane of it is listed
-// as not yet observed and none can be chosen until the served catalog comes.
+// What the agent column runs with, chosen among what the agent offers
+// (agentOffer.ts): the selection kept, restored or started, and the record a
+// run start takes. A run takes a provider, a transport, a model and an
+// effort, and nothing else (AgentSpec, agent/spec.py): the execution mode and
+// the catalog entry are the service's to resolve.
 
-/** The catalog answer is the agent's declared catalog, not a served one. */
-export const isDeclared = (
-  answer: ServedCatalogAnswer,
-): answer is ServedDeclaredProviderCatalog =>
-  "kind" in answer && answer.kind === "declared";
+/** The column's choices of an offer: its providers and each way's models. */
+export type OfferChoices = Pick<AgentOffer, "providers" | "models">;
 
-/** The served lanes of a catalog answer; a declared catalog serves none. */
-const servedLanes = (answer: ServedCatalogAnswer): ServedProviderLane[] =>
-  isDeclared(answer) ? [] : (answer.providers ?? []);
-
-/** The identity of a lane: one provider, reached one way. */
-const wayId = (lane: ServedProviderLane) =>
-  `${lane.provider_id}/${lane.transport}`;
-
-// A lane that states its engine's health outside the contract is not
-// understood: it is not offered.
-const understood = (lane: ServedProviderLane) =>
-  parseEngineHealth(lane) !== "malformed";
-
-/** The health of each local engine's lane the catalog states, by lane id
- * (`<provider>_<transport>`): only a lane whose engine was measured. */
-export function laneEngines(
-  answer: ServedCatalogAnswer,
-): Record<string, AgentEngineHealth> {
-  const engines: Record<string, AgentEngineHealth> = {};
-  for (const lane of servedLanes(answer)) {
-    const engine = understood(lane) ? parseEngineHealth(lane) : null;
-    if (engine !== null && engine !== "malformed")
-      engines[`${lane.provider_id}_${lane.transport}`] = engine;
-  }
-  return engines;
-}
-
-/** The words for each effort cadrumo-agent names (agent/spec.py `Effort`). */
-const EFFORT_WORDS = {
-  low: "desktop.agent.effort_low",
-  medium: "desktop.agent.effort_medium",
-  high: "desktop.agent.effort_high",
-  xhigh: "desktop.agent.effort_xhigh",
-  max: "desktop.agent.effort_max",
-  ultra: "desktop.agent.effort_ultra",
-} as const satisfies Record<Effort, string>;
-
-const isEffort = (value: string): value is Effort =>
-  Object.hasOwn(EFFORT_WORDS, value);
-
-export function effortWords(t: Translate, effort: Effort): string {
-  return t(EFFORT_WORDS[effort]);
-}
-
-const effortChoice = (t: Translate, effort: Effort): Choice => ({
-  id: effort,
-  name: effortWords(t, effort),
-});
-
-/** The capabilities a person chooses a provider by, in words; the agent's
- * own machinery (tools, subagents) is not one of them. */
-function capabilityWords(t: Translate, capability: string): string | undefined {
-  switch (capability) {
-    case "writing":
-      return t("desktop.agent.can_write");
-    case "web_retrieval":
-      return t("desktop.agent.can_search_web");
-    case "image_reading":
-      return t("desktop.agent.can_read_images");
-    case "pdf_reading":
-      return t("desktop.agent.can_read_pdfs");
-    default:
-      return undefined;
-  }
-}
-
-/** What the lane has been proven to do on this host. A proof is the lane's,
- * not a model's: `entry` on one names a tool server, not a model, so the
- * proofs are shown for the way into a provider and never for a model. A
- * generation-scoped proof is not a claim about the whole way, so it is left
- * out of this lane-level summary. */
-function provenCapabilities(t: Translate, lane: ServedProviderLane): string[] {
-  const words = (lane.capability_proofs ?? [])
-    .filter(
-      (proof) =>
-        proof.state === "proven" &&
-        (proof.generation === undefined || proof.generation === null),
-    )
-    .map((proof) => capabilityWords(t, proof.capability))
-    .filter((word): word is string => word !== undefined);
-  return [...new Set(words)];
-}
-
-/** Why a lane cannot be chosen, from the first of its health axes that says
- * so, and the step the person can take where one exists: signing in to a lane
- * that is signed out, and asking again for a lane whose models could not be
- * read. A lane held by a configuration, an engine or an admission the person
- * cannot repair from the picker has no step. */
-function laneHeld(
-  t: Translate,
-  lane: ServedProviderLane,
-): { words: string; step?: HeldStep } {
-  const { health } = lane;
-  if (health.configured === "unavailable")
-    return { words: t("desktop.agent.lane_not_configured") };
-  if (health.authentication === "unauthenticated")
-    return { words: t("desktop.agent.lane_signed_out"), step: "sign_in" };
-  // A local engine that does not run is the cause behind an unreachable
-  // transport, so it is said before the transport.
-  const engine = parseEngineHealth(lane);
-  const engineWords =
-    engine !== null && engine !== "malformed"
-      ? engineNotRunningWords(t, engine)
-      : null;
-  if (engineWords !== null) return { words: engineWords };
-  if (health.transport === "unavailable" || !lane.executable)
-    return { words: t("desktop.agent.lane_unreachable") };
-  if (health.admission === "not_admitted")
-    return { words: t("desktop.agent.lane_not_admitted") };
-  if (health.catalog === "unavailable" || health.catalog === "unknown")
-    return { words: t("desktop.agent.lane_no_catalog"), step: "retry" };
-  return { words: t("desktop.agent.unavailable"), step: "retry" };
-}
-
-/** That a lane's engine does not run, in words, with the door the service
- * names; null for a running engine. */
-function engineWordsOf(
-  t: Translate,
-  engine: AgentEngineHealth,
-): { words: string; door: EngineDoor } | null {
-  const words = engineNotRunningWords(t, engine);
-  return words !== null && engine.state === "not_running"
-    ? { words, door: engine.door }
-    : null;
-}
-
-/** Authentication and saved configuration are independent of a provider's
- * capability proof. The agent's `selectable` remains the authority for
- * admission and execution policy; this extra check keeps an installed or
- * selected CLI from becoming runnable without live authentication evidence. */
-function hasRunAuthentication(lane: ServedProviderLane): boolean {
-  const { health } = lane;
-  const authenticated =
-    health.authentication === "authenticated" ||
-    health.authentication === "not_applicable";
-  return (
-    health.configured === "available" &&
-    health.transport === "available" &&
-    health.catalog === "available" &&
-    authenticated
-  );
-}
-
-const writesModel = (lane: ServedProviderLane) =>
-  lane.model_source === "declared";
-
-/** The efforts a lane that lists no models accepts with any model: the options
- * of its one thought-level control that are efforts, which is how a gateway's
- * declared efforts are served (providers/effort.py `declared_effort_control`
- * makes each option's id the effort's value). */
-function laneEfforts(lane: ServedProviderLane): Effort[] {
-  const levels = (lane.catalog.native_controls ?? []).filter(
-    (control) => control.kind === "thought_level",
-  );
-  if (levels.length !== 1) return [];
-  return (levels[0]?.options ?? []).flatMap((option) =>
-    isEffort(option.option_id) ? [option.option_id] : [],
-  );
-}
-
-function modelOption(t: Translate, entry: ServedCatalogModel): ModelOption {
-  return {
-    id: entry.entry_id,
-    name: entry.display_name,
-    ...(entry.description ? { description: entry.description } : {}),
-    efforts: (entry.efforts ?? []).map((effort) => effortChoice(t, effort)),
-    ...(entry.default_effort ? { defaultEffort: entry.default_effort } : {}),
-    // The served catalog marks only a model this computer lacks.
-    ...(entry.installed === false ? { installed: false } : {}),
-  };
-}
-
-/** A model the catalog does not say this computer lacks, so a run can name
- * it. Whether it is held is the catalog's to say; the column never decides. */
-export const heldModel = (model: Pick<ModelOption, "installed">) =>
-  model.installed !== false;
-
-export type CatalogChoices = {
-  providers: ProviderOption[];
-  /** Each way's models, by way id. */
-  models: Record<string, ModelOption[]>;
-  /** The catalog lists lanes, but none says what provider or transport it
-   * is: the service is older than this column. */
-  incompatible: boolean;
-  /** False while the lanes are only the agent's declared ones, which no
-   * running agent has observed yet. */
-  observed: boolean;
-};
-
-/** The declared lanes, each listed under its provider and none choosable. */
-function declaredChoices(
-  t: Translate,
-  catalog: ServedDeclaredProviderCatalog,
-): CatalogChoices {
-  const declared = catalog.catalog.providers;
-  const key = (lane: ServedDeclaredLane) =>
-    `${lane.provider}/${lane.transport}`;
-  const lanes = declared.filter(
-    (lane, index) =>
-      declared.findIndex((held) => key(held) === key(lane)) === index,
-  );
-  const grouped = new Map<string, ServedDeclaredLane[]>();
-  for (const lane of lanes)
-    grouped.set(lane.provider, [...(grouped.get(lane.provider) ?? []), lane]);
-  const models: Record<string, ModelOption[]> = {};
-  const providers = [...grouped].map(([id, group]): ProviderOption => {
-    const ways = [...group]
-      .sort(
-        (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
-      )
-      .map((lane): ProviderWay => {
-        models[key(lane)] = [];
-        return {
-          id: key(lane),
-          transport: lane.transport,
-          authKind: lane.auth_kind,
-          selectable: false,
-          unavailableReason: t("desktop.agent.lane_not_observed"),
-          heldStep: "retry",
-        };
-      });
-    return {
-      id,
-      name: group[0]?.display_name ?? id,
-      selectable: false,
-      ways,
-    };
-  });
-  return { providers, models, incompatible: false, observed: false };
-}
-
-/** The person's model lists of the lanes on this computer: which lanes those
- * are, by catalogue lane id, and the models the person added to each. */
-export type LocalLists = {
-  lanes: readonly string[];
-  added(lane: string): readonly string[];
-};
-
-/** Whether a local lane's list holds `entry`: a model the lane recommends or
- * one the person added. */
-function listedOn(
-  lane: ServedProviderLane,
-  lists: LocalLists,
-  entry: ServedCatalogModel,
-): boolean {
-  const recommended = Object.values(lane.catalog.recommended ?? {});
-  return (
-    recommended.includes(entry.model) ||
-    lists.added(`${lane.provider_id}_${lane.transport}`).includes(entry.model)
-  );
-}
-
-/** Whether downloading a model is a way on for `lane`, the one place that
- * decides it: the service says the lane's models are downloaded to this
- * computer, and the lane lists one the catalog says is not held yet. A hosted
- * lane, which the service says downloads none, never has one. */
-function laneModelsToDownload(
-  lane: ServedProviderLane,
-  listed: readonly ModelOption[],
-): boolean {
-  return (
-    lane.model_download === "required" &&
-    listed.some((model) => !heldModel(model))
-  );
-}
-
-/** The providers and models the column offers, as the catalog has them. A
- * lane on this computer offers the models of its list, where `lists` says
- * which those are. */
-export function catalogChoices(
-  t: Translate,
-  catalog: ServedCatalogAnswer,
-  lists: LocalLists | null = null,
-): CatalogChoices {
-  if (isDeclared(catalog)) return declaredChoices(t, catalog);
-  const served = catalog.providers ?? [];
-  const lanes = served.filter(
-    (lane, index) =>
-      understood(lane) &&
-      served.findIndex((held) => wayId(held) === wayId(lane)) === index,
-  );
-  const models: Record<string, ModelOption[]> = {};
-  // Providers in the order they were served, each with its lanes: the API
-  // before the command-line app, whatever order they were served in.
-  const grouped = new Map<string, ServedProviderLane[]>();
-  for (const lane of lanes)
-    grouped.set(lane.provider_id, [
-      ...(grouped.get(lane.provider_id) ?? []),
-      lane,
-    ]);
-  const providers = [...grouped].map(([id, group]): ProviderOption => {
-    const ways = [...group]
-      .sort(
-        (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
-      )
-      .flatMap((lane): ProviderWay[] => {
-        const capabilities = provenCapabilities(t, lane);
-        const local = lists?.lanes.includes(
-          `${lane.provider_id}_${lane.transport}`,
-        )
-          ? lists
-          : null;
-        const listed = writesModel(lane)
-          ? []
-          : (lane.catalog.models ?? [])
-              .filter((entry) => !local || listedOn(lane, local, entry))
-              .map((entry) => modelOption(t, entry));
-        models[wayId(lane)] = listed;
-        const runs =
-          lane.health.selectable &&
-          hasRunAuthentication(lane) &&
-          lane.executable;
-        // A lane whose listed models this computer holds none of runs
-        // nothing until one is downloaded.
-        const noneHeld =
-          !writesModel(lane) &&
-          listed.length > 0 &&
-          !listed.some((model) => heldModel(model));
-        const usable =
-          runs && (writesModel(lane) || (listed.length > 0 && !noneHeld));
-        const toDownload = laneModelsToDownload(lane, listed);
-        const held = usable || (runs && noneHeld) ? null : laneHeld(t, lane);
-        const engine = parseEngineHealth(lane);
-        const notRunning =
-          engine !== null && engine !== "malformed"
-            ? engineWordsOf(t, engine)
-            : null;
-        return [
-          {
-            id: wayId(lane),
-            transport: lane.transport,
-            authKind: lane.auth_kind,
-            selectable: usable,
-            ...(usable
-              ? {}
-              : {
-                  unavailableReason:
-                    held?.words ?? t("desktop.agent.lane_no_installed_model"),
-                  ...(held?.step ? { heldStep: held.step } : {}),
-                }),
-            ...(toDownload ? { modelsToDownload: true } : {}),
-            ...(notRunning ? { engineNotRunning: notRunning } : {}),
-            ...(capabilities.length > 0 ? { capabilities } : {}),
-            ...(lane.catalog.recommended_entry_id
-              ? { defaultModelId: lane.catalog.recommended_entry_id }
-              : {}),
-            ...(writesModel(lane)
-              ? {
-                  modelWritten: {
-                    efforts: laneEfforts(lane).map((effort) =>
-                      effortChoice(t, effort),
-                    ),
-                  },
-                }
-              : {}),
-          },
-        ];
-      });
-    return {
-      id,
-      // Each lane of a provider carries its name; the first is the provider's.
-      name: group[0]?.display_name ?? id,
-      selectable: ways.some((way) => way.selectable),
-      ways,
-    };
-  });
-  return {
-    providers,
-    models,
-    incompatible: served.length > 0 && lanes.length === 0,
-    observed: true,
-  };
-}
+/** The observed lane `way` names, by way id; none while only declared. */
+const laneOfWay = (
+  offer: Pick<AgentOffer, "observed" | "lanes">,
+  way: string,
+): OfferedLane | undefined =>
+  offer.observed
+    ? [...offer.lanes.values()].find((held) => held.wayId === way)
+    : undefined;
 
 /** Whether some way into `provider` lists a model this computer does not hold
  * yet, so that downloading one is a way on for it. A hosted provider has no
@@ -441,12 +35,12 @@ export const providerModelsToDownload = (provider: ProviderOption) =>
 
 /**
  * The provider the person is on, even where none of its ways can run now: the
- * provider of the first of `held` the catalog serves, else the first provider
+ * provider of the first of `held` the offer serves, else the first provider
  * served, which is where a start with nothing kept begins. Undefined only for
- * a catalog serving no provider.
+ * an offer serving no provider.
  */
 export function intendedProvider(
-  choices: CatalogChoices,
+  choices: OfferChoices,
   held: readonly (AgentSelection | null | undefined)[],
 ): ProviderOption | undefined {
   for (const selection of held) {
@@ -484,9 +78,9 @@ export function startingSelection(
   return { providerId: provider.id, wayId: way.id, modelId: model.id };
 }
 
-/** The way and model `selection` names, where the catalog offers a way that
- * can be chosen and, unless the person writes the model, that model in it. */
-function offeredParts(choices: CatalogChoices, selection: AgentSelection) {
+/** The way and model `selection` names, where the offer has a way that can
+ * be chosen and, unless the person writes the model, that model in it. */
+function offeredParts(choices: OfferChoices, selection: AgentSelection) {
   const provider = choices.providers.find(
     (held) => held.id === selection.providerId,
   );
@@ -498,24 +92,24 @@ function offeredParts(choices: CatalogChoices, selection: AgentSelection) {
   return { efforts: way.modelWritten?.efforts ?? model?.efforts ?? [] };
 }
 
-/** `selection` where the catalog still offers it, else where the first way
- * that can be chosen starts; null when none can. */
+/** `selection` where the offer still has it, else where the first way that
+ * can be chosen starts; null when none can. */
 export function offeredSelection(
-  choices: CatalogChoices,
+  choices: OfferChoices,
   selection: AgentSelection | null,
 ): AgentSelection | null {
   return restoredSelection(choices, [selection], false);
 }
 
 /**
- * The first of `held` the catalog still offers, else where the first way
- * that can be chosen starts; null when none can. A choice kept from before,
- * such as the last one made or the one a conversation ran with, can name an
- * effort its model no longer takes: with `dropEffort` that effort is left
- * out and the rest of the choice kept, so the provider's default applies.
+ * The first of `held` the offer still has, else where the first way that can
+ * be chosen starts; null when none can. A choice kept from before, such as
+ * the last one made or the one a conversation ran with, can name an effort
+ * its model no longer takes: with `dropEffort` that effort is left out and
+ * the rest of the choice kept, so the provider's default applies.
  */
 export function restoredSelection(
-  choices: CatalogChoices,
+  choices: OfferChoices,
   held: readonly (AgentSelection | null | undefined)[],
   dropEffort = true,
 ): AgentSelection | null {
@@ -562,100 +156,90 @@ const isModelId = (id: string) =>
  * not one the way offers or the person has written, or one the catalog says
  * this computer does not hold. */
 export function selectionRecord(
-  catalog: ServedCatalogAnswer,
+  offer: Pick<AgentOffer, "observed" | "lanes">,
   selection: AgentSelection,
 ): AgentSelectionRecord | null {
-  const lane = servedLanes(catalog).find(
-    (held) => understood(held) && wayId(held) === selection.wayId,
-  );
+  const lane = laneOfWay(offer, selection.wayId);
   if (!lane) return null;
-  const base = { provider: lane.provider_id, transport: lane.transport };
-  if (writesModel(lane)) {
+  const base = { provider: lane.provider, transport: lane.transport };
+  if (lane.modelWritten) {
     const model = selection.modelId.trim();
     if (!isModelId(model)) return null;
-    const effort = laneEfforts(lane).find((held) => held === selection.effort);
+    const effort = lane.modelWritten.efforts.find(
+      (held) => held === selection.effort,
+    );
     return { ...base, model, ...(effort ? { effort } : {}) };
   }
-  const entry = lane.catalog.models?.find(
-    (held) => held.entry_id === selection.modelId,
-  );
+  const entry = lane.models.find((held) => held.entryId === selection.modelId);
   // A model the catalog says this computer lacks is not run.
   if (!entry || entry.installed === false) return null;
-  const effort = entry.efforts?.find((held) => held === selection.effort);
+  const effort = entry.efforts.find((held) => held === selection.effort);
   return { ...base, model: entry.model, ...(effort ? { effort } : {}) };
 }
 
 /** The name the picker gives the model `model` (the id a run names) in the
- * lane `way`: the catalog's own `display_name`, and the id itself only where
- * the catalog does not list it, as for a model the person writes. */
+ * lane `way`: the catalog's own name, and the id itself only where the
+ * catalog does not list it, as for a model the person writes. */
 export function modelDisplayName(
-  catalog: ServedCatalogAnswer,
+  offer: Pick<AgentOffer, "observed" | "lanes">,
   way: string | null,
   model: string,
 ): string {
-  const lane =
-    way === null
-      ? undefined
-      : servedLanes(catalog).find(
-          (held) => understood(held) && wayId(held) === way,
-        );
-  return (
-    lane?.catalog.models?.find((held) => held.model === model)?.display_name ??
-    model
-  );
+  const lane = way === null ? undefined : laneOfWay(offer, way);
+  return lane?.models.find((held) => held.model === model)?.name ?? model;
 }
 
 /** The model the service reads documents with, as the column holds a choice:
- * null where the catalog does not serve its lane or no longer lists it. */
+ * null where the offer does not have its lane or no longer lists it. */
 export function readingSelection(
-  catalog: ServedCatalogAnswer,
+  offer: Pick<AgentOffer, "observed" | "lanes">,
   reading: LocalModelListEntry,
 ): AgentSelection | null {
-  const lane = servedLanes(catalog).find(
-    (held) =>
-      understood(held) &&
-      `${held.provider_id}_${held.transport}` === reading.lane,
-  );
+  const lane = offer.observed ? offer.lanes.get(reading.lane) : undefined;
   if (!lane) return null;
-  return ranSelection(catalog, {
-    provider: lane.provider_id,
+  return ranSelection(offer, {
+    provider: lane.provider,
     transport: lane.transport,
     model: reading.model,
   });
 }
 
 /** The choice a run was made with, as the column holds it: the inverse of
- * `selectionRecord`. Null where the catalog no longer has its lane, or no
+ * `selectionRecord`. Null where the offer no longer has its lane, or no
  * longer lists its model, or where the agent served no provider or model. */
 export function ranSelection(
-  catalog: ServedCatalogAnswer,
-  ran: Pick<AgentRanWith, "provider" | "transport" | "model"> &
-    Partial<Pick<AgentRanWith, "effort">>,
+  offer: Pick<AgentOffer, "observed" | "lanes">,
+  ran: Pick<AgentRanWith, "transport"> & {
+    provider: string | null;
+    model: string | null;
+    effort?: AgentRanWith["effort"];
+  },
 ): AgentSelection | null {
-  if (ran.provider === null || ran.model === null) return null;
-  const lane = servedLanes(catalog).find(
+  if (ran.provider === null || ran.model === null || !offer.observed)
+    return null;
+  const lane = [...offer.lanes.values()].find(
     (held) =>
-      understood(held) &&
-      held.provider_id === ran.provider &&
-      held.transport === ran.transport,
+      held.provider === ran.provider && held.transport === ran.transport,
   );
   if (!lane) return null;
   const effort = ran.effort ? { effort: ran.effort } : {};
-  const base = { providerId: lane.provider_id, wayId: wayId(lane) };
-  if (writesModel(lane)) return { ...base, modelId: ran.model, ...effort };
-  const entry = lane.catalog.models?.find((held) => held.model === ran.model);
-  return entry ? { ...base, modelId: entry.entry_id, ...effort } : null;
+  const base = { providerId: lane.provider, wayId: lane.wayId };
+  if (lane.modelWritten) return { ...base, modelId: ran.model, ...effort };
+  const entry = lane.models.find((held) => held.model === ran.model);
+  return entry && entry.entryId !== null
+    ? { ...base, modelId: entry.entryId, ...effort }
+    : null;
 }
 
 /**
  * What a conversation fixed to the lane `way` runs with next: the first of
- * `held` in that lane the catalog still offers, else where that lane starts;
- * null while the lane cannot be chosen. A choice in another lane is never
- * taken in its place: a conversation keeps its lane, and the person changes
- * lanes only by starting a new conversation.
+ * `held` in that lane the offer still has, else where that lane starts; null
+ * while the lane cannot be chosen. A choice in another lane is never taken in
+ * its place: a conversation keeps its lane, and the person changes lanes only
+ * by starting a new conversation.
  */
 export function laneSelection(
-  choices: CatalogChoices,
+  choices: OfferChoices,
   held: readonly (AgentSelection | null | undefined)[],
   way: string,
 ): AgentSelection | null {
@@ -666,50 +250,5 @@ export function laneSelection(
   return restoredSelection(
     { ...choices, providers },
     held.filter((selection) => selection?.wayId === way),
-  );
-}
-
-/** Whether the service is still reading `lane`: its packaged model list is
- * shown in place of the account's, or the lane cannot be chosen only because
- * a health axis is not yet known. A lane held by something the service has
- * settled (not configured, signed out, an engine that does not run, an
- * unreachable transport, not admitted) is not being read. */
-function laneStillReading(lane: ServedProviderLane): boolean {
-  if (
-    lane.catalog.model_list_source === "packaged" &&
-    lane.catalog.state.status === "stale"
-  )
-    return true;
-  const { health } = lane;
-  if (health.selectable) return false;
-  const engine = parseEngineHealth(lane);
-  if (
-    engine !== null &&
-    engine !== "malformed" &&
-    engine.state === "not_running"
-  )
-    return false;
-  if (
-    health.configured === "unavailable" ||
-    health.transport === "unavailable" ||
-    !lane.executable ||
-    health.authentication === "unauthenticated" ||
-    health.admission === "not_admitted"
-  )
-    return false;
-  // Anything else that holds it (a login, catalog or launcher measurement not
-  // yet known, a catalog not observed again in time) the service settles on a
-  // later read.
-  return true;
-}
-
-/**
- * Whether the service still reads some lane of the catalog, which it answers
- * as a packaged model list or an axis not yet known and settles on a later
- * read, so the catalog is asked again until none is.
- */
-export function catalogStillReading(catalog: ServedCatalogAnswer): boolean {
-  return servedLanes(catalog).some(
-    (lane) => understood(lane) && laneStillReading(lane),
   );
 }

@@ -208,6 +208,7 @@ test("an agent column whose service stays busy notes each refusal at INFO and as
         readingHost: null,
         setupSettled: null,
         settingsChanges: 0,
+        settings: null,
         opened: 0,
         listChanges: 0,
         pickerOpened: 0,

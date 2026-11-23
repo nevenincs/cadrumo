@@ -14,6 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { offerMatches } from "../../shell/agentOffer";
 import { described, labelled } from "../../shell/compose";
 import { connectionWords } from "../../shell/providerConnection";
 import { useStrings } from "../../shell/strings";
@@ -37,11 +38,7 @@ const containsSearch = (
   _value: string,
   search: string,
   keywords?: string[],
-): number => {
-  const typed = search.trim().toLocaleLowerCase();
-  if (!typed) return 1;
-  return (keywords ?? []).join(" ").toLocaleLowerCase().includes(typed) ? 1 : 0;
-};
+): number => (offerMatches(keywords ?? [], search) ? 1 : 0);
 
 /**
  * The provider picker: one searchable row for every connection the catalog

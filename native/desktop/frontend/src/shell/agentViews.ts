@@ -11,7 +11,7 @@ import {
   formatRelative,
 } from "../shared/dateFormats";
 import { formatCount } from "../shared/numbers";
-import { effortWords } from "./agentCatalog";
+import { effortWords } from "./agentOffer";
 import { sentFiles } from "./agentDocuments";
 import type { ThreadStatus } from "./agentGatewayContract";
 import type {

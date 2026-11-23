@@ -7,7 +7,7 @@ import {
 } from "../../dev/ProvisioningStage";
 import { FIXTURE_CATALOG } from "../../dev/fixtures/agentCatalog";
 import type { SetupShape } from "../../dev/setupFixture";
-import { catalogLanes } from "../../shell/localModelLanes";
+import { catalogLanes } from "../../shell/agentOffer";
 import { LocalAi } from "./LocalAi";
 import { SOURCE_LOCALE, useStrings } from "../../shell/strings";
 
