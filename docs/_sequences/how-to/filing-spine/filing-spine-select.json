@@ -11,7 +11,7 @@
     {"argv":["aeat","app","ledger","attach","c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860","--purchase-invoice-evidence-id","0021fb5b1e7a777c"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2026","--period","1T"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","app","ledger","add","--date","2026-03-20","--amount","121","--direction","INCOMING","--description","Selector transition sale","--classification","BUSINESS","--taxable-base","100","--iva-rate","0.21","--iva-amount","21","--iva-category","domestic_general","--idempotency-key","filing-spine-selector-transition"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","--modelo","303","--year","2026","--period","1T","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"selected_revision_id","value":"a6b3ee43dd9fab6efbccc1cd31886f981f8d6201b03cbc065796dd6fc47338b4"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","--modelo","303","--year","2026","--period","1T","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"selected_revision_id","value":"da14f2126c93450485f0d6a7c692dd30f002afc04d4ce6b2d6f01533081f3cbc"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {
       "argv": [
         "aeat",
@@ -100,7 +100,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a6b3ee43dd9fab6efbccc1cd31886f981f8d6201b03cbc065796dd6fc47338b4",
+          "calculation_revision_id": "da14f2126c93450485f0d6a7c692dd30f002afc04d4ce6b2d6f01533081f3cbc",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -860,7 +860,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a6b3ee43dd9fab6efbccc1cd31886f981f8d6201b03cbc065796dd6fc47338b4",
+          "calculation_revision_id": "da14f2126c93450485f0d6a7c692dd30f002afc04d4ce6b2d6f01533081f3cbc",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1541,7 +1541,7 @@
         "modelo",
         "work",
         "revision",
-        "a6b3ee43dd9fab6efbccc1cd31886f981f8d6201b03cbc065796dd6fc47338b4"
+        "da14f2126c93450485f0d6a7c692dd30f002afc04d4ce6b2d6f01533081f3cbc"
       ],
       "captures": [],
       "envelope": {
@@ -1613,7 +1613,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a6b3ee43dd9fab6efbccc1cd31886f981f8d6201b03cbc065796dd6fc47338b4",
+          "calculation_revision_id": "da14f2126c93450485f0d6a7c692dd30f002afc04d4ce6b2d6f01533081f3cbc",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -2372,7 +2372,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a6b3ee43dd9fab6efbccc1cd31886f981f8d6201b03cbc065796dd6fc47338b4",
+          "calculation_revision_id": "da14f2126c93450485f0d6a7c692dd30f002afc04d4ce6b2d6f01533081f3cbc",
           "casilla_values": {
             "01": "0.00",
             "02": "0",

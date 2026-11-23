@@ -402,24 +402,9 @@
           "events": [
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "065c58e0a141ab6c4b86cdccba8468ff213db63465ef8bfa930f9b910dc936a4",
-              "event_type": "modelo.work_unit.created",
-              "object_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53",
-              "object_type": "work_unit",
-              "occurred_at": "2026-04-01T09:00:00+00:00",
-              "payload": {
-                "filing_year": "2026",
-                "modelo": "303",
-                "name": "303-2026-1T",
-                "period": "1T",
-                "revision_id": "2026-hasta-01-y-1t"
-              }
-            },
-            {
-              "actor": "docs-sequence-sandbox",
-              "event_id": "407e964990fba2e9d25a92e2f14401cabffd3685f930552285335aaebde3dc65",
+              "event_id": "03e07bae853cb0448a8952829937cfa1876c519897a2d73447bff074d8b92481",
               "event_type": "modelo.calculation.created",
-              "object_id": "ac687ba121edc583d615ca1e4eae74cc56215e1fea013431cc6f62ee832e9e4c",
+              "object_id": "9789695868138aecc418a3c59164a91318d22b735c9cf8acbc36fac2c9a912c4",
               "object_type": "calculation_revision",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -427,7 +412,7 @@
                 "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "borrador_participated": "false",
                 "borrador_snapshot_id": "",
-                "calculation_revision_id": "ac687ba121edc583d615ca1e4eae74cc56215e1fea013431cc6f62ee832e9e4c",
+                "calculation_revision_id": "9789695868138aecc418a3c59164a91318d22b735c9cf8acbc36fac2c9a912c4",
                 "casilla_count": "174",
                 "filing_year": "2026",
                 "formula_count": "44",
@@ -441,6 +426,21 @@
                 "source_provenance_trace_sha256": "cf6b6a91d29d677625743c201db50dd1155b88105f42e6ffb348a88c214275fd",
                 "source_transaction_count": "0",
                 "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
+              }
+            },
+            {
+              "actor": "docs-sequence-sandbox",
+              "event_id": "065c58e0a141ab6c4b86cdccba8468ff213db63465ef8bfa930f9b910dc936a4",
+              "event_type": "modelo.work_unit.created",
+              "object_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53",
+              "object_type": "work_unit",
+              "occurred_at": "2026-04-01T09:00:00+00:00",
+              "payload": {
+                "filing_year": "2026",
+                "modelo": "303",
+                "name": "303-2026-1T",
+                "period": "1T",
+                "revision_id": "2026-hasta-01-y-1t"
               }
             }
           ],

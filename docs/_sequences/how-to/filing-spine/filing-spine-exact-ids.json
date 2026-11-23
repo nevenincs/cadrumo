@@ -372,7 +372,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "98822b0e3407e0e9ebf011b954bfffa36b0da067f02666dec0283277733b34ad"
+          "value": "86fae8e258b6b230762a6d8ab8cc4e51d80cf6bde372cba448c9b177d4b2cc5b"
         }
       ],
       "envelope": null,
@@ -389,7 +389,7 @@
         "modelo",
         "work",
         "verify",
-        "98822b0e3407e0e9ebf011b954bfffa36b0da067f02666dec0283277733b34ad"
+        "86fae8e258b6b230762a6d8ab8cc4e51d80cf6bde372cba448c9b177d4b2cc5b"
       ],
       "captures": [],
       "envelope": null,
@@ -397,7 +397,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.verify\nverification_report_id\td1f07dc8f922884fc9e8e71a78c9766f4f8854cf9018068aed5110e02662794c\ncalculation_revision_id\t98822b0e3407e0e9ebf011b954bfffa36b0da067f02666dec0283277733b34ad\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t3\nfinding\tadvisory\twarning\t\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nnotice\tmodelo.work.verify.finding.advisory\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.verify\nverification_report_id\td293e27a0f9a32e76a16ed70218727f6ace55cb2b43cafebe22a6cdd2815ffc8\ncalculation_revision_id\t86fae8e258b6b230762a6d8ab8cc4e51d80cf6bde372cba448c9b177d4b2cc5b\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t3\nfinding\tadvisory\twarning\t\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nnotice\tmodelo.work.verify.finding.advisory\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -406,7 +406,7 @@
         "modelo",
         "work",
         "file",
-        "98822b0e3407e0e9ebf011b954bfffa36b0da067f02666dec0283277733b34ad"
+        "86fae8e258b6b230762a6d8ab8cc4e51d80cf6bde372cba448c9b177d4b2cc5b"
       ],
       "captures": [],
       "envelope": null,
@@ -414,7 +414,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\t7f3acfbaed5a97616b2684168f16963c3d95ec2798e803267c2cd73e42eed328\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t98822b0e3407e0e9ebf011b954bfffa36b0da067f02666dec0283277733b34ad\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\tc6109fd81a985213104b1e8228503370916b3f38ce3942ac04d37f1eeb0330f0\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t86fae8e258b6b230762a6d8ab8cc4e51d80cf6bde372cba448c9b177d4b2cc5b\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_timeliness\ten_plazo\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -426,7 +426,7 @@
         "export",
         "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53",
         "--revision",
-        "98822b0e3407e0e9ebf011b954bfffa36b0da067f02666dec0283277733b34ad",
+        "86fae8e258b6b230762a6d8ab8cc4e51d80cf6bde372cba448c9b177d4b2cc5b",
         "--output",
         "./modelo-303-revision.boe"
       ],
@@ -468,10 +468,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "747921fef717ceb791e66bf0d52e816bd832d577cf65e0ee83280ae85ac71787",
+          "bucket_event_id": "e5eb597ab9eeea95425c89cb06243cfe3c117cbba4d843ded1182e8d4cbe21ca",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "98822b0e3407e0e9ebf011b954bfffa36b0da067f02666dec0283277733b34ad",
+          "calculation_revision_id": "86fae8e258b6b230762a6d8ab8cc4e51d80cf6bde372cba448c9b177d4b2cc5b",
           "file_sha256": "64e8dedcfbfeb357dc13299f85ccc16e5c6283d8096aaa3cdbf5a35c1e2d6258",
           "filing_year": 2026,
           "format": "fichero-boe",
