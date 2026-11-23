@@ -27,6 +27,8 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
+from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from dev.paths import REPO_ROOT
 
@@ -94,8 +96,38 @@ def _selector_key(variant: GovernedFactVariant) -> tuple[tuple[str, str, str], .
     return tuple(sorted((item.name, type(item.value).__name__, repr(item.value)) for item in variant.selectors))
 
 
+def _selector_years(selector: PeriodSelector) -> set[int]:
+    """Every year at which the selector's coverage or period surface can change."""
+    years = set(selector.years) | {override.year for override in selector.period_overrides}
+    years |= {year for year in (selector.year_from, selector.year_to) if year is not None}
+    return years
+
+
+def _periods_coselect(left: PeriodSelector | None, right: PeriodSelector | None) -> bool:
+    """Whether one filing query can match both selectors, as the resolver matches a variant's period.
+
+    A variant without a period selector answers only a period-less query and a
+    selected one only a query naming a period, so the two never meet. Between
+    the years the selectors name, coverage and surface are constant, so those
+    years plus one past the last decide every year.
+    """
+    if left is None or right is None:
+        return left is None and right is None
+    candidates = _selector_years(left) | _selector_years(right)
+    candidates.add(max(candidates) + 1)
+    return any(
+        selector_period_matches_request(left_period, right_period)
+        for year in candidates
+        if left.includes_year(year) and right.includes_year(year)
+        for left_period in left.periods_for_year(year)
+        for right_period in right.periods_for_year(year)
+    )
+
+
 def _overlap(fact: GovernedFact, left: GovernedFactVariant, right: GovernedFactVariant) -> bool:
     if left.date_axis != right.date_axis or _selector_key(left) != _selector_key(right):
+        return False
+    if not _periods_coselect(left.period_selector, right.period_selector):
         return False
     left_window = fact.validity_window(left)
     right_window = fact.validity_window(right)
@@ -334,6 +366,17 @@ def resolved_fact_provenance_findings(results: Iterable[ResolvedGovernedFact]) -
     return tuple(sorted(set(findings)))
 
 
+def _first_served_period(variant: GovernedFactVariant, first_year: int, last_year: int) -> tuple[int, str] | None:
+    """The first filing year and period the variant's selector serves inside the envelope, if any."""
+    selector = variant.period_selector
+    if selector is None:
+        return None
+    for year in range(first_year, last_year + 1):
+        if selector.includes_year(year):
+            return year, selector.periods_for_year(year)[0]
+    return None
+
+
 def _resolved_variants(
     facts: Iterable[GovernedFact],
     support: SupportedFilingYearsCatalogue,
@@ -352,6 +395,9 @@ def _resolved_variants(
                 effective_date
             ):
                 continue
+            coordinate = _first_served_period(variant, effective_date.year, envelope.horizon.year)
+            if variant.period_selector is not None and coordinate is None:
+                continue
             query = query_adapter.validate_python(
                 {
                     "family": fact.family,
@@ -359,6 +405,7 @@ def _resolved_variants(
                     "date_axis": variant.date_axis,
                     "effective_date": effective_date,
                     "selectors": variant.selectors,
+                    **({} if coordinate is None else {"filing_year": coordinate[0], "period": coordinate[1]}),
                 },
             )
             resolved.append(resolve_governed_fact(catalogue, query, authority_digest="0" * 64, support=support))

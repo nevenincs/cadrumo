@@ -586,11 +586,14 @@ def calendar_iva_block_unanswered_warnings(
     already_warned: Iterable[str],
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalendarWarning, ...]:
-    """Name every question a claimed Modelo IVA block still owes, once each.
+    """Name every question a claimed Modelo IVA block still owes, and every one leaving a window undecided, once each.
 
-    A path that decides a window names the modelos it leaves undetermined; one
-    that decides none is still owed by the periodic IVA self-assessment, so it
-    names that modelo. A path another warning already names is not repeated.
+    A path that decides a window names the modelos it leaves undetermined; an
+    IVA block path that decides none is still owed by the periodic IVA
+    self-assessment, so it names that modelo. An enrolment fact outside the
+    block, such as the large-company condition that switches the cadence to
+    monthly, is named only while it leaves a window undecided. A path another
+    warning already names is not repeated.
     """
     deciding: dict[str, set[str]] = {}
     for item in undetermined:
@@ -601,11 +604,11 @@ def calendar_iva_block_unanswered_warnings(
     return tuple(
         CalendarWarning(
             code=path,
-            message=IVA_BLOCK_QUESTION_LOCALE_KEYS[path],
+            message=IVA_BLOCK_QUESTION_LOCALE_KEYS.get(path) or PROFILE_FIELD_WARNING_LOCALE_KEYS[path],
             fix_action=declare_next_action(_PROFILE_EDIT_ACTION_ID),
             affected_modelos=tuple(sorted(deciding.get(path) or {periodic})),
         )
-        for path in dict.fromkeys(unanswered_paths)
+        for path in dict.fromkeys((*unanswered_paths, *deciding))
         if path not in skipped
     )
 

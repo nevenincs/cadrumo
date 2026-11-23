@@ -855,15 +855,22 @@ def _question_locale_key(path: str) -> str | None:
     return IVA_BLOCK_QUESTION_LOCALE_KEYS.get(path) or PROFILE_FIELD_WARNING_LOCALE_KEYS.get(path)
 
 
-def _undetermined_calendar_entry(item: UndeterminedObligation) -> SuppressedCalendarEntry:
-    """Hold a window an unanswered Modelo IVA fact leaves undecided off the schedule, with the door to the question."""
+def _undetermined_calendar_entry(
+    item: UndeterminedObligation, verdict: ApplicabilityVerdict
+) -> SuppressedCalendarEntry:
+    """Hold a window an unanswered fact leaves undecided off the schedule, with the door to the question.
+
+    ``verdict`` is the modelo's own applicability: an applicable modelo whose
+    filing cadence alone is unknown keeps it, so the window says the modelo is
+    owed and only its date is open.
+    """
     return SuppressedCalendarEntry(
         modelo=item.modelo,
         period=item.period,
         opens_on=item.opens_on,
         closes_on=item.closes_on,
         adjusted_closes_on=item.closes_on,
-        verdict=ApplicabilityVerdict.INCOMPLETE,
+        verdict=verdict,
         reason=" ".join(
             tr(key) for key in (_question_locale_key(path) for path in item.deciding_paths) if key is not None
         )
@@ -890,6 +897,49 @@ def _undetermined_in_range(
             calendar_range=calendar_range,
             operation=operation,
         )
+    )
+
+
+def _undetermined_verdicts(
+    undetermined: tuple[UndeterminedObligation, ...],
+    profile: TaxpayerProfile,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[tuple[str, int], ApplicabilityVerdict]:
+    """Judge each undecided window's modelo once per filing year, as an obligation of that year is judged.
+
+    A window whose modelo the profile confidently excludes is not owed under
+    any answer, so the open question does not concern it.
+    """
+    verdicts: dict[tuple[str, int], ApplicabilityVerdict] = {}
+    for item in undetermined:
+        key = (str(item.modelo), item.period.filing_year)
+        if key not in verdicts:
+            verdicts[key] = derive_modelo_applicability(
+                profile, str(item.modelo), reference_date=date(key[1], 12, 31), operation=operation
+            ).verdict
+    return verdicts
+
+
+def _owed_undetermined(
+    undetermined: tuple[UndeterminedObligation, ...],
+    verdicts: Mapping[tuple[str, int], ApplicabilityVerdict],
+) -> tuple[UndeterminedObligation, ...]:
+    return tuple(
+        item
+        for item in undetermined
+        if verdicts[(str(item.modelo), item.period.filing_year)] not in _EXCLUDING_VERDICTS
+    )
+
+
+_EXCLUDING_VERDICTS = frozenset({ApplicabilityVerdict.NOT_APPLICABLE, ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH})
+
+
+def _undetermined_entry_verdict(verdict: ApplicabilityVerdict) -> ApplicabilityVerdict:
+    return (
+        ApplicabilityVerdict.APPLICABLE
+        if verdict is ApplicabilityVerdict.APPLICABLE
+        else ApplicabilityVerdict.INCOMPLETE
     )
 
 
@@ -1040,9 +1090,20 @@ def build_overview_calendar(
         operation=operation,
     )
     completeness, warnings = build_completeness_and_warnings(raw_values, entries_tuple, operation=operation)
-    undetermined = _undetermined_in_range(schedules, calendar_range, operation=operation)
+    all_undetermined = tuple(item for schedule in schedules for item in schedule.undetermined)
+    undetermined_verdicts = _undetermined_verdicts(all_undetermined, profile, operation=operation)
+    owed_undetermined = _owed_undetermined(all_undetermined, undetermined_verdicts)
+    undetermined = _owed_undetermined(
+        _undetermined_in_range(schedules, calendar_range, operation=operation), undetermined_verdicts
+    )
     if show_suppressed:
-        suppressed.extend(_undetermined_calendar_entry(item) for item in undetermined)
+        suppressed.extend(
+            _undetermined_calendar_entry(
+                item,
+                _undetermined_entry_verdict(undetermined_verdicts[(str(item.modelo), item.period.filing_year)]),
+            )
+            for item in undetermined
+        )
         suppressed.sort(key=lambda s: (s.modelo, s.period.filing_year, s.period.registry_token))
     iva_block_warnings = calendar_iva_block_unanswered_warnings(
         profile.iva_block_unanswered_paths,
@@ -1071,7 +1132,7 @@ def build_overview_calendar(
         coverage_surface_modelos | {entry.modelo for entry in entries_tuple},
         today=today,
         operation=operation,
-        undetermined_modelos={str(item.modelo) for schedule in schedules for item in schedule.undetermined},
+        undetermined_modelos={str(item.modelo) for item in owed_undetermined},
     )
     return OverviewCalendar(
         range=calendar_range,
