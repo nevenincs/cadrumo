@@ -42,9 +42,9 @@ async function openSettings(target: Page) {
     .click();
   await expect(settings(target)).toBeVisible();
   await settings(target)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
 }
 

@@ -237,26 +237,28 @@ function pageMarkIconButton(name) {
 function pageLanes() {
   const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
   const lanes = [];
-  for (const group of document.querySelectorAll(
-    ".provider-settings li[data-provider]",
+  // Each lane is its own row, named "<provider> · <connection>".
+  for (const lane of document.querySelectorAll(
+    ".provider-settings li[data-lane]",
   )) {
-    const details = group.querySelector(":scope > details");
-    if (details && !details.open) details.open = true;
-    for (const lane of group.querySelectorAll("li[data-lane]")) {
-      const swatch = lane.querySelector('[role="switch"]');
-      lanes.push({
-        provider: group.getAttribute("data-provider"),
-        id: lane.getAttribute("data-lane"),
-        transport: lane.getAttribute("data-transport"),
-        connection: norm(lane.querySelector("h5")?.textContent),
-        hidden: lane.hidden,
-        status:
-          lane
-            .querySelector('[data-slot="provider-status"]')
-            ?.getAttribute("data-status") ?? null,
-        on: swatch ? swatch.getAttribute("aria-checked") === "true" : null,
-      });
-    }
+    const expander = lane.querySelector('[data-slot="lane-expander"]');
+    if (expander?.getAttribute("aria-expanded") === "false") expander.click();
+    const swatch = lane.querySelector('[role="switch"]');
+    lanes.push({
+      provider: lane.getAttribute("data-provider"),
+      id: lane.getAttribute("data-lane"),
+      transport: lane.getAttribute("data-transport"),
+      connection: norm(lane.querySelector("h4 > span")?.textContent).replace(
+        /^·\s*/,
+        "",
+      ),
+      hidden: lane.hidden,
+      status:
+        lane
+          .querySelector('[data-slot="provider-status"]')
+          ?.getAttribute("data-status") ?? null,
+      on: swatch ? swatch.getAttribute("aria-checked") === "true" : null,
+    });
   }
   return lanes;
 }
@@ -577,7 +579,7 @@ const readyLane = (lanes) =>
     (lane) =>
       !lane.hidden &&
       lane.on !== false &&
-      lane.status === "ready" &&
+      (lane.status === "ready" || lane.status === "signed_in") &&
       lane.provider &&
       lane.transport,
   ) ?? null;

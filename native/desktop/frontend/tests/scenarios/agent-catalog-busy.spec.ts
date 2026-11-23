@@ -4,7 +4,6 @@ import {
   offeredModels,
   openHistory,
   openModelPicker,
-  pickWay,
   scenarioOnly,
 } from "../support/agent";
 import { label } from "../support/strings";
@@ -157,8 +156,7 @@ test("the stored model lists are not asked for while the agent starts, and are r
   // put on its list, and the picker leaves it out. Lists left unread would
   // offer it.
   const picker = await openModelPicker(target);
-  await pickWay(target, picker, "zai/api");
-  expect(await offeredModels(picker)).toEqual([
+  expect(await offeredModels(picker, "zai/api")).toEqual([
     "synthetic-text:1",
     "synthetic-vision:1",
   ]);
@@ -244,8 +242,8 @@ test("while the service stays busy the settings say the agent is starting in the
     name: label("desktop.providers.title"),
   });
   await providers
-    .locator('li[data-provider="zai"] > details')
-    .evaluate((node) => ((node as HTMLDetailsElement).open = true));
+    .locator('li[data-provider="zai"] [data-slot=lane-expander]')
+    .click();
   const said = providers
     .locator('li[data-provider="zai"] [data-model-list-state="starting"]')
     .first();

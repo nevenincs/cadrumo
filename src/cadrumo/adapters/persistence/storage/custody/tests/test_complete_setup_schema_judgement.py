@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from datetime import date
 from pathlib import Path
 from uuid import UUID
 
@@ -38,14 +39,20 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.overview.calendar import build_overview_calendar
+from cadrumo.application.overview.calendar_models import OverviewCalendarRange
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
+from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.projections import projection_for_taxpayer
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.application.user_profile.validation import (
     CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
     REQUIRED_FIELD_MISSING_CODE,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 
@@ -198,3 +205,60 @@ def test_complete_setup_is_a_no_op_on_an_already_complete_record(tmp_path: Path)
 
         assert again.setup_state is ProfileSetupState.COMPLETE
         assert again.record_revision == promoted.record_revision, "a re-promotion must not advance the revision"
+
+
+_TAXPAYER_MODEL_PATHS = ("taxpayer_type.entity_type", "taxpayer_type.irpf_income_categories")
+
+
+def _calendar_of(profile_id: str, storage_root: Path, operation: PinnedAuthorityOperation):
+    """Read the stored record back and build the calendar from it, as the overview read does."""
+    _, profile_decode_context = profile_authority_contexts()
+    record = ProfileRecordRepository.for_current_session(
+        profile_id, root=storage_root, profile_decode_context=profile_decode_context
+    ).load(profile_id)
+    taxpayer = projection_for_taxpayer(record, schema=profile_decode_context.schema, withhold_unanswered_iva_block=True)
+    year = filing_year_envelope().horizon
+    calendar_range = OverviewCalendarRange(from_date=date(year, 1, 1), to_date=date(year, 12, 31))
+    return build_overview_calendar(taxpayer, calendar_range, operation=operation, today=date(year, 4, 1))
+
+
+def test_complete_setup_and_the_calendar_name_the_same_unstated_taxpayer_model_at_once(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """A profile declared ready while the calendar could not place one obligation is the defect.
+
+    The subject answers everything else the contract asks, so the only gap is
+    the taxpayer model. Promotion must refuse naming the entity type AND the
+    income categories in the one refusal, the calendar must name exactly the
+    same profile paths at once, and once both are stated the two agree the
+    other way: the profile promotes and the calendar's model is declared.
+    """
+    schema = published_profile_schema()
+    without_model = tuple(fact for fact in complete_profile_facts(schema) if fact.path not in _TAXPAYER_MODEL_PATHS)
+    with _setup_subject(tmp_path, facts=without_model) as (storage_root, profile_id):
+        with pytest.raises(ProfileSchemaValidationError) as refusal:
+            _promote(profile_id, storage_root)
+        issue_paths = (refusal.value.context or {})["issue_paths"]
+        assert isinstance(issue_paths, tuple)
+        assert set(_TAXPAYER_MODEL_PATHS) <= set(issue_paths)
+
+        calendar = _calendar_of(profile_id, storage_root, operation)
+        assert calendar.taxpayer_model_declared is False
+        assert tuple(fact.value for fact in calendar.undeclared_profile_facts) == _TAXPAYER_MODEL_PATHS
+
+        _, profile_decode_context = profile_authority_contexts()
+        apply_profile_fact_changes(
+            profile_id=profile_id,
+            changes=(
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            ),
+            door=ProfileFactWriteDoor.MANAGER_FIELD,
+            profile_decode_context=profile_decode_context,
+        )
+
+        promoted = _promote(profile_id, storage_root)
+        assert promoted.setup_state is ProfileSetupState.COMPLETE
+        answered = _calendar_of(profile_id, storage_root, operation)
+        assert answered.taxpayer_model_declared is True
+        assert answered.undeclared_profile_facts == ()

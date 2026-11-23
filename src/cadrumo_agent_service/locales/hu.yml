@@ -71,8 +71,6 @@ desktop:
     catalog_unavailable: Nem sikerült beolvasni az ügynök szolgáltatólistáját.
     choose_another_model: Válassz másik modellt
     choose_model: Válassz modellt
-    choose_provider: Válassz szolgáltatót
-    choose_provider_first: Először válassz szolgáltatót.
     choose_to_start: Válassz szolgáltatót és modellt a kezdéshez.
     close_documents: Dokumentumok bezárása
     condition_budget_exhausted: A költségkeret elfogyott
@@ -134,11 +132,13 @@ desktop:
     drop_release_single: Engedd el 1 fájl hozzáadásához
     drop_title: Hozzáadás ehhez a beszélgetéshez
     effort: Ráfordítás
+    effort_catalog_default: 'a katalógus alapértelmezése: {effort}'
     effort_default: Alapértelmezett
     effort_high: Magas
     effort_low: Alacsony
     effort_max: Maximális
     effort_medium: Közepes
+    effort_provider_default: A szolgáltató alapértelmezése
     effort_ultra: Ultra
     effort_xhigh: Nagyon magas
     engine_door_local_ai_setup: Helyi MI javítása
@@ -183,6 +183,23 @@ desktop:
     model_does_not_fit_shortfall: Ennek a modellnek körülbelül {needed} token kontextusra
       van szüksége ehhez a beszélgetéshez, többre, mint az a {context}, amelyet befogad.
       Válassz másik modellt vagy másik szolgáltatót ehhez a beszélgetéshez.
+    model_matrix_cell: '{model}, {effort}'
+    model_matrix_clear_search: Keresés törlése
+    model_matrix_count: '{count} modell látható'
+    model_matrix_count_one: 1 modell látható
+    model_matrix_filter_off: Kikapcsolva
+    model_matrix_filter_on: Bekapcsolva
+    model_matrix_filter_ready: Kész
+    model_matrix_filter_setup: Beállítandó
+    model_matrix_filters: Szolgáltatók megjelenítése
+    model_matrix_label: Modellek és ráfordítások
+    model_matrix_none_on: Egy szolgáltató sincs bekapcsolva. Kapcsolj be egyet az
+      MI-szolgáltatóknál.
+    model_matrix_off_hidden: '{count} szolgáltató ki van kapcsolva'
+    model_matrix_off_hidden_one: 1 szolgáltató ki van kapcsolva
+    model_matrix_search_empty: Egy modell sem felel meg a keresésednek.
+    model_matrix_search_label: Modellek keresése
+    model_matrix_show: Megjelenítés
     model_not_installed: '{name} (nincs letöltve)'
     model_not_installed_refused: A választott modell nincs ezen a gépen. Töltsd le,
       vagy válassz másik modellt.
@@ -191,8 +208,6 @@ desktop:
     model_with_effort: '{model} ({effort})'
     model_written: Ez a szolgáltató nem sorolja fel a modelljeit. Írd be a modell
       nevét pontosan úgy, ahogy a szolgáltató írja.
-    models_to_download: Néhány modell még nincs ezen a gépen. Töltsd le őket a helyi
-      MI beállításaiban.
     more_files: +{count} további
     movement_dismiss: Elvetés
     movement_shared: Ha elküldöd, megosztod a(z) {provider} szolgáltatóval, amely
@@ -205,10 +220,8 @@ desktop:
     movement_unreadable: Nem sikerült beolvasni a tételt a Naplóból.
     new_conversation: Új beszélgetés
     no_installed_model: Még nincs letöltött MI-modell. A kezdéshez tölts le egyet.
-    no_models: Nincs választható modell
     no_provider: A kezdéshez állíts be egy MI-szolgáltatót.
     platform_unsupported: Az MI-ügynök ezen a platformon még nem támogatott.
-    provider: Szolgáltató
     questions_answer: Válaszolok
     questions_clear: Válasz törlése
     questions_control: Minden válasz egy sorban legyen.
@@ -470,14 +483,11 @@ desktop:
     connection_local: Ezen a számítógépen
     console_command_label: 'Futtasd ezt a parancsot terminálban:'
     detail_app_missing: Telepítsd a(z) {provider} alkalmazást, majd jelentkezz be.
-    detail_off: 'Kikapcsolva: az ügynök nem ajánlja fel és nem használja.'
-    detail_off_kept: 'Kikapcsolva: az ügynök nem ajánlja fel és nem használja. Az
-      API-kulcsát megőrizzük, amíg újra bekapcsolod.'
     detail_sign_in: Jelentkezz be a(z) {provider}-fiókoddal.
-    group_intro: Válassz szolgáltatót a beállításhoz.
     icon_credits: Ikonok forrása
     key_label: API-kulcs ({provider})
     key_note: Titkosítva mentjük ezen a gépen, és többé nem jelenik meg.
+    lane_details: '{provider} ({connection}) részletei'
     load_failed: Nem sikerült betölteni a szolgáltatókat. Próbáld újra.
     local_engine_change_failed: A módosítást nem sikerült menteni. Próbáld újra.
     local_engine_changing: Mentés…
@@ -540,9 +550,20 @@ desktop:
     reads_off_host: A beszélgetésed elhagyja ezt a számítógépet, és a szolgáltatóhoz
       kerül.
     reads_on_host: A beszélgetésed ezen a számítógépen marad.
+    reason_add_key: Adj meg egy {provider} API-kulcsot a használatához.
     reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
+    reason_key_saved: 'Az első használatkor ellenőrződik: küldj egy üzenetet, vagy
+      futtass vele egy feladatot.'
+    reason_local_ready: Ezen a számítógépen fut. Válaszd ki az ügynökben a használatához.
+    reason_not_checked: Még nincs ellenőrizve. Az első használatkor ellenőrződik.
     reason_record_unreadable: A mentett API-kulcs nem olvasható. Add hozzá újra.
+    reason_signed_in: Bejelentkezve a(z) {provider} alkalmazással. Válaszd ki az ügynökben
+      a használatához.
+    reason_turned_off: Az ügynök nem ajánlja fel és nem használja. Kapcsold be a kapcsolóval,
+      ha újra használnád.
     refresh: Újrapróbálkozás
+    refused_agent_starting: Az ügynök most indul, ezért ez még nem lett mentve. Próbáld
+      újra egy pillanat múlva.
     refused_base_url_rejected: Ellenőrizd a kiszolgáló címét, és próbáld újra.
     refused_busy: A szolgáltatóid egy másik módosítása még folyamatban van. Próbáld
       újra egy kis idő múlva.
@@ -562,11 +583,9 @@ desktop:
     remove_key: API-kulcs eltávolítása
     replace_key: API-kulcs cseréje
     save: Mentés
+    save_retry: Próbáld újra
     saved_unread: Mentve, de az állapota nem olvasható. Próbáld újra.
     saving: Mentés…
-    search_empty: Nincs találat. Próbálj más keresést.
-    search_label: Szolgáltatók keresése
-    search_placeholder: Keresés
     sign_in_action: Bejelentkezés
     sign_in_busy: Egy másik {provider}-bejelentkezés még folyamatban van. Várj egy
       kicsit, majd próbáld újra.
@@ -677,19 +696,29 @@ desktop:
     sign_out_label: 'Kijelentkezés innen: {provider}'
     status_not_checked: Nincs ellenőrizve
     status_off: Kikapcsolva
+    status_off_kept: Kikapcsolva · kulcs megőrizve
     status_ready: Kész
-    status_saved: Mentve
+    status_saved: Kulcs mentve
     status_setup_needed: Nincs beállítva
     status_sign_in_needed: Nincs bejelentkezve
+    status_signed_in: Bejelentkezve
     status_unconfirmed: A bejelentkezés nincs megerősítve
-    task_model_effort: 'Ráfordítás ehhez: {task}'
+    task_model_change: Módosítás
+    task_model_change_label: 'Módosítsd, mivel fut: {task}'
     task_model_model: 'Modell ehhez: {task}'
-    task_model_reading: Az olvasási modellt használja
+    task_model_reading_chosen: 'Olvasási modell: {model}'
+    task_model_reading_default: 'Olvasási modell: {model}, az alapértelmezett, amíg
+      nem választasz egyet'
+    task_model_reading_none: Olvasási modell, amint beállítasz egyet
     task_model_refused: Nem sikerült módosítani, mivel fut ez a feladat. Próbáld újra.
     task_model_saved: Mentve.
+    task_model_stored_unoffered: '{model} itt: {lane}, ami már nem érhető el'
+    task_model_use_reading: Az olvasási modell használata
     task_models_intro: Válaszd ki, melyik modellel fusson az egyes feladattípusok.
       Az a feladat, amelyet nem állítasz be, a dokumentumok olvasásához használt modellel
       fut.
+    task_models_runs_with: Ezzel fut
+    task_models_task: Feladat
     task_models_title: Modellek feladatonként
     title: MI-szolgáltatók
     use_in_agent: '{provider} ({connection}) használata az ügynökben'

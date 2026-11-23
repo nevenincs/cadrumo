@@ -136,6 +136,8 @@ def test_iva_block_claim_reads_paths_in_a_stable_order() -> None:
 
 def test_a_satisfied_block_leaves_nothing_outstanding() -> None:
     values = {
+        "taxpayer_type.entity_type": "natural_person",
+        "taxpayer_type.irpf_income_categories": "actividad_economica",
         "identity.tax_id": "12345678Z",
         "iva.regime": "GENERAL",
         "iva.m303_regime_composition": "general",

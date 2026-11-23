@@ -3,7 +3,6 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import type { AgentAccess, useAgentAccess } from "../../shell/agentAccess";
-import type { ServedCatalogAnswer } from "../../shell/agentCatalogContract";
 import { offerMatches } from "../../shell/agentOffer";
 import { useAgentOffer } from "../../shell/agentOfferContext";
 import type { LocalModelHost } from "../../shell/localModels";
@@ -15,7 +14,7 @@ import { useStrings } from "../../shell/strings";
 import { AgentAccess as AgentAccessSection } from "../settings/AgentAccess";
 import { LocalModels } from "../settings/LocalModels";
 import { ProviderSettings as ProviderSettingsSection } from "../settings/ProviderSettings";
-import { TaskModels } from "../settings/TaskModels";
+import { TaskAssignments } from "../settings/TaskAssignments";
 import { LocalAi } from "../setup/LocalAi";
 import { ReadState, SectionFailure } from "./ReadState";
 
@@ -78,7 +77,6 @@ export function AgentSettingsPanel({
   localProviderId,
   catalogStatus,
   catalogFailure = null,
-  catalog,
   onRetryCatalog,
   onLocalModelRemoved,
 }: {
@@ -107,9 +105,6 @@ export function AgentSettingsPanel({
   catalogStatus: "ready" | "loading" | "failed";
   /** The refusal the catalogue read answered, while it is failed. */
   catalogFailure?: string | null;
-  /** The catalogue the agent serves, once read: the kinds of task it runs
-   * and what each can run with. */
-  catalog: ServedCatalogAnswer | null;
   onRetryCatalog: () => void;
   onLocalModelRemoved: () => void;
 }) {
@@ -131,10 +126,13 @@ export function AgentSettingsPanel({
       open = open.parentElement?.closest("details") ?? null
     )
       open.open = true;
-    const details = group.querySelector("details");
-    if (details) details.open = true;
+    // The provider's first connection row, with its details opened.
+    const expander = group.querySelector<HTMLElement>(
+      "[data-slot=lane-expander]",
+    );
+    if (expander?.getAttribute("aria-expanded") === "false") expander.click();
     group.scrollIntoView({ block: "nearest" });
-    group.querySelector<HTMLElement>("summary")?.focus();
+    expander?.focus();
   };
   const query = settingsQuery.trim().toLocaleLowerCase();
   const titleMatches = (title: string) =>
@@ -184,7 +182,6 @@ export function AgentSettingsPanel({
             (settings.read.kind === "ready" ? (
               <ProviderSettingsSection
                 query={providerTitleMatches ? "" : query}
-                searching={Boolean(query)}
                 embedded
                 onMatch={onProviderMatch}
                 providers={settings.read.value.providers}
@@ -300,9 +297,8 @@ export function AgentSettingsPanel({
           visible={tasksVisible}
           searching={Boolean(query)}
         >
-          <TaskModels
+          <TaskAssignments
             host={localModelHost}
-            catalog={catalog}
             catalogStatus={catalogStatus}
             catalogFailure={catalogFailure}
             onRetryCatalog={onRetryCatalog}

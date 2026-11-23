@@ -321,6 +321,7 @@ export const FIXTURE_CALENDAR: FilingCalendarServed = servedCalendar({
   },
   taxpayer_model_declared: true,
   incomplete_reason: null,
+  undeclared_profile_facts: [],
   late_count: null,
   applicable_modelos_without_deadline: null,
   suppressed_entries: [],

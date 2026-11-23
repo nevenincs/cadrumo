@@ -133,3 +133,18 @@ export const UNANSWERED_IVA_CALENDAR: FilingCalendarServed = servedCalendar({
     ],
   },
 });
+
+// A profile that states neither its entity type nor its income categories:
+// the calendar places no obligation and names both facts at once, each by the
+// profile path that answers it.
+export const UNDECLARED_TAXPAYER_CALENDAR: FilingCalendarServed =
+  servedCalendar({
+    ...EMPTY_CALENDAR,
+    taxpayer_model_declared: false,
+    incomplete_reason:
+      "Synthetic sentence: the calendar waits for the entity type. Synthetic sentence: the calendar waits for the income categories.",
+    undeclared_profile_facts: [
+      "taxpayer_type.entity_type",
+      "taxpayer_type.irpf_income_categories",
+    ],
+  });

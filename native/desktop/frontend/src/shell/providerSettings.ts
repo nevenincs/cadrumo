@@ -98,7 +98,10 @@ const servedCommand = (value: unknown): { consoleSignInCommand?: string } => {
   return command ? { consoleSignInCommand: command } : {};
 };
 
-const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
+/** A served lane record as the settings show it. */
+export const providerStatus = (
+  record: ProviderSettingsRecord,
+): ProviderStatus => ({
   id: record.id,
   provider: record.provider,
   name: record.display_name,
@@ -106,6 +109,7 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
   authKind: record.auth_kind,
   mode: record.mode,
   readiness: record.readiness,
+  available: record.available,
   source: record.source,
   ...(record.cli_state ? { cliState: record.cli_state } : {}),
   // A cause is the service's closed word or nothing: another word is dropped.

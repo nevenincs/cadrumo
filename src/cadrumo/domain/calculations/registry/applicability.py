@@ -75,7 +75,7 @@ no rule is reported INCOMPLETE with a rationale that says so.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Iterable, Mapping
 from datetime import date
 from typing import TYPE_CHECKING, Final
 
@@ -105,6 +105,7 @@ from .applicability_models import (
     ModeloApplicability,
     ModeloApplicabilityExclusion,
     ModeloApplicabilityRule,
+    TaxpayerModelFact,
     incomplete_applicability,
     registry_applicability_reason,
 )
@@ -451,24 +452,45 @@ def modelo_requires_iva_regime(modelo: str, *, operation: PinnedAuthorityOperati
     return rule is not None and bool(rule.applicable_iva_regimes)
 
 
+def taxpayer_model_required_facts(entity_type: str | None) -> tuple[TaxpayerModelFact, ...]:
+    """Return every fact the taxpayer model needs, given the declared entity type.
+
+    Every profile states its entity type. A natural person also states at
+    least one IRPF income category; a legal or attribution entity does not,
+    because its entity type alone selects its tax. While the entity type is
+    unstated, nothing says the profile is not a natural person, so the income
+    categories are owed too: the operator is asked every fact at once rather
+    than discovering the second only after answering the first.
+    """
+    # A blank entity type is as unstated as an absent one.
+    if bool(entity_type) and entity_type != entity_type_natural_person_token():
+        return (TaxpayerModelFact.ENTITY_TYPE,)
+    return (TaxpayerModelFact.ENTITY_TYPE, TaxpayerModelFact.IRPF_INCOME_CATEGORIES)
+
+
+def undeclared_taxpayer_model_facts(
+    entity_type: str | None, irpf_income_categories: Collection[object]
+) -> tuple[TaxpayerModelFact, ...]:
+    """Return the taxpayer-model facts the profile has not stated, all of them, in profile order."""
+    stated = {
+        TaxpayerModelFact.ENTITY_TYPE: bool(entity_type),
+        TaxpayerModelFact.IRPF_INCOME_CATEGORIES: bool(irpf_income_categories),
+    }
+    return tuple(fact for fact in taxpayer_model_required_facts(entity_type) if not stated[fact])
+
+
 def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     """Return whether the profile carries a usable taxpayer model.
 
-    The taxpayer model is "declared" when the operator has set an
-    ``entity_type`` and — for a natural person — at least one IRPF
-    income category. Without these, modelo applicability cannot be
-    derived: the engine must report ``INCOMPLETE`` rather than assume
-    autónomo. A legal / attribution entity needs no income category;
-    the ``entity_type`` alone selects its tax.
+    The taxpayer model is "declared" when no fact of
+    :func:`taxpayer_model_required_facts` is unstated. Without them, modelo
+    applicability cannot be derived: the engine must report ``INCOMPLETE``
+    rather than assume autónomo.
 
     Args:
         profile: The :class:`TaxpayerProfile` to inspect.
     """
-    if profile.entity_type is None:
-        return False
-    if profile.entity_type == entity_type_natural_person_token():
-        return bool(profile.irpf_income_categories)
-    return True
+    return not undeclared_taxpayer_model_facts(profile.entity_type, profile.irpf_income_categories)
 
 
 def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
@@ -634,4 +656,6 @@ __all__ = [
     "iter_modelo_applicability_rules",
     "modelo_requires_iva_regime",
     "taxpayer_model_is_declared",
+    "taxpayer_model_required_facts",
+    "undeclared_taxpayer_model_facts",
 ]

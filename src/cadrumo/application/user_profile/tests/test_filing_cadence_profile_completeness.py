@@ -14,6 +14,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LARGE_COMPANY = "censo.large_company"
 _IVA_BLOCK = {
+    "taxpayer_type.entity_type": "natural_person",
+    "taxpayer_type.irpf_income_categories": "actividad_economica",
     "identity.tax_id": "12345678Z",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",

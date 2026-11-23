@@ -1,13 +1,15 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import {
   agentColumn as column,
+  matrixCell,
+  matrixLane,
+  matrixRows,
   offeredModels,
   openModelPicker,
   pickWay,
   scenarioOnly,
 } from "../support/agent";
-import { connectionLabel } from "../support/connection";
 import { label } from "../support/strings";
 
 // What the picker offers follows what the service says it has read. A lane
@@ -82,23 +84,31 @@ const settle = (target: Page) =>
 const comeBack = (target: Page) =>
   target.evaluate(() => window.dispatchEvent(new Event("focus")));
 
-const laneRow = (target: Page, way: string) =>
-  target.locator(`[role=option][data-way="${way}"]`);
+/** The cells of the lane `way`'s models that can be chosen. */
+const choosableCells = (picker: Locator, way: string) =>
+  matrixRows(picker, way).locator("[role=radio]:not([aria-disabled])");
 
-/** Opens the picker's provider list, reads one lane's row and closes it. */
+/** The cells chosen on the lane `way`. */
+const chosenCells = (picker: Locator, way: string) =>
+  matrixRows(picker, way).locator("[role=radio][aria-checked=true]");
+
+/** The steps offered in the heading of the lane `way`. */
+const laneSteps = (picker: Locator, way: string, step?: string) =>
+  matrixLane(picker, way).locator(
+    step ? `[data-held-step="${step}"]` : "[data-held-step]",
+  );
+
+/** Opens the picker, reads one lane's heading and closes it: whether the
+ * lane can be chosen, and what its heading says. */
 async function rowState(target: Page, way: string) {
   const picker = await openModelPicker(target);
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
-  const row = laneRow(target, way);
+  const row = matrixLane(picker, way);
   await expect(row).toBeVisible();
   const state = {
-    disabled: (await row.getAttribute("data-disabled")) === "true",
+    disabled: (await row.getAttribute("data-standing")) !== "ready",
+    choosable: await choosableCells(picker, way).count(),
     text: (await row.textContent()) ?? "",
   };
-  await target.keyboard.press("Escape");
-  await expect(target.getByRole("listbox")).toBeHidden();
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
   return state;
@@ -112,6 +122,7 @@ test("a lane first served as still being read becomes choosable without a reload
   await expect.poll(() => reads(target)).toBe(1);
   const held = await rowState(target, READ);
   expect(held.disabled).toBe(true);
+  expect(held.choosable).toBe(0);
   expect(held.text).toContain(label("desktop.agent.lane_no_catalog"));
 
   // The service settles the lane. Time alone asks nothing; the person
@@ -124,6 +135,7 @@ test("a lane first served as still being read becomes choosable without a reload
   await expect.poll(() => reads(target)).toBe(before + 1);
   const settled = await rowState(target, READ);
   expect(settled.disabled).toBe(false);
+  expect(settled.choosable).toBeGreaterThan(0);
 });
 
 test("a lane whose sign-in the service has not yet read is read again until it is signed in", async ({
@@ -132,7 +144,9 @@ test("a lane whose sign-in the service has not yet read is read again until it i
   await served(target, { [READ]: SIGN_IN_UNKNOWN });
   await open(target);
   await expect.poll(() => reads(target)).toBe(1);
-  expect((await rowState(target, READ)).disabled).toBe(true);
+  const held = await rowState(target, READ);
+  expect(held.disabled).toBe(true);
+  expect(held.choosable).toBe(0);
 
   // The sign-in has completed: the read on the person's return states it,
   // with nothing opened.
@@ -140,7 +154,9 @@ test("a lane whose sign-in the service has not yet read is read again until it i
   const before = await reads(target);
   await comeBack(target);
   await expect.poll(() => reads(target)).toBe(before + 1);
-  expect((await rowState(target, READ)).disabled).toBe(false);
+  const settled = await rowState(target, READ);
+  expect(settled.disabled).toBe(false);
+  expect(settled.choosable).toBeGreaterThan(0);
 });
 
 test("a lane held back for models that could not be read offers asking again, and is choosable after", async ({
@@ -149,7 +165,8 @@ test("a lane held back for models that could not be read offers asking again, an
   await served(target, { [READ]: UNREAD });
   await open(target);
   const picker = await openModelPicker(target);
-  const held = picker.locator(`[data-held-way="${READ}"]`);
+  const held = matrixLane(picker, READ);
+  await expect(held).toHaveAttribute("data-standing", "setup");
   await expect(held).toContainText(label("desktop.agent.lane_no_catalog"));
   const retry = held.getByRole("button", {
     name: label("desktop.agent.retry"),
@@ -158,14 +175,11 @@ test("a lane held back for models that could not be read offers asking again, an
   await expect(retry).toBeVisible();
   await settle(target);
   await retry.click();
-  await expect(held).toHaveCount(0);
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
-  await expect(laneRow(target, READ)).not.toHaveAttribute(
-    "data-disabled",
-    "true",
-  );
+  // Asked again, the lane is read and can be chosen in the same picker.
+  await expect(held).toHaveAttribute("data-standing", "ready");
+  await expect(held).not.toContainText(label("desktop.agent.lane_no_catalog"));
+  await expect(laneSteps(picker, READ)).toHaveCount(0);
+  await expect(choosableCells(picker, READ).first()).toBeVisible();
 });
 
 test("a lane that is signed out offers signing in, which opens the settings", async ({
@@ -174,7 +188,8 @@ test("a lane that is signed out offers signing in, which opens the settings", as
   expect(laneOf(SIGNED_OUT).health.authentication).toBe("unauthenticated");
   await open(target);
   const picker = await openModelPicker(target);
-  const held = picker.locator(`[data-held-way="${SIGNED_OUT}"]`);
+  const held = matrixLane(picker, SIGNED_OUT);
+  await expect(held).toHaveAttribute("data-standing", "setup");
   await expect(held).toContainText(label("desktop.agent.lane_signed_out"));
   await held
     .getByRole("button", {
@@ -190,20 +205,27 @@ test("a lane that is signed out offers signing in, which opens the settings", as
   ).toBeVisible();
 });
 
-test("a lane held back for what the person cannot repair here offers no step", async ({
+test("a lane held back for what the person cannot repair here offers only the way to its settings", async ({
   page: target,
 }) => {
   await open(target);
   const picker = await openModelPicker(target);
-  // The lanes whose program is not installed or that have no key.
-  for (const served of lanes) {
-    if (
+  // The lanes whose program is not installed or that have no key: neither
+  // signing in, asking again nor a download brings them into use.
+  const unrepairable = lanes.filter(
+    (served) =>
       served.health.transport === "unavailable" ||
-      served.health.configured === "unavailable"
-    )
-      await expect(
-        picker.locator(`[data-held-way="${wayOf(served)}"]`),
-      ).toHaveCount(0);
+      served.health.configured === "unavailable",
+  );
+  expect(unrepairable.length).toBeGreaterThan(0);
+  for (const served of unrepairable) {
+    const way = wayOf(served);
+    await expect(matrixLane(picker, way)).toHaveAttribute(
+      "data-standing",
+      "setup",
+    );
+    await expect(laneSteps(picker, way)).toHaveCount(1);
+    await expect(laneSteps(picker, way, "set_up")).toHaveCount(1);
   }
 });
 
@@ -229,33 +251,45 @@ test("the hint to download models shows under the lane whose models are download
   expect(laneOf(LOCAL).model_download).toBe("required");
   await open(target);
   const picker = await openModelPicker(target);
-  // The column starts on a hosted lane.
-  await expect(picker).not.toContainText(
-    label("desktop.agent.models_to_download"),
-  );
-  await expect(
-    picker.getByRole("button", {
+  const downloadOf = (way: string) =>
+    matrixLane(picker, way).getByRole("button", {
       name: label("desktop.agent.download_models"),
       exact: true,
-    }),
-  ).toHaveCount(0);
+    });
+  // The column starts on a hosted lane; the hint stays with the lane whose
+  // models are downloaded whichever lane is chosen.
+  await expect(chosenCells(picker, START)).toHaveCount(1);
+  await expect(downloadOf(START)).toHaveCount(0);
+  await expect(laneSteps(picker, LOCAL, "download")).toHaveCount(1);
+  await expect(downloadOf(LOCAL)).toBeVisible();
   await pickWay(target, picker, LOCAL);
-  await expect(picker).toContainText(label("desktop.agent.models_to_download"));
+  await expect(chosenCells(picker, LOCAL)).toHaveCount(1);
+  await expect(downloadOf(LOCAL)).toBeVisible();
+  await expect(downloadOf(START)).toHaveCount(0);
   await pickWay(target, picker, START);
-  await expect(picker).not.toContainText(
-    label("desktop.agent.models_to_download"),
-  );
+  await expect(chosenCells(picker, START)).toHaveCount(1);
+  await expect(downloadOf(START)).toHaveCount(0);
 });
 
-test("with no provider to choose, the model field asks for a provider rather than saying there are no models", async ({
+test("with no provider to choose, the picker says why of each lane rather than saying there are no models", async ({
   page: target,
 }) => {
   await open(target, "&catalog=hosted-signed-out&models=none");
   const picker = await openModelPicker(target);
-  await expect(picker).toContainText(
-    label("desktop.agent.choose_provider_first"),
+  // Each lane is listed with what holds it back and the step that brings it
+  // into use; no model can be chosen yet.
+  await expect(matrixLane(picker, SIGNED_OUT)).toContainText(
+    label("desktop.agent.lane_signed_out"),
   );
-  await expect(picker).not.toContainText(label("desktop.agent.no_models"));
+  await expect(laneSteps(picker, SIGNED_OUT, "sign_in")).toHaveCount(1);
+  await expect(matrixLane(picker, LOCAL)).toContainText(
+    label("desktop.agent.lane_no_installed_model"),
+  );
+  await expect(laneSteps(picker, LOCAL, "download")).toHaveCount(1);
+  await expect(
+    picker.locator("[role=radio][data-matrix-cell]:not([aria-disabled])"),
+  ).toHaveCount(0);
+  await expect(picker.locator("[data-slot=model-matrix-empty]")).toHaveCount(0);
 });
 
 test("a model the person chose comes back with its lane after the lane is held back for a while", async ({
@@ -266,25 +300,26 @@ test("a model the person chose comes back with its lane after the lane is held b
   await open(target);
   let picker = await openModelPicker(target);
   await pickWay(target, picker, READ);
-  await picker
-    .getByLabel(label("desktop.agent.model"))
-    .selectOption(model.entry_id);
+  await matrixCell(picker, READ, model.entry_id).click();
+  await expect(matrixCell(picker, READ, model.entry_id)).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
 
-  // The lane is not choosable for a while: the picker is on another lane.
+  // The lane is not choosable for a while: nothing on it is chosen.
   await target.evaluate((state) => {
     window.__fixtureLaneStates = { "qwen/api": state } as never;
   }, UNREAD);
   const before = await reads(target);
   picker = await openModelPicker(target);
   await expect.poll(() => reads(target)).toBeGreaterThan(before);
-  const provider = picker.getByRole("button", {
-    name: label("desktop.agent.provider"),
-  });
-  await expect(provider).not.toHaveAccessibleName(
-    `${label("desktop.agent.provider")}: ${laneOf(READ).display_name}, ${connectionLabel(laneOf(READ))}`,
+  await expect(matrixLane(picker, READ)).toHaveAttribute(
+    "data-standing",
+    "setup",
   );
+  await expect(chosenCells(picker, READ)).toHaveCount(0);
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
 
@@ -294,13 +329,10 @@ test("a model the person chose comes back with its lane after the lane is held b
   await comeBack(target);
   await expect.poll(() => reads(target)).toBe(waited + 1);
   picker = await openModelPicker(target);
-  await expect(
-    picker.getByRole("button", { name: label("desktop.agent.provider") }),
-  ).toHaveAccessibleName(
-    `${label("desktop.agent.provider")}: ${laneOf(READ).display_name}, ${connectionLabel(laneOf(READ))}`,
-  );
-  await expect(picker.getByLabel(label("desktop.agent.model"))).toHaveValue(
-    model.entry_id,
+  await expect(chosenCells(picker, READ)).toHaveCount(1);
+  await expect(matrixCell(picker, READ, model.entry_id)).toHaveAttribute(
+    "aria-checked",
+    "true",
   );
 });
 
@@ -357,7 +389,7 @@ for (const [code, role, words] of [
     // Read, the lists apply again: the local lane offers its list alone,
     // leaving out the model it serves that nobody put on the list.
     await pickWay(target, picker, LOCAL);
-    expect(await offeredModels(picker)).toEqual([
+    expect(await offeredModels(picker, LOCAL)).toEqual([
       "synthetic-text:1",
       "synthetic-vision:1",
     ]);

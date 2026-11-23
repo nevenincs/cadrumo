@@ -484,6 +484,13 @@ function refusal(code: string): Error & { code: string } {
 /** Every provider settings command may reject with its service's refusal. */
 const SERVICE_REFUSALS: CallPlan = { serviceRefusals: true };
 
+/** A change refused `busy` waits on the agent's start, which the settings say
+ * with the step to try again: a state of the setup, not a fault. */
+const SETTINGS_CHANGE: CallPlan = {
+  ...SERVICE_REFUSALS,
+  state: (code) => code === "busy",
+};
+
 function tauriProviderSettings(
   token: ShellToken | null,
   openExternal: (url: string) => Promise<void>,
@@ -532,32 +539,36 @@ function tauriProviderSettings(
                   : { [BASE_URL_HEADER]: base_url }),
             },
           },
-          SERVICE_REFUSALS,
+          SETTINGS_CHANGE,
         );
       } finally {
         key.fill(0);
       }
     },
     turnOff: ({ provider, revision }) =>
-      command<ProviderSettingsRecord>("provider_settings_remove", {
-        provider,
-        revision,
-      }),
+      command<ProviderSettingsRecord>(
+        "provider_settings_remove",
+        { provider, revision },
+        SETTINGS_CHANGE,
+      ),
     turnOn: ({ provider, revision }) =>
-      command<ProviderSettingsRecord>("provider_settings_turn_on", {
-        provider,
-        revision,
-      }),
+      command<ProviderSettingsRecord>(
+        "provider_settings_turn_on",
+        { provider, revision },
+        SETTINGS_CHANGE,
+      ),
     reset: ({ provider, revision }) =>
-      command<ProviderSettingsRecord>("provider_settings_reset", {
-        provider,
-        revision,
-      }),
+      command<ProviderSettingsRecord>(
+        "provider_settings_reset",
+        { provider, revision },
+        SETTINGS_CHANGE,
+      ),
     signOut: ({ provider, revision }) =>
-      command<ProviderSettingsRecord>("provider_sign_out", {
-        provider,
-        revision,
-      }),
+      command<ProviderSettingsRecord>(
+        "provider_sign_out",
+        { provider, revision },
+        SETTINGS_CHANGE,
+      ),
     signIn: {
       start: ({ provider, revision, method }) =>
         command<ProviderSignInSnapshot>("provider_sign_in_start", {

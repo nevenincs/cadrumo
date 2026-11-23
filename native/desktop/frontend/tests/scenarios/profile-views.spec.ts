@@ -54,6 +54,7 @@ test("profile reads hide previous snapshots on the first commit and ignore late 
       },
       taxpayer_model_declared: true,
       incomplete_reason: null,
+      undeclared_profile_facts: [],
       suppressed_entries: [],
       events: [],
       coverage: {

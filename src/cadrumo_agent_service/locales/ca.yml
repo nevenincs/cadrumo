@@ -73,8 +73,6 @@ desktop:
     catalog_unavailable: No s'ha pogut llegir la llista de proveïdors de l'agent.
     choose_another_model: Tria un altre model
     choose_model: Tria un model
-    choose_provider: Tria un proveïdor
-    choose_provider_first: Tria primer un proveïdor.
     choose_to_start: Tria un proveïdor i un model per començar.
     close_documents: Tanca els documents
     condition_budget_exhausted: Pressupost esgotat
@@ -136,11 +134,13 @@ desktop:
     drop_release_single: Deixa anar per afegir 1 fitxer
     drop_title: Afegeix a aquesta conversa
     effort: Esforç
+    effort_catalog_default: 'predeterminat del catàleg: {effort}'
     effort_default: Per defecte
     effort_high: Alt
     effort_low: Baix
     effort_max: Màxim
     effort_medium: Mitjà
+    effort_provider_default: Predeterminat del proveïdor
     effort_ultra: Ultra
     effort_xhigh: Molt alt
     engine_door_local_ai_setup: Repara la IA local
@@ -186,6 +186,23 @@ desktop:
     model_does_not_fit_shortfall: Aquest model necessita uns {needed} tokens de context
       per a aquesta conversa, més dels {context} que pot contenir. Tria un altre model,
       o un altre proveïdor per a aquesta conversa.
+    model_matrix_cell: '{model}, {effort}'
+    model_matrix_clear_search: Esborra la cerca
+    model_matrix_count: '{count} models mostrats'
+    model_matrix_count_one: 1 model mostrat
+    model_matrix_filter_off: Desactivats
+    model_matrix_filter_on: Activats
+    model_matrix_filter_ready: A punt
+    model_matrix_filter_setup: Per configurar
+    model_matrix_filters: Mostra els proveïdors
+    model_matrix_label: Models i esforços
+    model_matrix_none_on: No hi ha cap proveïdor activat. Activa'n un a Proveïdors
+      d'IA.
+    model_matrix_off_hidden: '{count} proveïdors estan desactivats'
+    model_matrix_off_hidden_one: 1 proveïdor està desactivat
+    model_matrix_search_empty: Cap model coincideix amb la teva cerca.
+    model_matrix_search_label: Cerca models
+    model_matrix_show: Mostra
     model_not_installed: '{name} (sense baixar)'
     model_not_installed_refused: El model triat no és en aquest ordinador. Baixa'l
       o tria'n un altre.
@@ -194,8 +211,6 @@ desktop:
     model_with_effort: '{model} ({effort})'
     model_written: Aquest proveïdor no llista els seus models. Escriu el nom del model
       tal com l'escriu el proveïdor.
-    models_to_download: Alguns models encara no són en aquest ordinador. Baixa'ls
-      als ajustos de la IA local.
     more_files: +{count} més
     movement_dismiss: Descarta
     movement_shared: En enviar-lo, el comparteixes amb {provider}, que el llegeix
@@ -208,10 +223,8 @@ desktop:
     movement_unreadable: No s'ha pogut llegir el moviment del Llibre.
     new_conversation: Conversa nova
     no_installed_model: Encara no hi ha cap model d'IA baixat. Baixa'n un per començar.
-    no_models: No hi ha models per triar
     no_provider: Configura un proveïdor d'IA per començar.
     platform_unsupported: L'agent d'IA encara no està disponible en aquesta plataforma.
-    provider: Proveïdor
     questions_answer: Respon
     questions_clear: Esborra aquesta resposta
     questions_control: Escriu cada resposta en una sola línia.
@@ -473,14 +486,11 @@ desktop:
     connection_local: En aquest ordinador
     console_command_label: 'Executa aquesta ordre en un terminal:'
     detail_app_missing: Instal·la l'aplicació de {provider} i després inicia la sessió.
-    detail_off: 'Desactivat: l''agent no l''ofereix ni el fa servir.'
-    detail_off_kept: 'Desactivat: l''agent no l''ofereix ni el fa servir. La seva
-      clau API es conserva per quan l''activis.'
     detail_sign_in: Inicia la sessió amb el teu compte de {provider}.
-    group_intro: Tria un proveïdor per configurar-lo.
     icon_credits: Crèdits de les icones
     key_label: Clau d'API de {provider}
     key_note: Es desa xifrada en aquest ordinador i no es torna a mostrar.
+    lane_details: Detalls de {provider} ({connection})
     load_failed: No s’han pogut carregar els proveïdors. Torna-ho a provar.
     local_engine_change_failed: No s’ha desat el teu canvi. Torna-ho a provar.
     local_engine_changing: Desant…
@@ -543,9 +553,22 @@ desktop:
       update_app: Actualitza aquesta aplicació a l'última versió i torna-ho a provar.
     reads_off_host: La teva conversa surt d’aquest ordinador cap al proveïdor.
     reads_on_host: La teva conversa es queda en aquest ordinador.
+    reason_add_key: Afegeix una clau API de {provider} per fer-lo servir.
     reason_check_settings: Revisa aquesta configuració i torna-ho a provar.
+    reason_key_saved: 'Es comprova el primer cop que es fa servir: envia un missatge
+      o executa una tasca amb ell.'
+    reason_local_ready: Funciona en aquest ordinador. Tria'l a l'agent per fer-lo
+      servir.
+    reason_not_checked: Encara no s'ha comprovat. Es comprova el primer cop que es
+      fa servir.
     reason_record_unreadable: No es pot llegir la clau API desada. Torna-la a afegir.
+    reason_signed_in: Sessió iniciada amb l'aplicació de {provider}. Tria'l a l'agent
+      per fer-lo servir.
+    reason_turned_off: L'agent no l'ofereix ni el fa servir. Activa'l amb l'interruptor
+      per tornar-lo a fer servir.
     refresh: Torna-ho a provar
+    refused_agent_starting: L'agent s'està iniciant, així que encara no s'ha desat.
+      Torna-ho a provar d'aquí a un moment.
     refused_base_url_rejected: Revisa l’adreça del servidor i torna-ho a provar.
     refused_busy: Encara hi ha un altre canvi als teus proveïdors en curs. Torna-ho
       a provar d'aquí a un moment.
@@ -565,11 +588,9 @@ desktop:
     remove_key: Elimina la clau API
     replace_key: Substitueix la clau API
     save: Desa
+    save_retry: Torna-ho a provar
     saved_unread: Desat, però no se n'ha pogut llegir l'estat. Torna-ho a provar.
     saving: S'està desant…
-    search_empty: No hi ha proveïdors que coincideixin. Prova una altra cerca.
-    search_label: Cerca proveïdors
-    search_placeholder: Cerca
     sign_in_action: Inicia la sessió
     sign_in_busy: Un altre inici de sessió de {provider} encara s'està acabant. Espera
       un moment i torna-ho a provar.
@@ -689,19 +710,29 @@ desktop:
     sign_out_label: Tanca la sessió de {provider}
     status_not_checked: Sense comprovar
     status_off: Desactivat
+    status_off_kept: Desactivat · clau desada
     status_ready: A punt
-    status_saved: Desat
+    status_saved: Clau desada
     status_setup_needed: Sense configurar
     status_sign_in_needed: Sense sessió iniciada
+    status_signed_in: Sessió iniciada
     status_unconfirmed: Inici de sessió sense confirmar
-    task_model_effort: Esforç per a {task}
+    task_model_change: Canvia
+    task_model_change_label: Canvia amb què s'executa {task}
     task_model_model: Model per a {task}
-    task_model_reading: Fa servir el model de lectura
+    task_model_reading_chosen: 'Model de lectura: {model}'
+    task_model_reading_default: 'Model de lectura: {model}, el predeterminat fins
+      que en triïs un'
+    task_model_reading_none: Model de lectura, quan en configuris un
     task_model_refused: No s'ha pogut canviar amb què s'executa aquesta tasca. Torna-ho
       a provar.
     task_model_saved: Desat.
+    task_model_stored_unoffered: '{model} a {lane}, que ja no s''ofereix'
+    task_model_use_reading: Fes servir el model de lectura
     task_models_intro: Tria amb quin model s'executa cada tipus de tasca. Una tasca
       que no configuris fa servir el model amb què es llegeixen els documents.
+    task_models_runs_with: S'executa amb
+    task_models_task: Tasca
     task_models_title: Models per tasca
     title: Proveïdors d'IA
     use_in_agent: Fes servir {provider} ({connection}) a l'agent

@@ -56,9 +56,9 @@ async function openSignedIn(target: Page, language = "en") {
     .click();
   await expect(settings(target, language)).toBeVisible();
   await settings(target, language)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
 }
 

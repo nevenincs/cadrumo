@@ -4,6 +4,9 @@ import { formatSize } from "../../src/shared/numbers";
 import { catalogLanes } from "../../src/shell/agentOffer";
 import {
   ask,
+  matrixCell,
+  matrixLane,
+  matrixRows,
   messageField,
   offeredModels,
   openModelPicker,
@@ -84,9 +87,9 @@ async function openSettings(target: Page) {
     .click();
   await expect(settings(target)).toBeVisible();
   await settings(target)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
   return settings(target);
 }
@@ -114,6 +117,12 @@ const remove = (row: Locator) =>
   row.getByRole("button", {
     name: label("desktop.providers.local_model_remove"),
   });
+/** The row of `model` on the lane `way` of an open model picker. */
+const pickerRow = (picker: Locator, way: string, model: string) =>
+  matrixRows(picker, way).and(picker.locator(`[data-model="${model}"]`));
+/** The step `step` in the heading of the lane `way` of an open picker. */
+const laneStep = (picker: Locator, way: string, step: string) =>
+  matrixLane(picker, way).locator(`[data-held-step="${step}"]`);
 const calls = (target: Page) =>
   target.evaluate(() => window.__scenarioHostCalls ?? []);
 const setupStep = (target: Page) =>
@@ -323,21 +332,29 @@ for (const engine of ENGINES) {
       await open(target, engine);
       const picker = await openModelPicker(target);
       await pickWay(target, picker, way);
-      const field = picker.getByLabel(label("desktop.agent.model"));
-      const option = field.locator(`option[value="${missing.id}"]`);
-      await expect(option).toBeDisabled();
-      await expect(option).toHaveText(
+      const absentRow = pickerRow(picker, way, missing.id);
+      await expect(absentRow).toHaveAttribute("data-held", "false");
+      await expect(absentRow).toHaveAttribute("aria-disabled", "true");
+      await expect(matrixCell(picker, way, missing.id)).toHaveAttribute(
+        "aria-disabled",
+        "true",
+      );
+      await expect(absentRow.getByRole("rowheader")).toHaveText(
         label("desktop.agent.model_not_installed", { name: missing.name }),
       );
-      await expect(field.locator(`option[value="${held.id}"]`)).toBeEnabled();
-      expect([...(await offeredModels(picker))].sort()).toEqual(
+      await expect(pickerRow(picker, way, held.id)).not.toHaveAttribute(
+        "aria-disabled",
+        "true",
+      );
+      expect([...(await offeredModels(picker, way))].sort()).toEqual(
         [...recommended].sort(),
       );
-      expect(await field.inputValue()).toBe(held.id);
-      await expect(picker).toContainText(
-        label("desktop.agent.models_to_download"),
+      await expect(matrixCell(picker, way, held.id)).toHaveAttribute(
+        "aria-checked",
+        "true",
       );
-      await picker
+      await expect(laneStep(picker, way, "download")).toHaveCount(1);
+      await matrixLane(picker, way)
         .getByRole("button", {
           name: label("desktop.agent.download_models"),
           exact: true,
@@ -353,9 +370,10 @@ for (const engine of ENGINES) {
       await open(target, engine);
       const picker = await openModelPicker(target);
       await pickWay(target, picker, way);
-      expect(
-        await picker.getByLabel(label("desktop.agent.model")).inputValue(),
-      ).toBe(held.id);
+      await expect(matrixCell(picker, way, held.id)).toHaveAttribute(
+        "aria-checked",
+        "true",
+      );
       await target.keyboard.press("Escape");
       await expect(picker).toBeHidden();
       // The model is removed behind the window's back, after the picker
@@ -389,9 +407,9 @@ for (const engine of ENGINES) {
         .click();
       await expect(settings(target)).toBeVisible();
       await settings(target)
-        .locator("li[data-provider] > details")
+        .locator("[data-slot=lane-expander][aria-expanded=false]")
         .evaluateAll((nodes) =>
-          nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+          nodes.forEach((node) => (node as HTMLElement).click()),
         );
       await expect(modelRows(target, engine)).toHaveCount(recommended.length);
       await expect(
@@ -404,21 +422,32 @@ for (const engine of ENGINES) {
     }) => {
       await open(target, engine, "&models=none");
       const picker = await openModelPicker(target);
-      await picker
-        .getByRole("button", { name: label("desktop.agent.provider") })
-        .click();
-      const entry = target.locator(`[role=option][data-way="${way}"]`);
-      await expect(entry).toHaveAttribute("data-disabled", "true");
+      const entry = matrixLane(picker, way);
+      await expect(entry).toHaveAttribute("data-standing", "setup");
       await expect(entry).toContainText(
         label("desktop.agent.lane_no_installed_model"),
       );
-      await target.keyboard.press("Escape");
-      // The way shown is a hosted one, whose models are not downloaded: the
+      await expect(
+        matrixRows(picker, way).locator("[role=radio]:not([aria-disabled])"),
+      ).toHaveCount(0);
+      await expect(laneStep(picker, way, "download")).toHaveCount(1);
+      // The way chosen is a hosted one, whose models are not downloaded: the
       // local download hint belongs to the local lane alone.
-      await expect(picker).not.toContainText(
-        label("desktop.agent.models_to_download"),
+      const chosenWay = await picker
+        .locator("tr[data-slot=model-matrix-row]")
+        .filter({ has: target.locator("[role=radio][aria-checked=true]") })
+        .getAttribute("data-way");
+      expect(chosenWay).not.toBe(way);
+      expect(
+        (FIXTURE_CATALOG.providers ?? []).find(
+          (held) => `${held.provider_id}/${held.transport}` === chosenWay,
+        )?.model_download,
+      ).toBe("none");
+      await expect(laneStep(picker, chosenWay ?? "", "download")).toHaveCount(
+        0,
       );
       await target.keyboard.press("Escape");
+      await expect(picker).toBeHidden();
       await openSettings(target);
       for (const model of recommended) {
         const row = rowOf(lane(target, engine), model);

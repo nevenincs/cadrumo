@@ -50,23 +50,43 @@ export async function openModelPicker(target: Page): Promise<Locator> {
   return picker;
 }
 
-/** Picks the provider way `way` in an open model picker. */
-export async function pickWay(target: Page, picker: Locator, way: string) {
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
-  await target.locator(`[role=option][data-way="${way}"]`).click();
-  await expect(target.getByRole("listbox")).toBeHidden();
+/** The heading row of the lane `way` in an open model matrix. */
+export const matrixLane = (scope: Locator, way: string) =>
+  scope.locator(`tr[data-slot=model-matrix-lane][data-way="${way}"]`);
+
+/** The rows of the lane `way`'s models in an open model matrix. */
+export const matrixRows = (scope: Locator, way: string) =>
+  scope.locator(`tr[data-slot=model-matrix-row][data-way="${way}"]`);
+
+/** The cell of `model` on the lane `way` for `effort`, or for the
+ * provider's default where none is named. */
+export const matrixCell = (
+  scope: Locator,
+  way: string,
+  model: string,
+  effort = "default",
+) =>
+  matrixRows(scope, way)
+    .and(scope.locator(`[data-model="${model}"]`))
+    .locator(`[role=radio][data-column="${effort}"]`);
+
+/** Picks the provider way `way` in an open model picker, starting on the
+ * model its catalog recommends, else its first model that can be chosen, at
+ * the provider's default effort. */
+export async function pickWay(_target: Page, picker: Locator, way: string) {
+  const rows = matrixRows(picker, way).and(
+    picker.locator(":not([aria-disabled])"),
+  );
+  const recommended = rows.and(picker.locator("[data-recommended]"));
+  const row = (await recommended.count()) > 0 ? recommended : rows.first();
+  await row.locator('[role=radio][data-column="default"]').click();
 }
 
-/** The model ids an open model picker offers for its way. */
-export const offeredModels = (picker: Locator) =>
-  picker
-    .getByLabel(label("desktop.agent.model"))
-    .locator("option")
-    .evaluateAll((nodes) =>
-      nodes.map((node) => (node as HTMLOptionElement).value),
-    );
+/** The model ids an open model picker offers for the way `way`. */
+export const offeredModels = (picker: Locator, way: string) =>
+  matrixRows(picker, way).evaluateAll((nodes) =>
+    nodes.map((node) => node.getAttribute("data-model") ?? ""),
+  );
 
 export const messageField = (target: Page) =>
   agentColumn(target).getByRole("textbox", {

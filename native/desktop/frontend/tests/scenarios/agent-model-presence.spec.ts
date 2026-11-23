@@ -1,9 +1,12 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import { catalogLanes } from "../../src/shell/agentOffer";
 import {
   agentColumn as column,
   ask,
+  matrixCell,
+  matrixLane,
+  matrixRows,
   messageField,
   openModelPicker,
   pickWay,
@@ -52,6 +55,18 @@ const download = (scope: ReturnType<typeof column>) =>
     exact: true,
   });
 
+/** The row of `model` on the lane `way` of an open model picker. */
+const modelRow = (picker: Locator, way: string, model: string) =>
+  matrixRows(picker, way).and(picker.locator(`[data-model="${model}"]`));
+
+/** The model chosen on the lane `way` of an open model picker. */
+const chosenModel = (picker: Locator, way: string) =>
+  matrixRows(picker, way)
+    .filter({
+      has: picker.page().locator("[role=radio][aria-checked=true]"),
+    })
+    .getAttribute("data-model");
+
 const catalogReads = (target: Page) =>
   target.evaluate(
     () =>
@@ -68,27 +83,35 @@ test("a model this computer lacks is listed but cannot be chosen, and the picker
   await open(target);
   const picker = await openModelPicker(target);
   await pickWay(target, picker, LOCAL);
-  const field = picker.getByLabel(label("desktop.agent.model"));
   for (const entry of absent) {
-    const option = field.locator(`option[value="${entry.entry_id}"]`);
-    await expect(option).toBeDisabled();
-    await expect(option).toHaveText(
+    const row = modelRow(picker, LOCAL, entry.entry_id);
+    await expect(row).toHaveAttribute("data-held", "false");
+    await expect(row).toHaveAttribute("aria-disabled", "true");
+    await expect(matrixCell(picker, LOCAL, entry.entry_id)).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await expect(row.getByRole("rowheader")).toHaveText(
       label("desktop.agent.model_not_installed", {
         name: entry.display_name,
       }),
     );
   }
   for (const entry of held) {
-    const option = field.locator(`option[value="${entry.entry_id}"]`);
-    await expect(option).toBeEnabled();
-    await expect(option).toHaveText(entry.display_name);
+    const row = modelRow(picker, LOCAL, entry.entry_id);
+    await expect(row).not.toHaveAttribute("data-held", "false");
+    await expect(row).not.toHaveAttribute("aria-disabled", "true");
+    await expect(matrixCell(picker, LOCAL, entry.entry_id)).not.toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await expect(row.getByRole("rowheader")).toHaveText(entry.display_name);
   }
   // The way starts on a model this computer holds.
   expect(held.map((entry) => entry.entry_id)).toContain(
-    await field.inputValue(),
+    await chosenModel(picker, LOCAL),
   );
-  await expect(picker).toContainText(label("desktop.agent.models_to_download"));
-  await download(picker).click();
+  await download(matrixLane(picker, LOCAL)).click();
   await expect(picker).toBeHidden();
   await expect(settings(target)).toBeVisible();
 });
@@ -118,17 +141,15 @@ test("with no model on this computer the local lane cannot be chosen, and the co
   ).toBe(false);
 
   const picker = await openModelPicker(target);
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
-  const lane = target.locator(`[role=option][data-way="${LOCAL}"]`);
-  await expect(lane).toHaveAttribute("data-disabled", "true");
+  const lane = matrixLane(picker, LOCAL);
+  await expect(lane).toHaveAttribute("data-standing", "setup");
   await expect(lane).toContainText(
     label("desktop.agent.lane_no_installed_model"),
   );
-  await target.keyboard.press("Escape");
-  await expect(target.getByRole("listbox")).toBeHidden();
-  await expect(picker).toContainText(label("desktop.agent.models_to_download"));
+  await expect(
+    matrixRows(picker, LOCAL).and(picker.locator(":not([aria-disabled])")),
+  ).toHaveCount(0);
+  await expect(download(lane)).toBeVisible();
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
 
@@ -142,9 +163,7 @@ test("a send for a model this computer no longer holds is refused in words with 
   await open(target);
   const picker = await openModelPicker(target);
   await pickWay(target, picker, LOCAL);
-  const chosen = await picker
-    .getByLabel(label("desktop.agent.model"))
-    .inputValue();
+  const chosen = (await chosenModel(picker, LOCAL)) ?? "";
   expect(held.map((entry) => entry.entry_id)).toContain(chosen);
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
@@ -169,8 +188,9 @@ test("a send for a model this computer no longer holds is refused in words with 
   // What is offered is read again, and the lost model is no longer chosen.
   await expect.poll(() => catalogReads(target)).toBeGreaterThan(readsBefore);
   const again = await openModelPicker(target);
-  await expect(again.getByLabel(label("desktop.agent.model"))).not.toHaveValue(
-    chosen,
+  await expect(matrixCell(again, LOCAL, chosen)).not.toHaveAttribute(
+    "aria-checked",
+    "true",
   );
   await target.keyboard.press("Escape");
   await expect(again).toBeHidden();

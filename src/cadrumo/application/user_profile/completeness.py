@@ -6,6 +6,8 @@ from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
+from ...domain.calculations.registry.applicability import taxpayer_model_required_facts
+from ...domain.calculations.registry.applicability_models import TaxpayerModelFact
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import (
@@ -37,10 +39,10 @@ FISCAL_RESIDENCY_PATH = "taxpayer_type.fiscal_residency"
 COUNTRY_OF_FISCAL_RESIDENCE_PATH = "taxpayer_type.country_of_fiscal_residence"
 REPRESENTANTE_FISCAL_NIF_PATH = "taxpayer_type.representante_fiscal_nif"
 REPRESENTANTE_FISCAL_NOMBRE_PATH = "taxpayer_type.representante_fiscal_nombre"
-ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
+ENTITY_TYPE_PATH = TaxpayerModelFact.ENTITY_TYPE.value
 LEGAL_ENTITY_FORM_PATH = "taxpayer_type.legal_entity_form"
 LEGAL_NAME_PATH = "identity.legal_name"
-IRPF_INCOME_CATEGORIES_PATH = "taxpayer_type.irpf_income_categories"
+IRPF_INCOME_CATEGORIES_PATH = TaxpayerModelFact.IRPF_INCOME_CATEGORIES.value
 IVA_REGIME_PATH = "iva.regime"
 AUTH_PROVIDER_PATH = "auth.provider"
 CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
@@ -101,6 +103,10 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
     the two authorities came apart: the resolver hard-required six facts that
     no readiness surface asked for, so ``config profile status`` reported a
     profile ready and pointed the operator at a command that refused it.
+
+    The taxpayer model's facts are owed the same way, from the same owner as
+    the calendar and modelo applicability read them: a profile could be
+    declared ready while the calendar still could not place one obligation.
     """
     with pinned_registry_scope():
         return _conditional_profile_required_paths(values)
@@ -108,7 +114,10 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
 
 def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
     """Derive the conditional requirements inside a pinned registry scope."""
-    required: list[str] = [*modelo_iva_profile_required_paths(values), *filing_cadence_profile_required_paths(values)]
+    entity_type = _token(values.get(ENTITY_TYPE_PATH)).lower() or None
+    required: list[str] = [fact.value for fact in taxpayer_model_required_facts(entity_type)]
+    required.extend(modelo_iva_profile_required_paths(values))
+    required.extend(filing_cadence_profile_required_paths(values))
 
     if _token(values.get(ENTITY_TYPE_PATH)).lower() == entity_type_legal_entity_token().value:
         # A legal entity without a declared form has no selector for its

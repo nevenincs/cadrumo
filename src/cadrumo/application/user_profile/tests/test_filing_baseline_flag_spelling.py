@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: IVA block. This is the shape that shipped a dotted path to the operator.
 _IVA_BLOCK_OWED = {
     "taxpayer_type.entity_type": "natural_person",
+    "taxpayer_type.irpf_income_categories": "actividad_economica",
     "identity.name": "Ana",
     "identity.surnames": "Garcia Lopez",
     "identity.tax_id": "12345678Z",
@@ -36,6 +37,8 @@ _IVA_BLOCK_OWED = {
 }
 
 _PROFILE_PATH_FLAGS = {
+    "taxpayer_type.entity_type": "entity-type",
+    "taxpayer_type.irpf_income_categories": "irpf-income-categories",
     "taxpayer_type.country_of_fiscal_residence": "country-of-fiscal-residence",
     "taxpayer_type.representante_fiscal_nif": "representante-fiscal-nif",
     "iva.redeme_enrolled": "iva-redeme-enrolled",
@@ -127,8 +130,9 @@ def test_an_unregistered_path_still_yields_a_well_formed_flag() -> None:
             ("legal-entity-form", "legal-name"),
             False,
         ),
-        # Nothing answered at all: every identity flag is owed.
-        ({}, ("entity-type", "name", "surnames"), False),
+        # Nothing answered at all: every identity flag is owed, and with no
+        # entity type stated the taxpayer model also owes its income categories.
+        ({}, ("entity-type", "name", "surnames"), True),
     ],
 )
 def test_identity_and_conditional_groups_partition_the_refusal(

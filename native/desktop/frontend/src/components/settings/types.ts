@@ -36,6 +36,9 @@ export type ProviderStatus = {
   authKind: AuthKind;
   mode: ProviderSettingsMode;
   readiness: ProviderReadiness;
+  /** Whether the service can resolve a credential or sign-in for the lane
+   * now, as it serves it: a stored key, a signed-in app, a keyless lane. */
+  available: boolean;
   source: ProviderCredentialSource;
   /** Where the app stands, for a command-line way. */
   cliState?: CliState;
