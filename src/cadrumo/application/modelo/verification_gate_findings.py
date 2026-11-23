@@ -64,6 +64,7 @@ from ..aggregation.invoice_iva_source import (
     documented_invoice_ids,
     invoices_missing_source_document,
     issued_invoices_missing_source_document,
+    rectification_evidence_grounding_invoices,
 )
 from ..aggregation.ledger_membership import (
     LedgerMembershipPorts,
@@ -395,6 +396,28 @@ def invoice_source_document_findings(
         *(_received_invoice_document_finding(invoice) for invoice in received),
         *(_issued_invoice_document_finding(invoice) for invoice in issued),
     ]
+
+
+def rectification_evidence_is_recordable(
+    *,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    attachment_store: AttachmentStoreProtocol,
+) -> bool:
+    """Whether the records hold a factura rectificativa grounding ``rectification_evidence``.
+
+    Fact 0085 requires that authority of a rectificación de deducciones. A
+    received rectificativa holding its own document is its production writer, so
+    while the catalogue holds one the refusal on a rectification row is the
+    general, recoverable one rather than the terminal "file another way".
+    """
+    return bool(
+        rectification_evidence_grounding_invoices(
+            tuple(invoice_repository.load().invoices.values()),
+            documented=documented_invoice_ids(attachment_store),
+            window=transaction_repository.load(),
+        )
+    )
 
 
 def _when(applies: bool, select: Callable[[], tuple[Invoice, ...]]) -> tuple[Invoice, ...]:
@@ -897,6 +920,11 @@ def collect_verification_gate_findings(
             profile=workflow_profile,
             transaction_repository=transaction_repository,
             invoice_repository=invoice_repository,
+            rectification_evidence_recordable=rectification_evidence_is_recordable(
+                invoice_repository=invoice_repository,
+                transaction_repository=transaction_repository,
+                attachment_store=attachment_store,
+            ),
             operation=operation,
             work_profile=work_profile,
         )

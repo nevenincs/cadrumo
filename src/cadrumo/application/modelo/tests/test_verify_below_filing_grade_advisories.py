@@ -134,6 +134,7 @@ def _verify(
         profile=_profile(),
         transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=_BUCKET),
         invoice_repository=InvoiceCatalogueFake(),
+        rectification_evidence_recordable=False,
         operation=operation,
         work_profile=None,
     )

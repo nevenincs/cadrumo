@@ -80,10 +80,17 @@ CUOTA_LESS_WITHOUT_BASE_LEGAL_REFS: tuple[str, ...] = (
 LEDGER_TRANSACTION_SOURCE_REF_PREFIX: Final = "transaction:"
 
 
+#: The scenario a rectificación de deducciones falls under while the records
+#: hold no factura rectificativa that grounds its authority. A received
+#: rectificativa holding its document is that authority's production writer, so
+#: this refusal is terminal only while the catalogue holds no such document.
+RECTIFICATION_DOCUMENT_SCENARIO: Final = "rectification_document_unrecordable"
+
+
 UNRECORDABLE_DEDUCTION_SCENARIOS: Final = {
     "customs_declaration": "import_document_unrecordable",
     "reagp_receipt": "reagp_document_unrecordable",
-    "rectification_evidence": "rectification_document_unrecordable",
+    "rectification_evidence": RECTIFICATION_DOCUMENT_SCENARIO,
 }
 
 

@@ -511,6 +511,7 @@ def _append_source_evidence_findings(
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    rectification_evidence_recordable: bool,
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile | None,
     findings: list[ModeloVerificationFinding],
@@ -536,6 +537,7 @@ def _append_source_evidence_findings(
         work_unit=work_unit,
         target=target,
         transaction_repository=transaction_repository,
+        rectification_evidence_recordable=rectification_evidence_recordable,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
     )
@@ -579,6 +581,7 @@ def collect_revision_verification_findings(
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    rectification_evidence_recordable: bool,
     operation: PinnedAuthorityOperation,
     work_profile: ModeloWorkProfile | None,
 ) -> tuple[
@@ -654,6 +657,7 @@ def collect_revision_verification_findings(
         profile=profile,
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
+        rectification_evidence_recordable=rectification_evidence_recordable,
         operation=operation,
         work_profile=work_profile,
         findings=findings,

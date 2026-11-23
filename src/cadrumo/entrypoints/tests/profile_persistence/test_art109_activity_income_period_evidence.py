@@ -328,6 +328,7 @@ def _collect_art109_findings(
             ),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            rectification_evidence_recordable=False,
             operation=verify_operation,
             work_profile=None,
         )
