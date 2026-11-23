@@ -91,7 +91,13 @@ const preview: Preview = {
     a11y: { test: "error" },
     options: {
       storySort: {
-        order: ["Foundations", "Primitives", "Shell"],
+        order: [
+          "Settings",
+          ["AI settings (whole section)"],
+          "Foundations",
+          "Primitives",
+          "Shell",
+        ],
       },
     },
   },

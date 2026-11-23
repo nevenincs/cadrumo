@@ -27,9 +27,10 @@ const LOCAL_LANE =
 /** The lane on this computer, turned on and ready. */
 const LOCAL_PROVIDER: ProviderStatus = {
   ...PROVIDERS.find((provider) => provider.id === LANE)!,
-  mode: "key",
-  readiness: "ready",
-  source: "profile",
+  mode: "unset",
+  readiness: "not_verified",
+  available: true,
+  source: "none",
 };
 
 type Scene = {
@@ -81,8 +82,10 @@ function Settings(scene: Scene) {
   const [on, setOn] = useState(true);
   useEffect(() => {
     root.current
-      ?.querySelectorAll("details")
-      .forEach((node) => (node.open = true));
+      ?.querySelector<HTMLElement>(
+        "[data-slot=lane-expander][aria-expanded=false]",
+      )
+      ?.click();
   }, []);
   return (
     <ProvisioningStage shape="partial" latencyMs={600}>

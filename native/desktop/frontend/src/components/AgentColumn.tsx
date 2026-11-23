@@ -1009,7 +1009,6 @@ export function AgentColumn({
                     : "failed"
               }
               catalogFailure={catalog.kind === "failed" ? catalog.code : null}
-              catalog={catalog.kind === "ready" ? catalog.value : null}
               onRetryCatalog={agentCatalog.retry}
               onLocalModelRemoved={agentCatalog.refresh}
             />

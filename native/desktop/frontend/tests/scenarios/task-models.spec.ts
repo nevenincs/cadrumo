@@ -1,6 +1,12 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
-import { scenarioOnly, worded } from "../support/agent";
+import {
+  matrixCell,
+  matrixLane,
+  matrixRows,
+  scenarioOnly,
+  worded,
+} from "../support/agent";
 import { label } from "../support/strings";
 
 // What each kind of background task runs with, set in the agent's settings:
@@ -22,6 +28,51 @@ const section = (target: Page) =>
 
 const row = (target: Page, kind: string) =>
   section(target).locator(`[data-task-kind="${kind}"]`);
+
+const runsWith = (target: Page, kind: string) =>
+  row(target, kind).locator("[data-slot=task-model-runs-with]");
+
+const effortOf = (target: Page, kind: string) =>
+  row(target, kind).locator("[data-slot=task-model-effort]");
+
+type Kind = (typeof FIXTURE_CATALOG.task_kinds)[number];
+
+const changeButton = (target: Page, kind: Kind) =>
+  row(target, kind.id).getByRole("button", {
+    name: label("desktop.providers.task_model_change_label", {
+      task: kind.display_name,
+    }),
+  });
+
+/** Opens the one model matrix a kind's Change button shows, and answers it
+ * once shown. */
+async function openChange(target: Page, kind: Kind): Promise<Locator> {
+  await changeButton(target, kind).click();
+  const chooser = target.getByRole("dialog", {
+    name: label("desktop.providers.task_model_model", {
+      task: kind.display_name,
+    }),
+  });
+  await expect(chooser).toBeVisible();
+  return chooser;
+}
+
+const useReading = (chooser: Locator) =>
+  chooser.getByRole("button", {
+    name: label("desktop.providers.task_model_use_reading"),
+  });
+
+/** The words a task on the reading model runs with, whichever way the
+ * reading model stands. */
+const readingWords = new RegExp(
+  [
+    "desktop.providers.task_model_reading_chosen",
+    "desktop.providers.task_model_reading_default",
+    "desktop.providers.task_model_reading_none",
+  ]
+    .map((key) => worded(key).source)
+    .join("|"),
+);
 
 /** The settings the made-up service stores per kind. */
 const storedTasks = (target: Page) =>
@@ -46,12 +97,9 @@ test("each served task kind uses the reading model until a model and effort are 
     kinds.length,
   );
   for (const kind of kinds) {
-    const model = row(target, kind.id).getByLabel(
-      label("desktop.providers.task_model_model", { task: kind.display_name }),
-    );
-    await expect(model).toHaveValue("");
-    await expect(model.locator("option:checked")).toHaveText(
-      label("desktop.providers.task_model_reading"),
+    await expect(runsWith(target, kind.id)).toHaveText(readingWords);
+    await expect(effortOf(target, kind.id)).toHaveText(
+      label("desktop.agent.effort_provider_default"),
     );
     await expect(row(target, kind.id)).toContainText(kind.description);
   }
@@ -60,14 +108,16 @@ test("each served task kind uses the reading model until a model and effort are 
   const [first] = kinds;
   if (!first) throw new Error("The made-up catalogue serves no task kind.");
   const classification = row(target, first.id);
-  const model = classification.getByLabel(
-    label("desktop.providers.task_model_model", { task: first.display_name }),
-  );
-  const effort = classification.getByLabel(
-    label("desktop.providers.task_model_effort", { task: first.display_name }),
-  );
+  const reading = (await runsWith(target, first.id).textContent()) ?? "";
+  const chooser = await openChange(target, first);
+  await expect(useReading(chooser)).toHaveAttribute("aria-pressed", "true");
+
   // A lane whose background requests take no effort offers none.
-  await model.selectOption("qwen_api\nfixture-coder");
+  const coder = matrixRows(chooser, "qwen/api").and(
+    chooser.locator('[data-model="fixture-coder"]'),
+  );
+  await expect(coder.getByRole("radio")).toHaveCount(1);
+  await matrixCell(chooser, "qwen/api", "fixture-coder").click();
   await expect
     .poll(() => storedTasks(target))
     .toEqual([
@@ -81,17 +131,27 @@ test("each served task kind uses the reading model until a model and effort are 
   await expect(classification.getByRole("status")).toHaveText(
     label("desktop.providers.task_model_saved"),
   );
-  await expect(effort).toHaveCount(0);
+  await expect(
+    matrixCell(chooser, "qwen/api", "fixture-coder"),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(useReading(chooser)).toHaveAttribute("aria-pressed", "false");
+  await expect(runsWith(target, first.id)).toContainText("Fixture Coder");
+  await expect(effortOf(target, first.id)).toHaveText(
+    label("desktop.agent.effort_provider_default"),
+  );
 
   // A lane that takes one offers the levels the model states.
-  await model.selectOption("kimi_api\nfixture-quick");
-  await expect(effort).toBeVisible();
-  await expect(effort.locator("option")).toHaveText([
-    label("desktop.agent.effort_default"),
-    label("desktop.agent.effort_low"),
-    label("desktop.agent.effort_medium"),
-  ]);
-  await effort.selectOption("medium");
+  const quick = matrixRows(chooser, "kimi/api").and(
+    chooser.locator('[data-model="fixture-quick"]'),
+  );
+  expect(
+    await quick
+      .getByRole("radio")
+      .evaluateAll((cells) =>
+        cells.map((cell) => cell.getAttribute("data-column")),
+      ),
+  ).toEqual(["default", "low", "medium"]);
+  await matrixCell(chooser, "kimi/api", "fixture-quick", "medium").click();
   await expect
     .poll(() => storedTasks(target))
     .toEqual([
@@ -102,21 +162,31 @@ test("each served task kind uses the reading model until a model and effort are 
         effort: "medium",
       },
     ]);
+  await expect(
+    matrixCell(chooser, "kimi/api", "fixture-quick", "medium"),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(
+    matrixCell(chooser, "qwen/api", "fixture-coder"),
+  ).toHaveAttribute("aria-checked", "false");
+  await expect(runsWith(target, first.id)).toContainText("Fixture Quick");
+  await expect(effortOf(target, first.id)).toHaveText(
+    label("desktop.agent.effort_medium"),
+  );
   // The other kind still uses the reading model.
   const [, second] = kinds;
-  if (second)
-    await expect(
-      row(target, second.id).getByLabel(
-        label("desktop.providers.task_model_model", {
-          task: second.display_name,
-        }),
-      ),
-    ).toHaveValue("");
+  if (second) await expect(runsWith(target, second.id)).toHaveText(reading);
 
-  // Back to the default: the setting is cleared and no effort is offered.
-  await model.selectOption("");
+  // Back to the default: the setting is cleared and no effort is set.
+  await useReading(chooser).click();
   await expect.poll(() => storedTasks(target)).toEqual([]);
-  await expect(effort).toHaveCount(0);
+  await expect(useReading(chooser)).toHaveAttribute("aria-pressed", "true");
+  await expect(chooser.locator("[role=radio][aria-checked=true]")).toHaveCount(
+    0,
+  );
+  await expect(runsWith(target, first.id)).toHaveText(reading);
+  await expect(effortOf(target, first.id)).toHaveText(
+    label("desktop.agent.effort_provider_default"),
+  );
   await expect(classification.getByRole("status")).toHaveText(
     label("desktop.providers.task_model_saved"),
   );
@@ -143,15 +213,15 @@ test("a refused change says so and leaves the stored setting", async ({
         list.revision,
       );
   });
-  await row(target, first.id)
-    .getByLabel(
-      label("desktop.providers.task_model_model", { task: first.display_name }),
-    )
-    .selectOption("qwen_api\nfixture-chat");
+  const chooser = await openChange(target, first);
+  const chat = matrixCell(chooser, "qwen/api", "fixture-chat");
+  await chat.click();
   await expect(row(target, first.id).getByRole("alert")).toHaveText(
     label("desktop.providers.local_models_refused_revision_conflict"),
   );
   expect(await storedTasks(target)).toEqual([]);
+  await expect(chat).toHaveAttribute("aria-checked", "false");
+  await expect(useReading(chooser)).toHaveAttribute("aria-pressed", "true");
 });
 
 const openSettings = async (target: Page) => {
@@ -193,17 +263,15 @@ test("a record of the lists that cannot be read says why and offers the reset, a
   );
   const [first] = kinds;
   if (!first) throw new Error("The made-up catalogue serves no task kind.");
-  const model = row(target, first.id).getByLabel(
-    label("desktop.providers.task_model_model", { task: first.display_name }),
-  );
-  await expect(model).toBeDisabled();
+  const change = changeButton(target, first);
+  await expect(change).toBeDisabled();
   await said
     .getByRole("button", {
       name: label("desktop.providers.local_models_reset"),
     })
     .click();
   await expect(said).toHaveCount(0);
-  await expect(model).toBeEnabled();
+  await expect(change).toBeEnabled();
 });
 
 test("model lists that answer where setup stands are said as that state, with asking again where that helps", async ({
@@ -245,40 +313,58 @@ test("a lane a task cannot run on yet says why with the picker's step, and a mod
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready&models=none&catalog=hosted-signed-out",
   );
   await openSettings(target);
-  const held = section(target).locator("[data-slot=task-models-held]");
+  const [first] = kinds;
+  if (!first) throw new Error("The made-up catalogue serves no task kind.");
+  let chooser = await openChange(target, first);
   // The local lane holds none of its models yet: downloading one is the step.
-  const local = held.locator('[data-held-lane="zai_api"]');
-  await expect(local).toContainText(
+  const local = matrixLane(chooser, "zai/api");
+  await expect(local.locator("[data-slot=model-matrix-lane-words]")).toHaveText(
     label("desktop.agent.lane_no_installed_model"),
   );
   // A signed-out lane is signed in to in its provider's settings.
-  const signedOut = held.locator('[data-held-lane="kimi_cli"]');
-  await expect(signedOut).toContainText(label("desktop.agent.lane_signed_out"));
-  const [first] = kinds;
-  if (!first) throw new Error("The made-up catalogue serves no task kind.");
-  const model = row(target, first.id).getByLabel(
-    label("desktop.providers.task_model_model", { task: first.display_name }),
-  );
-  const absent = model.locator(
-    'optgroup[data-lane="zai_api"] option[data-installed="false"]',
-  );
-  await expect(absent.first()).toBeDisabled();
-  await expect(absent.first()).toHaveText(
+  const signedOut = matrixLane(chooser, "kimi/cli");
+  await expect(
+    signedOut.locator("[data-slot=model-matrix-lane-words]"),
+  ).toHaveText(label("desktop.agent.lane_signed_out"));
+
+  const absent = matrixRows(chooser, "zai/api")
+    .and(chooser.locator("[data-held=false]"))
+    .first();
+  await expect(absent).toHaveAttribute("aria-disabled", "true");
+  await expect(absent.getByRole("rowheader")).toHaveText(
     worded("desktop.agent.model_not_installed"),
   );
-  const providerDetails = (provider: string) =>
+  await expect(
+    absent.locator('[role=radio][data-column="default"]'),
+  ).toBeDisabled();
+
+  const providerExpander = (provider: string) =>
     target
       .locator(".pane-agent")
-      .locator(`li[data-provider="${provider}"] > details`);
-  await expect(providerDetails("kimi")).not.toHaveAttribute("open");
+      .locator(`li[data-provider="${provider}"]`)
+      .first()
+      .locator("[data-slot=lane-expander]");
+  await expect(providerExpander("kimi")).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
   await signedOut
     .getByRole("button", { name: label("desktop.providers.sign_in_action") })
     .click();
-  await expect(providerDetails("kimi")).toHaveAttribute("open");
-  await local
+  await expect(chooser).toBeHidden();
+  await expect(providerExpander("kimi")).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  chooser = await openChange(target, first);
+  await matrixLane(chooser, "zai/api")
     .getByRole("button", { name: label("desktop.agent.download_models") })
     .click();
-  await expect(providerDetails("zai")).toHaveAttribute("open");
+  await expect(chooser).toBeHidden();
+  await expect(providerExpander("zai")).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
   await expect(
     target
       .locator(".pane-agent")

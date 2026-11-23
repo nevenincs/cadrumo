@@ -1,10 +1,17 @@
+import type {
+  Effort,
+  ServedCatalogAnswer,
+  ServedCatalogModel,
+} from "../shell/agentCatalogContract";
 import type { AgentSession } from "../shell/agentSession";
 import type {
   LocalEngine,
   LocalEngineStatus,
   LocalModelListStatus,
   LocalPlacement,
+  TaskModelEntry,
 } from "../shell/localModelsContract";
+import type { ProviderSettingsRecord } from "../shell/providerSettingsContract";
 import { fixtureTaskModels } from "./fixtureTaskModels";
 import {
   catalogsUnderEngine,
@@ -341,4 +348,224 @@ export function fixtureModelHost({
     },
     selectedEngine: () => engine.engine,
   };
+}
+
+// The reads a model picker's specimen works its offer out from: six made-up
+// providers out of the fixture catalog, each standing differently. One is on
+// and ready by its API and signed out by its app; one serves forty models
+// that take every effort; the lane on this computer lists a model the
+// catalog does not, beside one not downloaded; one is not configured; one is
+// turned off, so the catalog leaves it out; and one is a local engine that
+// does not run.
+
+/** The providers of the specimen, out of the fixture catalog. */
+const OFFER_PROVIDERS = new Set([
+  "kimi",
+  "qwen",
+  "zai",
+  "deepseek",
+  "antigravity",
+  "llamacpp",
+]);
+/** The specimen's provider turned off in its settings. */
+const OFFER_OFF = "antigravity_cli";
+/** The specimen's lane with many models. */
+const OFFER_MANY = "qwen_api";
+const OFFER_EFFORTS: Effort[] = [
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+  "ultra",
+];
+
+/** Forty made-up models, each taking a run of the efforts from the lowest. */
+const manyModels = (): ServedCatalogModel[] =>
+  Array.from({ length: 40 }, (_, index): ServedCatalogModel => {
+    const number = String(index + 1).padStart(2, "0");
+    const efforts = OFFER_EFFORTS.slice(0, (index % OFFER_EFFORTS.length) + 1);
+    return {
+      entry_id: `example-many-${number}`,
+      model: `example-many-${number}`,
+      display_name: `Example Many ${number}`,
+      ...(index % 5 === 0
+        ? { description: `A made-up model, number ${number} of forty.` }
+        : {}),
+      native_control_ids: [],
+      efforts: index % 7 === 6 ? [] : efforts,
+      default_effort: index % 3 === 0 ? (efforts[0] ?? null) : null,
+      vision: null,
+      size_bytes: null,
+      context_length: null,
+      licence: null,
+      llamacpp_default_context: null,
+    };
+  });
+
+/** What the specimen's settings serve of each lane, by lane id. */
+const OFFER_STANDINGS: Record<
+  string,
+  Pick<
+    ProviderSettingsRecord,
+    "mode" | "available" | "source" | "readiness" | "reason" | "cli_state"
+  > & { credential_saved?: boolean }
+> = {
+  kimi_api: {
+    mode: "key",
+    available: true,
+    source: "profile",
+    readiness: "not_verified",
+    credential_saved: true,
+  },
+  kimi_cli: {
+    mode: "unset",
+    available: false,
+    source: "none",
+    readiness: "sign_in_required",
+    reason: "sign_in_with_provider_tool",
+    cli_state: "installed_signed_out",
+  },
+  qwen_api: {
+    mode: "key",
+    available: true,
+    source: "profile",
+    readiness: "not_verified",
+    credential_saved: true,
+  },
+  // The service never serves readiness "ready": it checks a lane on use.
+  qwen_cli: {
+    mode: "provider_sign_in",
+    available: true,
+    source: "none",
+    readiness: "not_verified",
+    cli_state: "installed_signed_in",
+  },
+  zai_api: {
+    mode: "unset",
+    available: true,
+    source: "none",
+    readiness: "not_verified",
+  },
+  // An app lane whose app is not on this computer is not set up: it says so
+  // and how to get the app, never asks for a key.
+  deepseek_cli: {
+    mode: "unset",
+    available: false,
+    source: "none",
+    readiness: "sign_in_required",
+    reason: "sign_in_with_provider_tool",
+    cli_state: "not_installed",
+  },
+  antigravity_cli: {
+    mode: "disabled",
+    available: false,
+    source: "none",
+    readiness: "disabled",
+    reason: "turned_off",
+  },
+  llamacpp_api: {
+    mode: "unset",
+    available: true,
+    source: "none",
+    readiness: "not_verified",
+  },
+};
+
+/** How a specimen's reads stand: the agent ready or still starting, the
+ * reading model chosen or a default standing in, what the tasks are set to,
+ * and every provider off. */
+export type FixtureOfferScene = {
+  declared?: boolean;
+  reading?: "chosen" | "default" | "none";
+  tasks?: readonly TaskModelEntry[];
+  allOff?: boolean;
+};
+
+/** The catalog, the lists and the settings a specimen's offer is worked out
+ * from. */
+export function fixtureOfferReads({
+  declared = false,
+  reading = "default",
+  tasks = [],
+  allOff = false,
+}: FixtureOfferScene = {}): {
+  catalog: ServedCatalogAnswer;
+  lists: LocalModelListStatus;
+  settings: { providers: ProviderSettingsRecord[] };
+} {
+  const kept = (lane: { provider_id: string; transport: string }) =>
+    OFFER_PROVIDERS.has(lane.provider_id) &&
+    `${lane.provider_id}_${lane.transport}` !== OFFER_OFF &&
+    !allOff;
+  const served = withEngineHealth(
+    {
+      ...FIXTURE_CATALOG,
+      providers: (FIXTURE_CATALOG.providers ?? []).filter(kept).map((lane) =>
+        `${lane.provider_id}_${lane.transport}` === OFFER_MANY
+          ? {
+              ...lane,
+              catalog: { ...lane.catalog, models: manyModels() },
+              background_requests: {
+                ...lane.background_requests,
+                options: ["effort"],
+              },
+            }
+          : lane,
+      ),
+    },
+    {
+      llamacpp: {
+        engine: "llamacpp",
+        state: "not_running",
+        reason: "not_reachable",
+        door: "local_ai_setup",
+      },
+    },
+  );
+  const catalog: ServedCatalogAnswer = declared
+    ? {
+        ...FIXTURE_DECLARED_CATALOG,
+        catalog: {
+          ...FIXTURE_DECLARED_CATALOG.catalog,
+          providers: FIXTURE_DECLARED_CATALOG.catalog.providers.filter((lane) =>
+            kept({ provider_id: lane.provider, transport: lane.transport }),
+          ),
+        },
+      }
+    : served;
+  const readingModel = { lane: "zai_api", model: "synthetic-text:1" };
+  const lists: LocalModelListStatus = {
+    unreadable: false,
+    models: [{ lane: "zai_api", model: "example-added:7b" }],
+    reading: reading === "none" ? null : readingModel,
+    reading_source: reading,
+    tasks: [...tasks],
+    local_lanes: ["zai_api", "llamacpp_api"],
+    revision: revisionOf(1),
+  };
+  const settings = FIXTURE_SETTINGS_LANES.filter((seed) =>
+    OFFER_PROVIDERS.has(seed.provider),
+  ).flatMap((seed): ProviderSettingsRecord[] => {
+    const standing = OFFER_STANDINGS[seed.id];
+    if (!standing) return [];
+    const off = allOff || seed.id === OFFER_OFF;
+    return [
+      {
+        ...seed,
+        ...standing,
+        ...(off
+          ? {
+              mode: "disabled",
+              available: false,
+              readiness: "disabled",
+              reason: "turned_off",
+            }
+          : {}),
+        sign_out_available: false,
+        revision: revisionOf(2),
+      },
+    ];
+  });
+  return { catalog, lists, settings: { providers: settings } };
 }

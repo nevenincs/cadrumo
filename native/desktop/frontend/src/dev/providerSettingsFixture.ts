@@ -54,15 +54,32 @@ const ON_THIS_COMPUTER = new Set(["zai_api", "ollama_api", "llamacpp_api"]);
 /** The command-line lanes the made-up agent declares a logout for. */
 const LOGOUT_DECLARED = new Set(["antigravity_cli"]);
 
-/** A lane as the service serves it: it can be signed out while it is signed
- * in and its agent declares a logout for it. */
-const served = (record: ProviderSettingsRecord): ProviderSettingsRecord => ({
-  ...record,
-  sign_out_available:
-    LOGOUT_DECLARED.has(record.id) &&
-    record.mode !== "disabled" &&
-    record.cli_state === "installed_signed_in",
-});
+/** Whether the service resolves the lane through its provider's own sign-in
+ * (resolution.py `_uses_provider_sign_in`). */
+const signsInWithApp = (record: ProviderSettingsRecord) =>
+  record.auth_kind !== "none" &&
+  record.mode !== "disabled" &&
+  (record.mode === "provider_sign_in" ||
+    record.auth_kind === "provider_sign_in_only");
+
+/** A lane as the service serves it: one signing in through its app is
+ * available exactly while the app is signed in, and it can be signed out
+ * while it is signed in and its agent declares a logout for it. */
+const served = (record: ProviderSettingsRecord): ProviderSettingsRecord => {
+  const signedIn = record.cli_state === "installed_signed_in";
+  return {
+    ...record,
+    ...(signsInWithApp(record) && record.cli_state !== "not_installed"
+      ? {
+          available: signedIn,
+          readiness: signedIn ? "not_verified" : "sign_in_required",
+          reason: signedIn ? null : "sign_in_with_provider_tool",
+        }
+      : {}),
+    sign_out_available:
+      LOGOUT_DECLARED.has(record.id) && record.mode !== "disabled" && signedIn,
+  };
+};
 
 /** The settings lanes of the made-up catalog: id `<provider>_<transport>`. */
 export const FIXTURE_SETTINGS_LANES: readonly Seed[] = (
@@ -174,6 +191,10 @@ export type ProviderSignInFixtureControls = {
   /** The next settings read rejects `read_failed`, with `detail` beside it
    * as the host sends it. */
   failNextSettingsRead: (detail?: ProviderSignInFixtureRefusal) => void;
+  /** The next key save is refused with `code` and `detail` beside it, and
+   * nothing is saved, as the service refuses one while the agent starts
+   * (`busy`, cause `agent_tree_running`). */
+  rejectNextSave: (code: string, detail?: ProviderSignInFixtureRefusal) => void;
   deferNextStart: () => void;
   completeStart: () => void;
   failNextStart: (
@@ -280,6 +301,10 @@ let fixtureAttempt: ProviderSignInSnapshot | null = null;
 let fixtureCancelRequestedFor: string | null = null;
 let fixtureCancelDetail: ProviderSignInFixtureDetail | null = null;
 let rejectNextSettingsRead: ProviderSignInFixtureRefusal | null = null;
+let rejectNextSave: {
+  code: string;
+  detail: ProviderSignInFixtureRefusal;
+} | null = null;
 let rejectNextSignOut: {
   code: string;
   detail: ProviderSignInFixtureRefusal;
@@ -305,13 +330,14 @@ function initial(
   ProviderSettingsRecord,
   "mode" | "available" | "source" | "readiness" | "reason"
 > {
-  // A lane with nothing to set up is ready once it is listed.
+  // A lane with nothing to set up is available once it is listed; the
+  // service checks it only when it is used.
   if (seed.auth_kind === "none")
     return {
       mode: "unset",
       available: true,
       source: "none",
-      readiness: "ready",
+      readiness: "not_verified",
     };
   if (seed.auth_kind !== "provider_sign_in_only")
     return {
@@ -326,7 +352,7 @@ function initial(
         mode: "provider_sign_in",
         available: true,
         source: "none",
-        readiness: "ready",
+        readiness: "not_verified",
       };
     case "not_installed":
       return {
@@ -384,6 +410,7 @@ export function providerSettingsFixture({
   fixtureCancelRequestedFor = null;
   fixtureCancelDetail = null;
   rejectNextSettingsRead = null;
+  rejectNextSave = null;
   rejectNextSignOut = null;
   failNextStatus = null;
   fixtureSignInCalls = [];
@@ -432,6 +459,10 @@ export function providerSettingsFixture({
     };
   };
   const signInControls: ProviderSignInFixtureControls = {
+    rejectNextSave(code, detail = {}) {
+      rejectNextSave = { code, detail };
+      say(`providerSetRefusalQueued ${code}`);
+    },
     failNextSettingsRead(detail = {}) {
       rejectNextSettingsRead = detail;
       say("providerStatusFailureQueued");
@@ -550,7 +581,7 @@ export function providerSettingsFixture({
           cli_state: "installed_signed_in",
           mode: "provider_sign_in",
           available: true,
-          readiness: "ready",
+          readiness: "not_verified",
           reason: null,
         });
       say("providerSignInAttemptSucceeded");
@@ -783,6 +814,12 @@ export function providerSettingsFixture({
     signIn: signInControlsSettings,
     async set({ provider, revision, secret, base_url }) {
       say(`providerSet ${provider}`);
+      if (rejectNextSave) {
+        const { code, detail } = rejectNextSave;
+        rejectNextSave = null;
+        await wait();
+        throw coded(code, detail);
+      }
       const record = await take(provider, revision);
       // A key has no spaces in it; what has is not a key.
       if (secret === "" || /\s/.test(secret)) throw coded("invalid_key_format");

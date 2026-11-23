@@ -30,9 +30,9 @@ async function openLane(target: Page) {
   const lane = settings(target).locator(`[data-lane="${SIGN_IN_LANE.id}"]`);
   await expect(lane).toBeAttached();
   await settings(target)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
   return lane;
 }

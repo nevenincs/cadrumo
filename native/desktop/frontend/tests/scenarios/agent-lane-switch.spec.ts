@@ -5,6 +5,9 @@ import {
   agentColumn as column,
   agentTurns,
   ask,
+  matrixCell,
+  matrixLane,
+  matrixRows,
   messageField,
   openConversation,
   openModelPicker,
@@ -58,30 +61,26 @@ const sends = async (target: Page) =>
 const notice = (target: Page, slot: string) =>
   column(target).locator(`[data-slot="${slot}"]`);
 
-/** Chooses the lane `way` in the open model picker and closes the picker. */
+/** Chooses the lane `way` in the model picker and closes the picker. */
 async function chooseLane(target: Page, way: string) {
   const picker = await openModelPicker(target);
   await pickWay(target, picker, way);
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .focus();
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
 }
 
-/** Chooses `model` of the lane the picker is on and closes the picker. */
-async function chooseModel(target: Page, model: string) {
+/** Chooses `model` of the lane `way` in the model picker, at the provider's
+ * default effort, and closes the picker. */
+async function chooseModel(target: Page, way: string, model: string) {
   const picker = await openModelPicker(target);
-  await picker.getByLabel(label("desktop.agent.model")).selectOption(model);
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .focus();
+  await matrixCell(picker, way, model).click();
   await target.keyboard.press("Escape");
   await expect(picker).toBeHidden();
 }
 
-const entry = (target: Page, way: string): Locator =>
-  target.locator(`[role=option][data-way="${way}"]`);
+/** The cells chosen on the lane `way` of an open model picker. */
+const chosenOn = (picker: Locator, way: string) =>
+  matrixRows(picker, way).locator("[role=radio][aria-checked=true]");
 
 test.beforeEach(async ({ page: target }) => {
   scenarioOnly("The conversations and the agent's answers are the host's.");
@@ -94,26 +93,21 @@ test("a conversation that has run offers every other lane as a new conversation"
   await open(target);
   await openConversation(target, SOURCE);
   const picker = await openModelPicker(target);
-  await picker
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
   const hint = label("desktop.agent.continue_in_new_conversation");
-  await expect(entry(target, OTHER)).toContainText(hint);
-  await expect(entry(target, RAN)).not.toContainText(hint);
-  await target.keyboard.press("Escape");
+  await expect(matrixLane(picker, OTHER)).toContainText(hint);
+  await expect(matrixLane(picker, RAN)).toBeVisible();
+  await expect(matrixLane(picker, RAN)).not.toContainText(hint);
 
-  // A conversation that has not run is on no lane yet: no entry carries it.
+  // A conversation that has not run is on no lane yet: no lane carries it.
   await target.keyboard.press("Escape");
+  await expect(picker).toBeHidden();
   await column(target)
     .getByRole("button", { name: label("desktop.agent.new_conversation") })
     .click();
   const fresh = await openModelPicker(target);
-  await fresh
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
-  await expect(entry(target, OTHER)).toBeVisible();
-  await expect(entry(target, OTHER)).not.toContainText(hint);
-  await expect(entry(target, RAN)).not.toContainText(hint);
+  await expect(matrixLane(fresh, OTHER)).toBeVisible();
+  await expect(matrixLane(fresh, OTHER)).not.toContainText(hint);
+  await expect(matrixLane(fresh, RAN)).not.toContainText(hint);
 });
 
 test("choosing another lane leaves the conversation, and the next message carries it once", async ({
@@ -195,9 +189,8 @@ test("back to the source conversation reopens it, with its own lane and nothing 
   expect(await sends(target)).toEqual([]);
   // The source is on its own lane again, and a message goes there.
   const picker = await openModelPicker(target);
-  await expect(
-    picker.getByRole("button", { name: label("desktop.agent.provider") }),
-  ).toHaveAccessibleName(new RegExp(`${laneOf(RAN).display_name}`));
+  await expect(chosenOn(picker, RAN)).toHaveCount(1);
+  await expect(chosenOn(picker, OTHER)).toHaveCount(0);
   await target.keyboard.press("Escape");
   await send(target, "Una pregunta más.");
   expect(await sends(target)).toEqual([`${SOURCE_ID} ${RAN}`]);
@@ -259,7 +252,7 @@ test("a change of model within the lane waits on the person, and is acknowledged
 }) => {
   await open(target);
   await openConversation(target, SOURCE);
-  await chooseModel(target, "fixture-quick");
+  await chooseModel(target, RAN, "fixture-quick");
   const text = "¿Y con otro modelo?";
   await ask(target, text);
 
@@ -327,7 +320,7 @@ test("keeping the conversation's model leaves the message unsent in the composer
 }) => {
   await open(target);
   await openConversation(target, SOURCE);
-  await chooseModel(target, "fixture-quick");
+  await chooseModel(target, RAN, "fixture-quick");
   const text = "¿Y con otro modelo?";
   await ask(target, text);
   const asked = notice(target, "selection-change");

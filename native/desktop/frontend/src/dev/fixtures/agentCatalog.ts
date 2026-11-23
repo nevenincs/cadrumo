@@ -54,11 +54,12 @@ const CAPABILITIES: LaneCapability[] = [
   "pdf_reading",
 ];
 
-/** What each made-up lane is authenticated with, by `<provider>/<transport>`;
- * a lane not named here takes a key. */
+/** What each made-up lane is authenticated with, by `<provider>/<transport>`,
+ * as the agent derives it: a provider's key is spent on its API lane, so a
+ * program lane not named here signs in through the provider's own app, and a
+ * program lane given a key also names the endpoint it is valid for. An API
+ * lane not named here takes a key. */
 const AUTH_KINDS: Record<string, AuthKind> = {
-  "antigravity/cli": "provider_sign_in_only",
-  "qwen/cli": "provider_sign_in_only",
   "zhipu/cli": "api_key_with_base_url",
   "minimax/cli": "api_key_with_base_url",
   "zai/api": "none",
@@ -71,7 +72,9 @@ const AUTH_KINDS: Record<string, AuthKind> = {
 export const fixtureAuthKind = (
   provider: string,
   transport: ProviderTransport,
-): AuthKind => AUTH_KINDS[`${provider}/${transport}`] ?? "api_key";
+): AuthKind =>
+  AUTH_KINDS[`${provider}/${transport}`] ??
+  (transport === "cli" ? "provider_sign_in_only" : "api_key");
 
 /** A made-up lane of `provider_id`, shown by the made-up `name`. */
 const declare = (

@@ -55,9 +55,7 @@ test("the agent settings show the local AI after the agent became ready while th
     .click();
   await expect(settings(target)).toBeVisible();
   const provider = settings(target).locator('li[data-provider="zai"]');
-  await provider
-    .locator("> details")
-    .evaluate((node) => ((node as HTMLDetailsElement).open = true));
+  await provider.locator("[data-slot=lane-expander]").click();
   await expect(provider.getByTestId("local-ai")).toBeVisible({
     timeout: 5000,
   });

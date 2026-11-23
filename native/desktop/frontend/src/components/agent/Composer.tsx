@@ -326,8 +326,6 @@ export function Composer({
           />
           {onSelectionChange ? (
             <AgentSettingsPopover
-              providers={providers}
-              models={models}
               selection={selection}
               onChange={onSelectionChange}
               fixedWayId={fixedWayId}

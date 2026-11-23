@@ -81,9 +81,9 @@ async function prepare(target: Page, shape: Shape) {
     .click();
   await expect(settings(target)).toBeVisible();
   await settings(target)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
 }
 
@@ -162,8 +162,16 @@ test.beforeEach(async ({ page: target }) => {
   });
 });
 
-test("the fixture catalogue offers two lanes that sign in through their app", () => {
-  expect(SIGN_IN_LANES).toHaveLength(2);
+test("the fixture catalogue's app lanes sign in through their app, save those that take a key with its endpoint", () => {
+  // As the agent derives it: a provider's key goes to its API lane, so its
+  // app lane signs in; an app-only provider's key lane names its endpoint.
+  expect(SIGN_IN_LANES.map((declared) => declared.id)).toEqual([
+    "antigravity_cli",
+    "kimi_cli",
+    "qwen_cli",
+    "deepseek_cli",
+    "moonshot_cli",
+  ]);
 });
 
 for (const shape of SHAPES) {
@@ -201,7 +209,7 @@ for (const shape of SHAPES) {
       await retryToSuccess(target, dialog, from, null);
       await expect(
         lane(target, shape.laneId).locator('[data-slot="provider-status"]'),
-      ).toHaveAttribute("data-status", "ready");
+      ).toHaveAttribute("data-status", "signed_in");
     });
 
     test("a refusal whose code the window does not name says its reason instead of the generic words", async ({
@@ -275,7 +283,7 @@ for (const shape of SHAPES) {
       expect(asked((await signInCalls(target)).slice(from), dead)).toEqual([]);
       await expect(
         lane(target, shape.laneId).locator('[data-slot="provider-status"]'),
-      ).toHaveAttribute("data-status", "ready");
+      ).toHaveAttribute("data-status", "signed_in");
     });
 
     test("an attempt the service cancels because the profile signed out says so, never as the person's own cancel", async ({

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { offeredSelection } from "../../shell/agentCatalog";
 import { agentOffer } from "../../shell/agentOffer";
+import { AgentOfferContext } from "../../shell/agentOfferContext";
 import type { ServedProviderCatalog } from "../../shell/agentCatalogContract";
 import { useStrings } from "../../shell/strings";
 import { AgentSettingsPopover } from "./AgentSettingsPopover";
@@ -69,17 +70,14 @@ function Settings({ start }: { start?: Partial<AgentSelection> }) {
   return (
     <Specimen title={t("desktop.agent.settings")} note={APPEARANCE_NOTE}>
       <div className="flex h-dvh w-(--agent-w) items-end pb-24">
-        <AgentSettingsPopover
-          providers={choices.providers}
-          models={choices.models}
-          selection={selection}
-          onChange={setSelection}
-        >
-          <Button variant="ghost" size="xs">
-            {words}
-            <Icon name="chevronDown" size="xs" />
-          </Button>
-        </AgentSettingsPopover>
+        <AgentOfferContext.Provider value={choices}>
+          <AgentSettingsPopover selection={selection} onChange={setSelection}>
+            <Button variant="ghost" size="xs">
+              {words}
+              <Icon name="chevronDown" size="xs" />
+            </Button>
+          </AgentSettingsPopover>
+        </AgentOfferContext.Provider>
       </div>
     </Specimen>
   );

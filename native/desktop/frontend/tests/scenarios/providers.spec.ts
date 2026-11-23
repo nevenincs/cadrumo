@@ -3,6 +3,7 @@ import {
   FIXTURE_SIGN_IN_PROVIDERS,
   settingsLanesUnderEngine,
 } from "../../src/dev/providerSettingsFixture";
+import { openModelPicker } from "../support/agent";
 import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { bundledMark, connectionLabel } from "../support/connection";
 import { label } from "../support/strings";
@@ -48,23 +49,23 @@ const nameOf = (id: string) =>
   SERVED_LANES.find((declared) => declared.id === id)?.display_name ?? id;
 
 type Status =
-  "ready" | "saved" | "not_checked" | "setup_needed" | "sign_in_needed" | "off";
+  | "ready"
+  | "saved"
+  | "signed_in"
+  | "not_checked"
+  | "setup_needed"
+  | "sign_in_needed"
+  | "off";
 
 const STATUS_WORDS = {
   ready: "desktop.providers.status_ready",
   saved: "desktop.providers.status_saved",
+  signed_in: "desktop.providers.status_signed_in",
   not_checked: "desktop.providers.status_not_checked",
   setup_needed: "desktop.providers.status_setup_needed",
   sign_in_needed: "desktop.providers.status_sign_in_needed",
   off: "desktop.providers.status_off",
 } as const satisfies Record<Status, string>;
-
-/** The only statuses drawn: a connection in use, and one that waits on the
- * person. Every other is its name in secondary text, with no glyph. */
-const GLYPH: Partial<Record<Status, string>> = {
-  ready: "check",
-  sign_in_needed: "alert",
-};
 
 const statusMark = (scope: Locator) =>
   scope.locator('[data-slot="provider-status"]');
@@ -72,27 +73,23 @@ const statusMark = (scope: Locator) =>
 const colourOf = (node: Locator) =>
   node.evaluate((element) => getComputedStyle(element).color);
 
-/** `card` shows `status`: its glyph where the status has one and none where
- * it has not, with the status in words kept for a screen reader and never
- * laid out to be read. */
-async function expectStatus(card: Locator, status: Status) {
-  const words = label(STATUS_WORDS[status]);
+/** `card` shows `status` as its one visible status word. A lane turned off
+ * with its key stored says that it keeps the key. */
+async function expectStatus(card: Locator, status: Status, kept = false) {
+  const words = label(
+    status === "off" && kept
+      ? "desktop.providers.status_off_kept"
+      : STATUS_WORDS[status],
+  );
   const mark = statusMark(card);
   await expect(mark).toHaveCount(1);
   await expect(mark).toHaveAttribute("data-status", status);
   await expect(mark).toHaveText(words);
-  const glyph = GLYPH[status];
-  if (glyph) {
-    const drawn = mark.locator("[data-icon]");
-    await expect(drawn).toHaveAttribute("data-icon", glyph);
-    await expect(drawn).toBeVisible();
-  } else {
-    await expect(mark.locator("[data-icon]")).toHaveCount(0);
-  }
-  const spoken = await mark.getByText(words, { exact: true }).boundingBox();
-  expect(spoken?.width).toBeLessThanOrEqual(1);
-  expect(spoken?.height).toBeLessThanOrEqual(1);
+  await expect(mark).toBeVisible();
 }
+
+/** The reason line behind a lane's expander. */
+const reasonOf = (card: Locator) => card.locator("[data-slot=lane-reason]");
 
 const signInCapableLane = SERVED_LANES.find(
   (declared) =>
@@ -110,9 +107,9 @@ async function openSettings(target: Page, expandProviders = true) {
   await expect(settings(target)).toBeVisible();
   if (expandProviders)
     await settings(target)
-      .locator("li[data-provider] > details")
+      .locator("[data-slot=lane-expander][aria-expanded=false]")
       .evaluateAll((nodes) =>
-        nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+        nodes.forEach((node) => (node as HTMLElement).click()),
       );
 }
 
@@ -188,31 +185,34 @@ test("providers start collapsed and keep each connection separately accessible",
   await open(target);
   await openSettings(target, false);
 
-  // One group for each provider, initially collapsed, with each connection
-  // still present under the disclosure.
+  // One row for each connection, with no separate provider summary, each
+  // with its details collapsed.
   await expect(settings(target).locator("li[data-provider]")).toHaveCount(
-    new Set(SERVED_LANES.map((declared) => declared.provider)).size,
+    SERVED_LANES.length,
   );
   await expect(settings(target).locator("[data-lane]")).toHaveCount(
     SERVED_LANES.length,
   );
   await expect(
-    settings(target).locator("li[data-provider] > details[open]"),
+    settings(target).locator("[data-slot=lane-expander][aria-expanded=true]"),
+  ).toHaveCount(0);
+  await expect(
+    settings(target).locator("[data-slot=lane-details]"),
   ).toHaveCount(0);
   await settings(target)
-    .locator("li[data-provider] > details")
+    .locator("[data-slot=lane-expander][aria-expanded=false]")
     .evaluateAll((nodes) =>
-      nodes.forEach((node) => ((node as HTMLDetailsElement).open = true)),
+      nodes.forEach((node) => (node as HTMLElement).click()),
     );
   for (const declared of SERVED_LANES) {
     const card = lane(target, declared.id);
     await expect(card).toHaveCount(1);
-    await expect(card.getByRole("heading", { level: 5 })).toHaveText(
-      connectionLabel(declared),
+    // The provider is named once per row, with the way it connects.
+    await expect(card.getByRole("heading", { level: 4 })).toHaveText(
+      `${declared.display_name} · ${connectionLabel(declared)}`,
     );
-    const mark = providerGroup(target, declared.provider).locator(
-      "[data-slot=provider-mark]",
-    );
+    await expect(card.locator("[data-slot=lane-details]")).toBeVisible();
+    const mark = card.locator("[data-slot=provider-mark]");
     await expect(mark).toHaveCount(1);
     await expect(mark).toHaveAttribute("data-provider", declared.provider);
     const bundled = bundledMark(declared.provider);
@@ -225,11 +225,14 @@ test("providers start collapsed and keep each connection separately accessible",
     else expect(style).toBeNull();
   }
 
-  // Example Alpha and Example Beta each have separate API and provider-app rows.
-  for (const name of ["Example Alpha", "Example Beta"])
-    await expect(
-      settings(target).getByRole("heading", { level: 4, name, exact: true }),
-    ).toHaveCount(1);
+  // Example Alpha and Example Beta each have separate API and provider-app
+  // rows, the API first.
+  for (const provider of ["kimi", "qwen"])
+    expect(
+      await providerGroup(target, provider).evaluateAll((rows) =>
+        rows.map((row) => row.getAttribute("data-transport")),
+      ),
+    ).toEqual(["api", "cli"]);
 
   // The row label names the kind of connection; nothing merges two lanes' status.
   // The engine selector and placement switch hold the only radios; a lane row has none.
@@ -249,11 +252,13 @@ test("providers start collapsed and keep each connection separately accessible",
     const card = lane(target, declared.id);
     const keyless = declared.auth_kind === "none";
     words.push({
-      text: await card.getByRole("heading", { level: 5 }).innerText(),
+      text: await card.getByRole("heading", { level: 4 }).innerText(),
       keyless,
     });
     if (!keyless)
-      for (const text of await card.locator(":scope > p").allInnerTexts())
+      for (const text of await card
+        .locator("[data-slot=lane-details] > p")
+        .allInnerTexts())
         words.push({ text, keyless });
   }
   for (const { text, keyless } of words) {
@@ -264,7 +269,7 @@ test("providers start collapsed and keep each connection separately accessible",
     if (!keyless) expect(text).not.toMatch(/on this computer/i);
   }
 
-  const credits = settings(target).locator("details").last();
+  const credits = settings(target).locator(":scope > details");
   await expect(credits.locator("summary")).toHaveText(
     label("desktop.providers.icon_credits"),
   );
@@ -276,69 +281,61 @@ test("providers start collapsed and keep each connection separately accessible",
   await expect(credits).toContainText("trademarks of their respective holders");
 });
 
-test("a connection is drawn only when ready or waiting on the person, and is quiet text otherwise", async ({
+test("each lane states one served status in words, with the reason and next step behind its expander", async ({
   page: target,
 }) => {
   await open(target);
   await openSettings(target);
-  const intro = settings(target).getByText(
-    label("desktop.providers.group_intro"),
+
+  const local = lane(target, "zai_api");
+  const keyLane = lane(target, "kimi_api");
+  const appLane = lane(target, "qwen_cli");
+  // A lane on this computer with no setup row or engine measure served is
+  // not checked yet; a key lane with no key needs a key; an app lane that is
+  // signed out needs its sign-in.
+  await expectStatus(local, "not_checked");
+  await expect(statusMark(local)).toHaveAttribute("data-reason", "not_checked");
+  await expect(reasonOf(local)).toHaveText(
+    label("desktop.providers.reason_not_checked"),
   );
-  const secondary = await colourOf(intro);
-  const name = (card: Locator) => card.getByRole("heading", { level: 5 });
+  await expectStatus(keyLane, "setup_needed");
+  await expect(statusMark(keyLane)).toHaveAttribute("data-reason", "add_key");
+  await expect(reasonOf(keyLane)).toHaveText(
+    label("desktop.providers.reason_add_key", { provider: nameOf("kimi_api") }),
+  );
+  await expectStatus(appLane, "sign_in_needed");
+  await expect(statusMark(appLane)).toHaveAttribute("data-reason", "sign_in");
+  await expect(reasonOf(appLane)).toHaveText(
+    label("desktop.providers.detail_sign_in", {
+      provider: nameOf("qwen_cli"),
+    }),
+  );
 
-  const ready = lane(target, "zai_api");
-  const unset = lane(target, "kimi_api");
-  const signIn = lane(target, "qwen_cli");
-  await expectStatus(ready, "ready");
-  await expectStatus(unset, "setup_needed");
-  await expectStatus(signIn, "sign_in_needed");
+  // A status that waits on the person is set apart from one that does not.
+  expect(await colourOf(statusMark(keyLane))).toBe(
+    await colourOf(statusMark(appLane)),
+  );
+  expect(await colourOf(statusMark(keyLane))).not.toBe(
+    await colourOf(statusMark(local)),
+  );
 
-  // Ready is the ordinary text with a green glyph; a connection that waits on
-  // the person has a glyph of another colour; one not set up is its name in
-  // the secondary text colour and nothing more.
-  const green = await colourOf(statusMark(ready));
-  const warning = await colourOf(statusMark(signIn));
-  expect(await colourOf(name(ready))).not.toBe(secondary);
-  expect(await colourOf(name(signIn))).not.toBe(secondary);
-  expect(await colourOf(name(unset))).toBe(secondary);
-  expect(new Set([green, warning, secondary]).size).toBe(3);
-
-  // The collapsed group says the same for each of its connections: the
-  // connection's name, the same glyph or none, and the status in words only
-  // for a screen reader.
+  // Every lane has a reason in words, and none is drawn as ready from a key
+  // the service has not used yet.
   for (const declared of SERVED_LANES) {
-    const chip = providerGroup(target, declared.provider).locator(
-      `summary [data-lane-summary="${declared.id}"]`,
-    );
-    const status = await statusMark(lane(target, declared.id)).getAttribute(
-      "data-status",
-    );
-    expect(status, declared.id).toBeTruthy();
-    await expect(statusMark(chip)).toHaveAttribute("data-status", status ?? "");
-    await expect(chip).toHaveText(
-      connectionLabel(declared) + (await statusMark(chip).textContent()),
-    );
-    await expect(chip.locator("[data-icon]")).toHaveCount(
-      GLYPH[status as Status] ? 1 : 0,
+    const card = lane(target, declared.id);
+    await expect(statusMark(card), declared.id).not.toHaveAttribute(
+      "data-reason",
+      "",
     );
   }
-  const quietChip = providerGroup(target, "kimi").locator(
-    'summary [data-lane-summary="kimi_api"]',
-  );
-  const readyChip = providerGroup(target, "zai").locator(
-    'summary [data-lane-summary="zai_api"]',
-  );
-  expect(await colourOf(quietChip)).toBe(secondary);
-  expect(await colourOf(readyChip)).not.toBe(secondary);
 
-  // A saved key is not ready, so it stays quiet text with no glyph.
+  // A saved key reads as saved and checked on first use, never as ready.
   await saveKey(target, "kimi_api", FAKE_KEY);
-  await expectStatus(unset, "saved");
-  await expect(statusMark(quietChip)).toHaveAttribute("data-status", "saved");
-  await expect(quietChip.locator("[data-icon]")).toHaveCount(0);
-  expect(await colourOf(quietChip)).toBe(secondary);
-  expect(await colourOf(name(unset))).toBe(secondary);
+  await expectStatus(keyLane, "saved");
+  await expect(statusMark(keyLane)).toHaveAttribute("data-reason", "key_saved");
+  await expect(reasonOf(keyLane)).toHaveText(
+    label("desktop.providers.reason_key_saved"),
+  );
 });
 
 test("settings search finds providers and agent keys", async ({
@@ -359,8 +356,9 @@ test("settings search finds providers and agent keys", async ({
   await expect(access).toBeVisible();
 
   await search.fill("Codex");
-  await expect(providerGroup(target, "codex")).toBeVisible();
-  await expect(providerGroup(target, "kimi")).toBeHidden();
+  await expect(providerGroup(target, "codex").first()).toBeVisible();
+  for (const row of await providerGroup(target, "kimi").all())
+    await expect(row).toBeHidden();
 
   await search.fill(label("desktop.providers.connection_api"));
   for (const declared of SERVED_LANES) {
@@ -450,7 +448,7 @@ test("provider settings read errors give a refresh action without exposing a cod
 });
 
 for (const language of ["es", "hu"] as const) {
-  test(`provider group names and connection marks fit a narrow ${language} panel`, async ({
+  test(`provider rows keep their name, status and controls inside a narrow ${language} panel`, async ({
     page: target,
   }) => {
     await target.setViewportSize({ width: 390, height: 844 });
@@ -464,65 +462,40 @@ for (const language of ["es", "hu"] as const) {
     const alpha = SERVED_LANES.find(
       (declared) => declared.display_name === "Example Alpha",
     )!;
-    const measureGroup = async (provider: string) =>
-      providerSettings
-        .locator(`li[data-provider="${provider}"] > details > summary`)
-        .evaluate((summary) => {
-          const header = summary.children[0] as HTMLElement;
-          const chevron = summary.children[1] as HTMLElement;
-          const statuses = summary.children[2] as HTMLElement;
-          const name = header.querySelector("h4") as HTMLElement;
-          const box = (node: HTMLElement) => {
-            const rect = node.getBoundingClientRect();
-            return {
-              left: rect.left,
-              right: rect.right,
-              top: rect.top,
-              bottom: rect.bottom,
-              width: rect.width,
-              height: rect.height,
-            };
-          };
-          return {
-            summary: {
-              width: summary.clientWidth,
-              scrollWidth: summary.scrollWidth,
-            },
-            header: box(header),
-            name: box(name),
-            lineHeight: Number.parseFloat(getComputedStyle(name).lineHeight),
-            chevron: box(chevron),
-            statuses: box(statuses),
-            chips: [...statuses.children].map((chip) =>
-              box(chip as HTMLElement),
-            ),
-          };
-        });
-
     for (const declared of [gamma, alpha]) {
-      const summary = providerSettings.locator(
-        `li[data-provider="${declared.provider}"] > details > summary`,
-      );
-      await expect(summary.getByRole("heading", { level: 4 })).toHaveText(
+      const row = providerSettings.locator(`[data-lane="${declared.id}"]`);
+      await expect(row.getByRole("heading", { level: 4 })).toContainText(
         declared.display_name,
       );
-      const metrics = await measureGroup(declared.provider);
-      expect(metrics.summary.scrollWidth).toBeLessThanOrEqual(
-        metrics.summary.width,
+      const metrics = await row.evaluate((node) => {
+        const header = node.firstElementChild as HTMLElement;
+        const name = node.querySelector("h4") as HTMLElement;
+        const box = (element: Element) => {
+          const rect = element.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, width: rect.width };
+        };
+        return {
+          header: {
+            ...box(header),
+            clientWidth: header.clientWidth,
+            scrollWidth: header.scrollWidth,
+          },
+          name: box(name),
+          controls: [
+            node.querySelector("[data-slot=provider-status]"),
+            node.querySelector("[role=switch]"),
+            node.querySelector("[data-slot=lane-expander]"),
+          ].map((element) => box(element!)),
+        };
+      });
+      expect(metrics.header.scrollWidth).toBeLessThanOrEqual(
+        metrics.header.clientWidth,
       );
       expect(metrics.name.width).toBeGreaterThan(80);
-      expect(metrics.name.height).toBeLessThanOrEqual(
-        metrics.lineHeight * 2 + 1,
-      );
-      expect(
-        Math.abs(metrics.chevron.top - metrics.header.top),
-      ).toBeLessThanOrEqual(2);
-      expect(metrics.statuses.top).toBeGreaterThanOrEqual(
-        metrics.header.bottom - 1,
-      );
-      for (const chip of metrics.chips) {
-        expect(chip.left).toBeGreaterThanOrEqual(metrics.statuses.left - 1);
-        expect(chip.right).toBeLessThanOrEqual(metrics.statuses.right + 1);
+      for (const control of metrics.controls) {
+        expect(control.width).toBeGreaterThan(0);
+        expect(control.left).toBeGreaterThanOrEqual(metrics.header.left - 1);
+        expect(control.right).toBeLessThanOrEqual(metrics.header.right + 1);
       }
     }
     expect(
@@ -621,8 +594,9 @@ test("a key is saved from the agent's settings and never kept anywhere", async (
       name: label("desktop.providers.replace_key"),
     }),
   ).toBeVisible();
-  // The other lane of the same provider is not changed by it.
-  await expectStatus(lane(target, "kimi_cli"), "setup_needed");
+  // The provider's app lane is not changed by it: it still signs in through
+  // the app.
+  await expectStatus(lane(target, "kimi_cli"), "sign_in_needed");
   // Nowhere a key could be left behind holds it.
   expect(await traces(target, FAKE_KEY)).toEqual(NO_TRACE);
 });
@@ -699,28 +673,18 @@ test("a gateway takes its address, and one with no default needs it", async ({
   expect(await traces(target, FAKE_KEY)).toEqual(NO_TRACE);
 });
 
-/** The entries of the agent's provider list, by lane, as the composer's
- * model settings offer them. */
+/** The lanes the composer's model picker offers as it opens, by way: a lane
+ * turned off is left out of them, only counted. */
 async function pickerWays(target: Page) {
-  await target
-    .locator(".pane-agent")
-    .getByRole("button", {
-      name: new RegExp(
-        `^${escaped(label("desktop.agent.settings_label", { current: "" }))}`,
-      ),
-    })
-    .first()
-    .click();
-  await target
-    .getByRole("dialog", { name: label("desktop.agent.settings_title") })
-    .getByRole("button", { name: label("desktop.agent.provider") })
-    .click();
-  const ways = await target
-    .getByRole("listbox")
-    .locator("[role=option][data-way]")
+  const picker = await openModelPicker(target);
+  await expect(
+    picker.locator("[data-slot=model-matrix-lane]").first(),
+  ).toBeVisible();
+  const ways = await picker
+    .locator("tr[data-slot=model-matrix-lane][data-way]")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-way")));
   await target.keyboard.press("Escape");
-  await target.keyboard.press("Escape");
+  await expect(picker).toBeHidden();
   return ways;
 }
 
@@ -747,10 +711,14 @@ test("every connection has one switch, apart from its setup, and one turned off 
   await expect(toggle).toBeChecked();
   await toggle.click();
   await expect(toggle).not.toBeChecked();
-  await expectStatus(alpha, "off");
-  // Off keeps the key, and setting it up waits until it is on again.
-  await expect(alpha).toContainText(label("desktop.providers.detail_off_kept"));
-  await expect(alpha.getByRole("button")).toHaveCount(0);
+  await expectStatus(alpha, "off", true);
+  // Off keeps the key, and setting it up waits until it is on again: the
+  // switch and the expander are its only controls.
+  await expect(reasonOf(alpha)).toHaveText(
+    label("desktop.providers.reason_turned_off"),
+  );
+  await expect(alpha.getByRole("button")).toHaveCount(1);
+  await expect(alpha.locator("[data-slot=lane-expander]")).toHaveCount(1);
 
   await settingsButton(target).click();
   expect(await pickerWays(target)).not.toContain("kimi/api");
@@ -775,7 +743,9 @@ test("a connection that signs in through its app turns off and on like any other
   const beta = lane(target, "qwen_cli");
   await beta.getByRole("switch").click();
   await expectStatus(beta, "off");
-  await expect(beta).toContainText(label("desktop.providers.detail_off"));
+  await expect(reasonOf(beta)).toHaveText(
+    label("desktop.providers.reason_turned_off"),
+  );
   await beta.getByRole("switch").click();
   await expectStatus(beta, "sign_in_needed");
   // It has no key to change.
@@ -972,11 +942,13 @@ test("successful provider sign-in shows completion and returns to settings", asy
     (call) => call === "agentProviderCatalogResolved",
   ).length;
   await target.evaluate(() =>
-    window.__scenarioProviderSignIn!.succeedCurrentAttempt(),
+    window.__scenarioProviderSignIn!.succeedCurrentAttempt(true),
   );
   await expect(dialog).toHaveCount(0);
   await expect(settings(target)).toBeVisible();
-  await expectStatus(lane(target, signInCapableLane.id), "not_checked");
+  // The app is signed in now, so the lane is: the service checks it when it
+  // is first used.
+  await expectStatus(lane(target, signInCapableLane.id), "signed_in");
   await expect
     .poll(
       async () =>
@@ -1191,7 +1163,8 @@ test("closing during active sign-in refreshes the committed provider revision", 
     )
     .toBeGreaterThan(previousReads);
 
-  await expectStatus(card, "not_checked");
+  // A cancelled sign-in leaves the app signed out, so it still needs one.
+  await expectStatus(card, "sign_in_needed");
 
   // Starting again succeeds only with the revision returned by that refresh.
   await card
