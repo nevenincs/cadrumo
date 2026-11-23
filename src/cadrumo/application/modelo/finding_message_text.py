@@ -90,6 +90,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "reduccion_id": FindingFactKind.BOX,
         "rnt_id": FindingFactKind.BOX,
         "floor_box": FindingFactKind.BOX,
+        "contribution_casilla_id": FindingFactKind.BOX,
         "boxes": FindingFactKind.BOXES,
         "casilla_number": FindingFactKind.BOX_NUMBER,
         # Modelos and years.
@@ -135,6 +136,11 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "floor_value": FindingFactKind.MONEY,
         "limited_total": FindingFactKind.MONEY,
         "after_limited": FindingFactKind.MONEY,
+        "stored_value": FindingFactKind.MONEY,
+        "invoice_sourced_value": FindingFactKind.MONEY,
+        "typed_value": FindingFactKind.MONEY,
+        "modification_base_value": FindingFactKind.MONEY,
+        "recargo_value": FindingFactKind.MONEY,
         # Other figures.
         "declared": FindingFactKind.NUMBER,
         "transaction_amount": FindingFactKind.NUMBER,
