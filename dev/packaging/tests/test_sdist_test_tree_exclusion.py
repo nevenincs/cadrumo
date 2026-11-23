@@ -19,15 +19,18 @@ what a consumer downloads.
 
 from __future__ import annotations
 
+import os
 import shutil
 import tarfile
 from pathlib import PurePosixPath
 
 import pytest
 
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
 from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
+from .test_google_oauth_provisioning import client_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -64,9 +67,12 @@ def sdist_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
     if uv is None:
         raise AssertionError("uv binary not found on PATH; the sdist test-tree gate cannot build its subject")
     out_dir = tmp_path_factory.mktemp("sdist-test-tree")
+    # A module fixture runs before the function-scoped synthetic client exists,
+    # so the build subprocess receives a synthetic client directly.
     completed = run_command(
         [uv, "build", "--sdist", "--out-dir", str(out_dir)],
         cwd=REPO_ROOT,
+        environment={**os.environ, GOOGLE_OAUTH_ENV: client_document()},
     )
     if completed.returncode != 0:
         raise RuntimeError(f"uv sdist build failed: {completed.stderr}")

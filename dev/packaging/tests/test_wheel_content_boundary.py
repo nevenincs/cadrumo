@@ -50,8 +50,11 @@ from dev.packaging.authority_staging import (
     AUTHORITY_ROOT_ENV,
     authoring_authority_root,
 )
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
 from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files, snapshot
+
+from .test_google_oauth_provisioning import client_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -201,9 +204,12 @@ def _built_once_per_run(
 
 
 def _uv_build(arguments: list[str], out_dir: Path, source: Path) -> None:
+    # The module fixtures that call this run before the function-scoped
+    # synthetic client exists, so the build subprocess receives one directly.
     subprocess.run(
         ["uv", "build", *arguments, "--out-dir", str(out_dir)],
         cwd=source,
+        env={**os.environ, GOOGLE_OAUTH_ENV: client_document()},
         capture_output=True,
         text=True,
         check=True,

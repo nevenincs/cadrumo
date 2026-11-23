@@ -78,6 +78,7 @@ per function, so a module can hold both labelled and unlabelled cases.
 | `windows_only` | Tests whose subject exists only on Windows (installed executable stubs, process behavior, and direct login surfaces). | `just test-windows` |
 | `resident_service` | Tests that query the running resident search service. | `just test-resident-service` |
 | `private_ingest_corpus` | Tests that score the ingestion harness against the external measurement corpus named by `CADRUMO_INGEST_CORPUS_ROOT`; they fail, never skip, without it. | `just test-ingest-corpus` |
+| `google_publisher_client` | Tests that read the packaged installation client resource staged from the publisher's Google Desktop OAuth client (`CADRUMO_GOOGLE_OAUTH_CLIENT_JSON`); they fail, never skip, without it. | `just test-google-publisher-client` |
 
 Ordinary lanes exclude the capability labels, so the label—not a path
 `--ignore`—is what holds those tests out.

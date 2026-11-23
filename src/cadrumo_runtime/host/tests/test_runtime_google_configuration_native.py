@@ -336,6 +336,7 @@ def _logout_twice_and_keep_folder(
         assert load_drive_config(profile_id) == reopened_folder
 
 
+@pytest.mark.google_publisher_client
 def test_native_google_configuration_installation_client_and_exact_profile_records(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
