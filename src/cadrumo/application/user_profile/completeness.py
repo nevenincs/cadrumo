@@ -39,10 +39,8 @@ FISCAL_RESIDENCY_PATH = "taxpayer_type.fiscal_residency"
 COUNTRY_OF_FISCAL_RESIDENCE_PATH = "taxpayer_type.country_of_fiscal_residence"
 REPRESENTANTE_FISCAL_NIF_PATH = "taxpayer_type.representante_fiscal_nif"
 REPRESENTANTE_FISCAL_NOMBRE_PATH = "taxpayer_type.representante_fiscal_nombre"
-ENTITY_TYPE_PATH = TaxpayerModelFact.ENTITY_TYPE.value
 LEGAL_ENTITY_FORM_PATH = "taxpayer_type.legal_entity_form"
 LEGAL_NAME_PATH = "identity.legal_name"
-IRPF_INCOME_CATEGORIES_PATH = TaxpayerModelFact.IRPF_INCOME_CATEGORIES.value
 IVA_REGIME_PATH = "iva.regime"
 AUTH_PROVIDER_PATH = "auth.provider"
 CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
@@ -114,12 +112,12 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
 
 def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
     """Derive the conditional requirements inside a pinned registry scope."""
-    entity_type = _token(values.get(ENTITY_TYPE_PATH)).lower() or None
+    entity_type = _token(values.get(TaxpayerModelFact.ENTITY_TYPE.value)).lower() or None
     required: list[str] = [fact.value for fact in taxpayer_model_required_facts(entity_type)]
     required.extend(modelo_iva_profile_required_paths(values))
     required.extend(filing_cadence_profile_required_paths(values))
 
-    if _token(values.get(ENTITY_TYPE_PATH)).lower() == entity_type_legal_entity_token().value:
+    if _token(values.get(TaxpayerModelFact.ENTITY_TYPE.value)).lower() == entity_type_legal_entity_token().value:
         # A legal entity without a declared form has no selector for its
         # corporate tax rate schedule; the schema's `required` axis is
         # unconditional so the conditional requirement lives here.
@@ -257,11 +255,13 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     profile persistence.
     """
     with pinned_registry_scope():
-        entity_type = _token(values.get(ENTITY_TYPE_PATH))
+        entity_type = _token(values.get(TaxpayerModelFact.ENTITY_TYPE.value))
         if entity_type != entity_type_natural_person_token().value:
             return True
         categories = {
-            token.strip() for token in _token(values.get(IRPF_INCOME_CATEGORIES_PATH)).split(",") if token.strip()
+            token.strip()
+            for token in _token(values.get(TaxpayerModelFact.IRPF_INCOME_CATEGORIES.value)).split(",")
+            if token.strip()
         }
         return irpf_income_category_actividad_economica_token().value in categories
 
@@ -411,9 +411,7 @@ __all__ = [
     "AUTH_PROVIDER_PATH",
     "CLAVE_MOVIL_ROUTE_PATH",
     "COUNTRY_OF_FISCAL_RESIDENCE_PATH",
-    "ENTITY_TYPE_PATH",
     "FISCAL_RESIDENCY_PATH",
-    "IRPF_INCOME_CATEGORIES_PATH",
     "IVA_REGIME_PATH",
     "REPRESENTANTE_FISCAL_NIF_PATH",
     "REPRESENTANTE_FISCAL_NOMBRE_PATH",

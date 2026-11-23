@@ -15,6 +15,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from ....domain.calculations.registry.applicability_models import TaxpayerModelFact
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.irpf_income_categories import (
     irpf_income_category_actividad_economica_token,
@@ -27,8 +28,6 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.contribuyente.entity_type import entity_type_natural_person_token
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ..completeness import (
-    ENTITY_TYPE_PATH,
-    IRPF_INCOME_CATEGORIES_PATH,
     IVA_REGIME_PATH,
     missing_required_field_paths,
     schema_requirement_applies,
@@ -50,8 +49,8 @@ def _values(*, economic_activity: bool) -> dict[str, str]:
             else next(choice.value for choice in irpf_income_category_choices() if choice.value != activity)
         )
         return {
-            ENTITY_TYPE_PATH: entity_type_natural_person_token().value,
-            IRPF_INCOME_CATEGORIES_PATH: category,
+            TaxpayerModelFact.ENTITY_TYPE.value: entity_type_natural_person_token().value,
+            TaxpayerModelFact.IRPF_INCOME_CATEGORIES.value: category,
         }
 
 
