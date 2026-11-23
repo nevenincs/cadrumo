@@ -24,7 +24,7 @@ from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.service_access import ServiceConnected, ServiceLease
-from dev.runtime_lifecycle.caller_owned_root import Programs
+from dev.runtime_lifecycle.caller_owned_root import COMMAND_SECONDS, Programs
 from dev.runtime_lifecycle.packaged_service_process import PackagedServiceProcess
 from dev.runtime_lifecycle.proof_support import Profile
 
@@ -170,8 +170,8 @@ class _Service:
             raise session_module.AcceptanceError("controlled event failure")
         return {"event": "refused", "code": "agent_provider_credential_missing"}
 
-    def admin(self, port: int, action: str) -> dict[str, Any]:
-        self.steps.append(f"service.admin.{action}")
+    def admin(self, port: int, action: str, *, within: float) -> dict[str, Any]:
+        self.steps.append(f"service.admin.{action}.within={within}")
         assert port == 45678
         return {"kind": action, "rows": []}
 
@@ -272,13 +272,16 @@ def test_shared_session_starts_runtime_first_and_reuses_one_profile_holder_and_s
         }
         assert shared.catalog() == {"kind": "catalog", "rows": []}
         assert shared.status() == {"kind": "status", "rows": []}
+        assert f"service.admin.catalog.within={process_module.ADMIN_EXCHANGE_SECONDS}" in steps
+        assert f"service.admin.status.within={process_module.ADMIN_EXCHANGE_SECONDS}" in steps
 
-        calls = _record_cli_calls(monkeypatch, (0, {"status": "success"}))
+        calls, timeouts = _record_cli_calls(monkeypatch, (0, {"status": "success"}))
         assert shared.cli_read("app", "ledger", "list", reveal_identifiers=True) == (0, {"status": "success"})
         arguments, environment, secret = calls[0]
         assert arguments[0] == "--profile-secrets-stdin"
         assert environment["CADRUMO_CLI_REVEAL_IDENTIFIERS"] == "true"
         assert secret == {"profile_passphrase": "test-profile-password"}
+        assert timeouts == [COMMAND_SECONDS]
 
         shared.cli_read("app", "ledger", "list", reveal_identifiers=False)
         assert calls[1][0][0] == "--profile-secrets-stdin"
@@ -526,21 +529,24 @@ def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
 
 def _record_cli_calls(
     monkeypatch: pytest.MonkeyPatch, reply: tuple[int, dict[str, Any]]
-) -> list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]]:
-    """Replace the session's CLI runner with one that records each call and answers ``reply``."""
+) -> tuple[list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]], list[float]]:
+    """Replace the session's CLI runner with one that records each call and its bound, and answers ``reply``."""
     calls: list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]] = []
+    timeouts: list[float] = []
 
     def cli(
         _programs: Programs,
         environment: Mapping[str, str],
         *arguments: str,
         secret: Mapping[str, str] | None,
+        timeout: float,
     ) -> tuple[int, dict[str, Any]]:
         calls.append((arguments, environment, secret))
+        timeouts.append(timeout)
         return reply
 
     monkeypatch.setattr(session_module, "run_cli", cli)
-    return calls
+    return calls, timeouts
 
 
 @pytest.mark.parametrize("persisted", [True, False], ids=["stored-sign-in", "profile-input"])
@@ -552,11 +558,12 @@ def test_cli_read_uses_exactly_one_authority_for_person_owned_read(
     session.environment = {"CADRUMO_STORAGE_ROOT": "synthetic-root"}
     session.profile = Profile("session-profile", "test-profile-password", _PROFILE_ID)
     session.login_session_persisted = persisted
-    calls = _record_cli_calls(monkeypatch, (1, {"status": "refused", "code": "sign_in_required"}))
-    result = session.cli_read("app", "ledger", "list", reveal_identifiers=True)
+    calls, timeouts = _record_cli_calls(monkeypatch, (1, {"status": "refused", "code": "sign_in_required"}))
+    result = session.cli_read("app", "ledger", "list", reveal_identifiers=True, timeout=600)
 
     assert result == (1, {"status": "refused", "code": "sign_in_required"})
     assert len(calls) == 1
+    assert timeouts == [600]
     arguments, environment, secret = calls[0]
     assert ("--profile-secrets-stdin" in arguments) is (not persisted)
     assert secret == ({"profile_passphrase": "test-profile-password"} if not persisted else None)
