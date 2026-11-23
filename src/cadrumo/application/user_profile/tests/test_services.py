@@ -51,6 +51,14 @@ def _governed_facts_in_scope(operation: PinnedAuthorityOperation) -> Iterator[No
         yield
 
 
+#: The taxpayer model facts a ready profile states: without them the calendar cannot
+#: place the taxpayer, so a profile is never ready regardless of the axis under test.
+_TAXPAYER_MODEL = (
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+)
+
+
 def _record(
     schema: ProfileSchemaDefinition,
     operation: PinnedAuthorityOperation,
@@ -220,7 +228,7 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(
     record = _record(
         schema,
         operation,
-        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+        facts=(*_TAXPAYER_MODEL, UserProfileFact(path="identity.tax_id", value="12345678Z")),
     )
     report = svc.report(
         record=record,
@@ -260,7 +268,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
     complete_record = _record(
         schema,
         operation,
-        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+        facts=(*_TAXPAYER_MODEL, UserProfileFact(path="identity.tax_id", value="12345678Z")),
     )
     ready_report = svc.report(
         record=complete_record,
@@ -274,7 +282,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
     assert ready_report.ready and ready_report.missing == ()
     assert reads == []
 
-    empty_record = _record(schema, operation)
+    empty_record = _record(schema, operation, facts=_TAXPAYER_MODEL)
     missing_report = svc.report(
         record=empty_record,
         modelo="100",
@@ -329,6 +337,7 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
     """A teaching employer owes the attestation: both boolean declarations are complete, absence is a refusal."""
     service = ProfilePreflightService(schema=schema)
     payroll_at_a_school = (
+        *_TAXPAYER_MODEL,
         UserProfileFact(path="withholding.has_employees", value=True),
         UserProfileFact(path="activities.iae_epigraph", value="931.1"),
     )

@@ -31,6 +31,8 @@ def _governed_facts_in_scope(operation: PinnedAuthorityOperation) -> Iterator[No
 
 
 _BASE_VALUES: dict[str, str] = {
+    "taxpayer_type.entity_type": "natural_person",
+    "taxpayer_type.irpf_income_categories": "actividad_economica",
     "identity.tax_id": "X0001500M",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
@@ -44,11 +46,15 @@ _BASE_VALUES: dict[str, str] = {
 
 def test_an_unchosen_clave_movil_route_never_makes_a_profile_incomplete() -> None:
     """An unchosen route resolves to the app request, so it is never owed."""
-    unchosen_route = conditional_profile_missing_required({"auth.provider": "clave_movil"})
+    taxpayer_model = {
+        "taxpayer_type.entity_type": "natural_person",
+        "taxpayer_type.irpf_income_categories": "actividad_economica",
+    }
+    unchosen_route = conditional_profile_missing_required({**taxpayer_model, "auth.provider": "clave_movil"})
     configured_qr = conditional_profile_missing_required(
-        {"auth.provider": "clave_movil", "auth.clave_movil_route": "qr"},
+        {**taxpayer_model, "auth.provider": "clave_movil", "auth.clave_movil_route": "qr"},
     )
-    certificate = conditional_profile_missing_required({"auth.provider": "certificate"})
+    certificate = conditional_profile_missing_required({**taxpayer_model, "auth.provider": "certificate"})
 
     assert unchosen_route == ()
     assert configured_qr == ()

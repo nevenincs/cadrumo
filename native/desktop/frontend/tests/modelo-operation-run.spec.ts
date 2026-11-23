@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { LedgerOutcome } from "../src/shell/ledger";
+import type { LedgerErrorDetail, LedgerOutcome } from "../src/shell/ledger";
 import type { ModeloPort } from "../src/shell/modelo";
 import { runOperation } from "../src/components/modelo/dialogs/operationRun";
 import { fixtureYear } from "../src/dev/fixtureDates";
@@ -152,22 +152,23 @@ test("rejections are told apart by what reached the runtime", async () => {
 });
 
 test("a rejected submission reads its served refusal without sending again", async () => {
+  const served: LedgerErrorDetail = {
+    detail_version: 1,
+    kind: "operation_error",
+    error_code: null,
+    message_key: null,
+    context: [],
+    context_entries_omitted: 0,
+    precondition_verdict_json: null,
+    refusal_words: "The backend served this explanation.",
+  };
   const { port, calls } = observing([
     () => ({
       kind: "refused",
       operation_id: "op-refused",
       revision: 2,
       reason: "observed_reason",
-      detail: {
-        detail_version: 1,
-        kind: "operation_error",
-        error_code: null,
-        message_key: null,
-        context: [],
-        context_entries_omitted: 0,
-        precondition_verdict_json: null,
-        refusal_words: "The backend served this explanation.",
-      },
+      detail: served,
     }),
   ]);
   let sent = 0;
@@ -190,7 +191,8 @@ test("a rejected submission reads its served refusal without sending again", asy
     reason: "original_reason",
     words: "The backend served this explanation.",
     step: null,
-    detail: null,
+    // The observed refusal's served detail, never the rejection's own.
+    detail: served,
   });
   expect(sent).toBe(1);
   expect(calls.operationIds).toEqual(["op-refused"]);

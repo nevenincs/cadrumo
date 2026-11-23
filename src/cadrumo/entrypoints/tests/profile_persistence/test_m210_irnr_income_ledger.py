@@ -163,6 +163,8 @@ def _seed_m210_profile() -> None:
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="activities.description", value="Spanish-source income"),
                 UserProfileFact(path="iva.regime", value=_iva_regime().value),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),

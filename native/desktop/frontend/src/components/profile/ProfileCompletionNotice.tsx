@@ -9,16 +9,20 @@ import type { UserProfile } from "../../shell/userProfile";
 
 /** The profile's own completion state and independently reported calendar
  * evidence, kept compact until the person asks to read the details.
- * `evidence` is the calendar's own sentences about what it had to assume. */
+ * `evidence` is the calendar's own sentences about what it had to assume;
+ * `missingPaths` the profile facts a served surface still waits for, named
+ * with the profile's own missing details in one list. */
 export function ProfileCompletionNotice({
   profile,
   evidence = [],
+  missingPaths = [],
   onNavigate,
   actions = {},
   className,
 }: {
   profile: UserProfile | null;
   evidence?: readonly string[];
+  missingPaths?: readonly string[];
   onNavigate?: (url: string) => void;
   /** Doors this surface can open, keyed by the catalogue action a served
    * notice names; a notice whose action has no door here shows text only. */
@@ -29,7 +33,10 @@ export function ProfileCompletionNotice({
   const detailsId = useId();
   const [expanded, setExpanded] = useState(false);
   const incomplete = profile?.setup_state === "incomplete";
-  const missing = new Set(profile?.missing_required ?? []);
+  const missing = new Set([
+    ...(profile?.missing_required ?? []),
+    ...missingPaths,
+  ]);
   const attention = profile !== null && (!profile.valid || missing.size > 0);
   const profileAttention = attention || (profile?.notices.length ?? 0) > 0;
   const labels =

@@ -131,3 +131,34 @@ test("missing fields remain attention even when setup is complete, and collapse 
     calendar.getByText(label("desktop.profile.notice.attention")),
   ).toHaveCount(0);
 });
+
+test("an undeclared taxpayer model names every missing fact at once, by the profile's own labels", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=user-profile&calendar=undeclared_taxpayer&latency=0&bar=off&lang=en",
+  );
+  await page
+    .locator(".rail")
+    .getByRole("button", { name: label("desktop.calendar.title"), exact: true })
+    .click();
+  const calendar = page.locator(".calendar-page");
+  await calendar
+    .getByRole("button", { name: label("desktop.profile.notice.show_details") })
+    .click();
+  // Both facts the calendar waits for are listed together, under the labels
+  // the profile itself shows for them, before either has been answered.
+  await expect(
+    calendar.getByRole("listitem").filter({ hasText: /^Entity type$/ }),
+  ).toHaveCount(1);
+  await expect(
+    calendar
+      .getByRole("listitem")
+      .filter({ hasText: /^IRPF income categories$/ }),
+  ).toHaveCount(1);
+  await expect(
+    calendar.getByText(
+      "Synthetic sentence: the calendar waits for the entity type. Synthetic sentence: the calendar waits for the income categories.",
+    ),
+  ).toBeVisible();
+});

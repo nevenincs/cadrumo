@@ -103,7 +103,9 @@ _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
     {
         # Needs a tool outside the Python dependency set: LibreOffice for binary
         # .xls conversion, or the full locale orthography pass, which needs
-        # dictionaries that `just setup` provisions but no CI lane enrols.
+        # dictionaries that `just setup` provisions but no CI lane enrols, or
+        # the lock-selected runtime wheels an installed-oracle cohort build
+        # acquires, which the network guard refuses to fetch inside pytest.
         "external_tool",
         # Reads a real external service; opt-in, and never enabled on CI.
         "aeat_live",

@@ -22,11 +22,17 @@ from ....domain.calculations.registry.applicability import (
 from ....domain.calculations.registry.authority import IndexedRegistryAuthority, PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, latest_period_end
 from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 from ..calendar_warnings import derive_gating_fields
-from ..coverage import build_obligation_coverage
+from ..coverage import CoverageAdviceReason, build_obligation_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,6 +58,9 @@ def _autonomo() -> TaxpayerProfile:
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
+        # Stated so every held-off row carries the verdict the lease decides,
+        # not a window an unanswered cadence question leaves undecided.
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 
@@ -129,8 +138,17 @@ def test_the_held_operation_decides_exactly_as_a_fresh_lease_does(operation: Pin
         assert (
             row.verdict == derive_modelo_applicability(profile, row.modelo, reference_date=latest_period_end()).verdict
         )
+    # A window an unanswered fact leaves undecided is the calendar's input to
+    # coverage, not something a fresh lease re-derives; it is passed through so
+    # the comparison judges the lease alone.
+    undetermined = {
+        row.modelo for row in calendar.coverage.advised if row.reason is CoverageAdviceReason.APPLICABILITY_UNDETERMINED
+    }
     assert calendar.coverage == build_obligation_coverage(
-        profile, {entry.modelo for entry in calendar.entries} | set(calendar.coverage.surfaced), today=_TODAY
+        profile,
+        {entry.modelo for entry in calendar.entries} | set(calendar.coverage.surfaced),
+        today=_TODAY,
+        undetermined_modelos=undetermined,
     )
 
 

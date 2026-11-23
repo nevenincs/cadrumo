@@ -43,12 +43,13 @@ from ...core.post_filing_event import PostFilingEventKind
 from ...core.prose_elision import ElidedProse
 from ...core.source_locator import SourceUrl
 from ...core.time.date_range import validate_inclusive_date_range
-from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict, TaxpayerModelFact
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage, HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus, Recovery
 from ..operator_actions.models import DeclaredNextAction
 from .coverage import ObligationCoverageReport
+from .suppressed_verdict_words import SUPPRESSING_VERDICTS
 
 
 def _hydrate_calendar_period(value: object) -> object:
@@ -749,6 +750,11 @@ class SuppressedCalendarEntry(BaseModel):
     def _window_is_ordered(self) -> Self:
         if self.opens_on > self.adjusted_closes_on or self.closes_on > self.adjusted_closes_on:
             raise ValueError("a suppressed obligation's window closes before it opens")
+        # A held-off row is served with the sentence of its verdict; one with
+        # no sentence would fail the whole calendar read when it is projected,
+        # so it is refused where it is built.
+        if self.verdict not in SUPPRESSING_VERDICTS:
+            raise ValueError("a suppressed obligation carries a verdict that holds nothing off the schedule")
         return self
 
 
@@ -774,9 +780,17 @@ class OverviewCalendar(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
+    undeclared_profile_facts: tuple[TaxpayerModelFact, ...] = Field(default=())
+    """Every profile fact the taxpayer model still lacks, each named by the profile path that answers it."""
     suppressed_entries: tuple[SuppressedCalendarEntry, ...] = Field(default=())
     events: tuple[OverviewCalendarEvent, ...] = Field(default=())
     coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
+
+    @model_validator(mode="after")
+    def _undeclared_facts_match_the_model(self) -> Self:
+        if self.taxpayer_model_declared and self.undeclared_profile_facts:
+            raise ValueError("a calendar with a declared taxpayer model names no undeclared profile fact")
+        return self
 
 
 class OverviewStatusReport(BaseModel):

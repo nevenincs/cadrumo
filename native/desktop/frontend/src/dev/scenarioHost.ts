@@ -66,7 +66,10 @@ import { agentAccessFixture } from "./agentAccessFixture";
 import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
-import { UNANSWERED_IVA_CALENDAR } from "./fixtures/calendarSuppressed";
+import {
+  UNANSWERED_IVA_CALENDAR,
+  UNDECLARED_TAXPAYER_CALENDAR,
+} from "./fixtures/calendarSuppressed";
 import {
   providerSettingsFixture,
   type ProviderSignInFixtureControls,
@@ -215,6 +218,8 @@ export const CALENDAR_SHAPES = {
   close_unknown: CLOSE_UNKNOWN_CALENDAR,
   // The IVA block claimed with its four yes/no questions unanswered.
   unanswered_iva: UNANSWERED_IVA_CALENDAR,
+  // Neither the entity type nor the income categories stated.
+  undeclared_taxpayer: UNDECLARED_TAXPAYER_CALENDAR,
   // The filing-year envelope the read was served under, in each state.
   support_supported: SUPPORTED_CALENDAR,
   support_bounded: BOUNDED_CALENDAR,

@@ -42,8 +42,16 @@ from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.time.clock import now
-from ...domain.calculations.registry.applicability import derive_modelo_applicability, taxpayer_model_is_declared
-from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict, ModeloApplicability
+from ...domain.calculations.registry.applicability import (
+    derive_modelo_applicability,
+    taxpayer_model_is_declared,
+    undeclared_taxpayer_model_facts,
+)
+from ...domain.calculations.registry.applicability_models import (
+    ApplicabilityVerdict,
+    ModeloApplicability,
+    TaxpayerModelFact,
+)
 from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff
 from ...domain.deadlines.effective_close import EffectiveFilingDeadline, effective_filing_deadline
 from ...domain.deadlines.engine import DeadlineEngine, ScheduleProducer
@@ -95,6 +103,7 @@ from .calendar_warnings import (
 from .coverage import build_obligation_coverage
 from .modelo202_instalment import Modelo202InstalmentVerdict, modelo_202_instalment_verdict
 from .next_actions import declare_next_action
+from .suppressed_verdict_words import EXCLUDING_VERDICTS
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -856,7 +865,12 @@ def _question_locale_key(path: str) -> str | None:
 
 
 def _undetermined_calendar_entry(item: UndeterminedObligation) -> SuppressedCalendarEntry:
-    """Hold a window an unanswered Modelo IVA fact leaves undecided off the schedule, with the door to the question."""
+    """Hold a window an unanswered fact leaves undecided off the schedule, with the door to the question.
+
+    The window is neither owed nor excluded until the question is answered: an
+    applicable modelo whose cadence is unknown has no dated window of its own,
+    since the monthly and quarterly windows differ.
+    """
     return SuppressedCalendarEntry(
         modelo=item.modelo,
         period=item.period,
@@ -893,9 +907,39 @@ def _undetermined_in_range(
     )
 
 
-def _undeclared_taxpayer_model_reason(profile: TaxpayerProfile) -> str:
-    """Name the profile fact whose absence leaves the taxpayer model undeclared."""
-    if profile.entity_type is None:
+def _undetermined_verdicts(
+    undetermined: tuple[UndeterminedObligation, ...],
+    profile: TaxpayerProfile,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[tuple[str, int], ApplicabilityVerdict]:
+    """Judge each undecided window's modelo once per filing year, as an obligation of that year is judged.
+
+    A window whose modelo the profile confidently excludes is not owed under
+    any answer, so the open question does not concern it.
+    """
+    verdicts: dict[tuple[str, int], ApplicabilityVerdict] = {}
+    for item in undetermined:
+        key = (str(item.modelo), item.period.filing_year)
+        if key not in verdicts:
+            verdicts[key] = derive_modelo_applicability(
+                profile, str(item.modelo), reference_date=date(key[1], 12, 31), operation=operation
+            ).verdict
+    return verdicts
+
+
+def _owed_undetermined(
+    undetermined: tuple[UndeterminedObligation, ...],
+    verdicts: Mapping[tuple[str, int], ApplicabilityVerdict],
+) -> tuple[UndeterminedObligation, ...]:
+    return tuple(
+        item for item in undetermined if verdicts[(str(item.modelo), item.period.filing_year)] not in EXCLUDING_VERDICTS
+    )
+
+
+def _undeclared_fact_sentence(fact: TaxpayerModelFact) -> str:
+    """Say why the calendar waits for one unstated taxpayer-model fact."""
+    if fact is TaxpayerModelFact.ENTITY_TYPE:
         return tr("application.overview.calendar.taxpayer_model_undeclared.entity_type")
     return tr("application.overview.calendar.taxpayer_model_undeclared.irpf_income_categories")
 
@@ -912,7 +956,13 @@ def _undeclared_taxpayer_calendar(
     work_units: tuple[WorkUnit, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
 ) -> OverviewCalendar:
-    """Build the incomplete calendar of a profile whose taxpayer model is undeclared."""
+    """Build the incomplete calendar of a profile whose taxpayer model is undeclared.
+
+    Every unstated fact is named at once, from the owner the profile's own
+    readiness reads, so answering one never reveals another that was owed all
+    along.
+    """
+    undeclared = undeclared_taxpayer_model_facts(profile.entity_type, profile.irpf_income_categories)
     # An undeclared taxpayer model yields an explicit
     # incomplete answer — never a confident wrong obligation. The
     # engine does not fall back to the autónomo guess. The profile's own
@@ -939,7 +989,8 @@ def _undeclared_taxpayer_calendar(
         warnings=(),
         completeness=CalendarCompleteness(),
         taxpayer_model_declared=False,
-        incomplete_reason=_undeclared_taxpayer_model_reason(profile),
+        incomplete_reason=" ".join(_undeclared_fact_sentence(fact) for fact in undeclared),
+        undeclared_profile_facts=undeclared,
         events=calendar_events_with_filing_evidence(events, filing_evidence),
         coverage=build_obligation_coverage(
             profile,
@@ -1040,7 +1091,12 @@ def build_overview_calendar(
         operation=operation,
     )
     completeness, warnings = build_completeness_and_warnings(raw_values, entries_tuple, operation=operation)
-    undetermined = _undetermined_in_range(schedules, calendar_range, operation=operation)
+    all_undetermined = tuple(item for schedule in schedules for item in schedule.undetermined)
+    undetermined_verdicts = _undetermined_verdicts(all_undetermined, profile, operation=operation)
+    owed_undetermined = _owed_undetermined(all_undetermined, undetermined_verdicts)
+    undetermined = _owed_undetermined(
+        _undetermined_in_range(schedules, calendar_range, operation=operation), undetermined_verdicts
+    )
     if show_suppressed:
         suppressed.extend(_undetermined_calendar_entry(item) for item in undetermined)
         suppressed.sort(key=lambda s: (s.modelo, s.period.filing_year, s.period.registry_token))
@@ -1071,7 +1127,7 @@ def build_overview_calendar(
         coverage_surface_modelos | {entry.modelo for entry in entries_tuple},
         today=today,
         operation=operation,
-        undetermined_modelos={str(item.modelo) for schedule in schedules for item in schedule.undetermined},
+        undetermined_modelos={str(item.modelo) for item in owed_undetermined},
     )
     return OverviewCalendar(
         range=calendar_range,

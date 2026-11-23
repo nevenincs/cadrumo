@@ -10,20 +10,56 @@ from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
+from dev.cache_root import dev_cache_root
 from dev.paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 from .build_scratch_reclaim import require_build_path
 from .command_execution import run_command
+from .runtime_wheel_acquisition import wheel_cache_dir
 
 _DERIVED_CACHE_VARIABLES = (
     "CADRUMO_REGISTRY_DISK_CACHE_DIR",
     "CADRUMO_RECORD_DESIGN_CACHE_DIR",
     "CADRUMO_CORPUS_TEXT_CACHE_DIR",
     "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
-    "CADRUMO_RUNTIME_WHEEL_CACHE_DIR",
 )
 _TEMPORARY_VARIABLES = ("TEMP", "TMP", "TMPDIR")
+_RUNTIME_WHEEL_CACHE_VARIABLE = "CADRUMO_RUNTIME_WHEEL_CACHE_DIR"
+#: Checkout members that hold machine-managed state rather than source.
+_MACHINE_MANAGED_CHECKOUT_ROOTS = frozenset({".cache", "var"})
+
+
+class WheelCacheLocationError(ValueError):
+    """The runtime wheel cache a build would share resolves outside the machine-managed cache roots."""
+
+
+def admitted_wheel_cache(repo_root: Path) -> Path:
+    """Resolve the caller's runtime wheel cache for a build to share, refusing a source location.
+
+    Unlike the other derived caches, which a build isolates, the wheel cache is
+    passed through: every entry is named for its lock SHA-256 and re-hashed
+    before it is served, so sharing it cannot change a build's bytes, and an
+    isolated one made every cohort build fetch every wheel from the index. It
+    must still be machine-managed state: below the development cache root or a
+    checkout's ``.cache``, and never inside a checkout's source tree.
+
+    Raises:
+        WheelCacheLocationError: When the cache resolves anywhere else.
+    """
+    cache = wheel_cache_dir().resolve()
+    checkouts = tuple(dict.fromkeys((repo_root.resolve(strict=True), REPO_ROOT.resolve(strict=True))))
+    for checkout in checkouts:
+        if cache.is_relative_to(checkout):
+            relative = cache.relative_to(checkout).parts
+            if not relative or relative[0] not in _MACHINE_MANAGED_CHECKOUT_ROOTS:
+                raise WheelCacheLocationError(f"runtime wheel cache resolves inside a source tree: {cache}")
+    allowed = (dev_cache_root().resolve(), *(checkout / ".cache" for checkout in checkouts))
+    if not any(cache.is_relative_to(root) for root in allowed):
+        raise WheelCacheLocationError(
+            f"runtime wheel cache must stay below {' or '.join(str(root) for root in allowed)}: {cache}"
+        )
+    return cache
 
 
 def _path_variables(work: Path) -> dict[str, Path]:
@@ -61,6 +97,8 @@ def _admit_work(work: Path, repo_root: Path) -> Path:
 def build_environment(work: Path, *, repo_root: Path = REPO_ROOT) -> Generator[dict[str, str]]:
     """Yield independent build controls without changing the caller's environment."""
     selected = _admit_work(work, repo_root)
+    # Resolved from the caller's environment, before the cache root moves below.
+    wheel_cache = admitted_wheel_cache(repo_root)
     temporary_base = prepare_temp_root()
     with tempfile.TemporaryDirectory(prefix=f"cadrumo-build-{selected.name}-", dir=temporary_base) as temporary:
         paths = _path_variables(Path(temporary))
@@ -69,7 +107,11 @@ def build_environment(work: Path, *, repo_root: Path = REPO_ROOT) -> Generator[d
         selected.mkdir(parents=True, exist_ok=True)
         for path in dict.fromkeys(paths.values()):
             path.mkdir(parents=True, exist_ok=True)
-        yield {**{name: str(path) for name, path in paths.items()}, "PYTHONDONTWRITEBYTECODE": "1"}
+        yield {
+            **{name: str(path) for name, path in paths.items()},
+            _RUNTIME_WHEEL_CACHE_VARIABLE: str(wheel_cache),
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
 
 
 @contextmanager
