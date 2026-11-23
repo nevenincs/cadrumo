@@ -207,6 +207,44 @@ test("a detail stated per ejercicio asks the year and keeps the other years' ans
   await expect(dialog).toContainText(new RegExp(`${accrual}: `));
 });
 
+test("a detail with choices is chosen by the keyboard, and Escape leaves it unsaved", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await row(
+    profile,
+    "irpf.activity_income_imputation_criterion",
+  ).scrollIntoViewIfNeeded();
+  await editButton(profile, "Income and expense timing").click();
+  const dialog = page.getByRole("dialog", {
+    name: "Income and expense timing",
+    exact: true,
+  });
+  const select = dialog.getByRole("combobox");
+  const choices = await select
+    .locator("option")
+    .evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value),
+    );
+  expect(choices.length).toBeGreaterThan(2);
+  await select.focus();
+  await expect(select).toHaveValue(choices[0]!);
+  await page.keyboard.press("ArrowDown");
+  await expect(select).toHaveValue(choices[1]!);
+  await page.keyboard.press("ArrowDown");
+  await expect(select).toHaveValue(choices[2]!);
+  await page.keyboard.press("ArrowUp");
+  await expect(select).toHaveValue(choices[1]!);
+  await page.keyboard.press("Home");
+  await expect(select).toHaveValue(choices[0]!);
+  await page.keyboard.press("End");
+  await expect(select).toHaveValue(choices.at(-1)!);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await editButton(profile, "Income and expense timing").click();
+  await expect(dialog.getByRole("combobox")).toHaveValue(choices[0]!);
+});
+
 test("details open for editing by double click, Enter, F2 and the hover button", async ({
   page,
 }) => {

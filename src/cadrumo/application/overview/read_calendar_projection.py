@@ -9,6 +9,7 @@ from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.applicability_models import TaxpayerModelFact
 from ...domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from ...domain.deadlines.models import ObligationStatus
 from .agenda import OverviewAgenda
@@ -102,6 +103,7 @@ class OverviewCalendarSnapshot(BaseModel):
     completeness: CalendarCompleteness
     taxpayer_model_declared: bool
     incomplete_reason: str | None
+    undeclared_profile_facts: tuple[TaxpayerModelFact, ...]
     suppressed_entries: tuple[OverviewSuppressedEntrySnapshot, ...]
     events: tuple[OverviewCalendarEventSnapshot, ...]
     coverage: ObligationCoverageReport
@@ -151,6 +153,7 @@ class OverviewCalendarSnapshot(BaseModel):
             completeness=value.completeness,
             taxpayer_model_declared=value.taxpayer_model_declared,
             incomplete_reason=value.incomplete_reason,
+            undeclared_profile_facts=value.undeclared_profile_facts,
             suppressed_entries=tuple(
                 OverviewSuppressedEntrySnapshot.from_entry(row) for row in value.suppressed_entries
             ),
@@ -171,6 +174,7 @@ class OverviewCalendarSnapshot(BaseModel):
             completeness=self.completeness,
             taxpayer_model_declared=self.taxpayer_model_declared,
             incomplete_reason=self.incomplete_reason,
+            undeclared_profile_facts=self.undeclared_profile_facts,
             suppressed_entries=tuple(row.to_entry() for row in self.suppressed_entries),
             events=tuple(row.to_event() for row in self.events),
             coverage=self.coverage,

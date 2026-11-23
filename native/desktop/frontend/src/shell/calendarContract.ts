@@ -436,6 +436,7 @@ export type OverviewCalendarSnapshot = {
   completeness: CalendarCompleteness;
   taxpayer_model_declared: boolean;
   incomplete_reason: string | null;
+  undeclared_profile_facts: TaxpayerModelFact[];
   suppressed_entries: OverviewSuppressedEntrySnapshot[];
   events: OverviewCalendarEventSnapshot[];
   coverage: ObligationCoverageReport;
@@ -846,6 +847,12 @@ export type PublicPeriod = {
 export type PublicScalar = string | number | boolean | PublicDecimal;
 
 export type SnapshotId = string;
+
+/**
+ * A profile fact the taxpayer model is declared by, named by its profile path.
+ */
+export type TaxpayerModelFact =
+  "taxpayer_type.entity_type" | "taxpayer_type.irpf_income_categories";
 
 export type WorkUnitId = string;
 

@@ -487,33 +487,47 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
 # ---------------------------------------------------------------------
 
 
+_ENTITY_TYPE_REASON = "application.overview.calendar.taxpayer_model_undeclared.entity_type"
+_CATEGORIES_REASON = "application.overview.calendar.taxpayer_model_undeclared.irpf_income_categories"
+
+
 @pytest.mark.parametrize(
-    ("natural_person", "key"),
+    ("natural_person", "facts", "keys"),
     [
-        pytest.param(False, "application.overview.calendar.taxpayer_model_undeclared.entity_type", id="no-entity-type"),
+        pytest.param(
+            False,
+            ("taxpayer_type.entity_type", "taxpayer_type.irpf_income_categories"),
+            (_ENTITY_TYPE_REASON, _CATEGORIES_REASON),
+            id="no-entity-type",
+        ),
         pytest.param(
             True,
-            "application.overview.calendar.taxpayer_model_undeclared.irpf_income_categories",
+            ("taxpayer_type.irpf_income_categories",),
+            (_CATEGORIES_REASON,),
             id="natural-person-without-categories",
         ),
     ],
 )
-def test_undeclared_profile_message_names_the_missing_fact_in_every_locale(
+def test_undeclared_profile_names_every_missing_fact_at_once_in_every_locale(
     authority_operation: PinnedAuthorityOperation,
     natural_person: bool,
-    key: str,
+    facts: tuple[str, ...],
+    keys: tuple[str, ...],
 ) -> None:
     """The reason is served to the window as well as the CLI, so it names the
-    profile fact that is missing rather than a command-line remedy, and it is
-    shipped text in every supported language rather than the raw key."""
+    profile facts that are missing rather than a command-line remedy, every one
+    of them at once (an unstated entity type leaves the income categories owed
+    too), each with the profile path that answers it, and it is shipped text in
+    every supported language rather than the raw key."""
 
     from ....core.i18n.render import tr
 
-    for locale in ("es", "en", "ca", "hu"):
-        rendered = tr(key, locale=locale)
-        assert rendered != key, locale
-        assert "[missing" not in rendered.lower(), locale
-        assert len(rendered) > 30, (locale, rendered)
+    for key in keys:
+        for locale in ("es", "en", "ca", "hu"):
+            rendered = tr(key, locale=locale)
+            assert rendered != key, locale
+            assert "[missing" not in rendered.lower(), locale
+            assert len(rendered) > 30, (locale, rendered)
 
     profile = TaxpayerProfile(
         tax_id="X0001500M",
@@ -522,7 +536,9 @@ def test_undeclared_profile_message_names_the_missing_fact_in_every_locale(
     )
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
     cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 4, 1))
-    assert cal.incomplete_reason == tr(key)
+    assert cal.taxpayer_model_declared is False
+    assert tuple(fact.value for fact in cal.undeclared_profile_facts) == facts
+    assert cal.incomplete_reason == " ".join(tr(key) for key in keys)
 
 
 # ---------------------------------------------------------------------

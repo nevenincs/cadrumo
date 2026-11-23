@@ -129,7 +129,8 @@ def test_the_agenda_and_backlog_render_the_same_profile(projection: str) -> None
 
 
 def test_a_profile_without_a_taxpayer_model_still_refuses_and_names_the_missing_fact() -> None:
-    register_cli_profile(label="undeclared", facts=_activity_facts(declares_income=False), log_in=False)
+    # Setup cannot complete without the taxpayer model, so the profile stays in setup.
+    register_cli_profile(label="undeclared", facts=_activity_facts(declares_income=False), complete=False, log_in=False)
     horizon = _horizon()
 
     exit_code, envelope = _json(

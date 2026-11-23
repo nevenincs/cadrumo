@@ -306,7 +306,11 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
                     break
                 answered.append(await _answer(app, pilot))
                 await settle(pilot, workers=False)
-            assert set(answered) >= set(overview.missing_required)
+            # An answer can withdraw a later question (an income category without an
+            # economic activity owes no IVA regime), so the walk asks a subset of the
+            # opening list and still leaves nothing owed.
+            assert answered
+            assert set(answered) <= set(overview.missing_required)
             assert not app.overview.missing_required
             assert app._setup_stage is ProfileSetupStage.REVIEW
             assert app.overview.setup_state is ProfileSetupState.INCOMPLETE
@@ -469,10 +473,6 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
             await pilot.click("#onboarding-continue")
             await settle(pilot)
             # A required fact of a repeatable group is asked on the group's row form, which has no help fold.
-            repeatable = {section.key for section in overview.sections if section.repeatable}
-            scalar_questions = [
-                field for field in overview.missing_required_fields if field.path.split(".", 1)[0] not in repeatable
-            ]
             asked = 0
             for _ in range(20):
                 dialog = app.app.screen
@@ -493,5 +493,7 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
                 asked += 1
                 await _answer(app, pilot)
                 await settle(pilot, workers=False)
-            assert asked >= len(scalar_questions)
+            # Every question the walk asked carried its help, and the walk ended owing nothing.
+            assert asked
+            assert not app.overview.missing_required
             pilot.app.exit(None)
