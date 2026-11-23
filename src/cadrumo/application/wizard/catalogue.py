@@ -625,6 +625,7 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     )
 
     _obligations_section = build_obligations_section(
+        _iva_block_claimed,
         _impatriado_regime,
         _natural_person,
         _premio_loteria_declared,

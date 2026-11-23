@@ -61,6 +61,7 @@ _INDIVIDUAL_CANONICAL: dict[str, str] = {
     "iva-cash-accounting-regime-enrolled": "false",
     "iva-voluntary-sii-enrolled": "false",
     "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
+    "enrollment-large-company": "false",
     "taxation-type": "1",
     "situacion-familiar": "soltero",
     "irpf-estimation-regime": "directa_normal",
@@ -87,6 +88,7 @@ _LEGAL_ENTITY_CANONICAL: dict[str, str] = {
     "iva-cash-accounting-regime-enrolled": "false",
     "iva-voluntary-sii-enrolled": "false",
     "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
+    "enrollment-large-company": "false",
     "irpf-estimation-regime": "directa_normal",
 }
 

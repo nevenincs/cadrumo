@@ -42,6 +42,7 @@ _PROFILE_PATH_FLAGS = {
     "taxpayer_type.country_of_fiscal_residence": "country-of-fiscal-residence",
     "taxpayer_type.representante_fiscal_nif": "representante-fiscal-nif",
     "iva.redeme_enrolled": "iva-redeme-enrolled",
+    "censo.large_company": "enrollment-large-company",
     "iva.regime": "iva-regime",
     "tax_residence.jurisdiction_scope": "tax-residence-jurisdiction-scope",
     # The live wizard spells these two exactly as the identity branch does,
