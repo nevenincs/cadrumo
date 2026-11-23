@@ -23,6 +23,9 @@
 //     [--bulk-edit [--extra-movements N]]  (instead: the Libro bulk-edit walk,
 //                     ledger-bulk-edit.test.mjs, on a world with N extra synthetic
 //                     movements, default 200; screenshots beside the report)
+//     [--antigravity] (instead: the attended Antigravity lane walk,
+//                     antigravity-lane.test.mjs; set CADRUMO_UX_SHOTS for its
+//                     screenshots and the SIGN_IN_ON_SCREEN marker)
 //     [--staged-package <app dir an earlier stage of --build mirrored>
 //      --strings-build <this checkout's CMake binary dir holding its chrome strings>]
 //
@@ -63,6 +66,9 @@ const idleCheck = fileURLToPath(
 const bulkEdit = fileURLToPath(
   new URL("./ledger-bulk-edit.test.mjs", import.meta.url),
 );
+const antigravityLane = fileURLToPath(
+  new URL("./antigravity-lane.test.mjs", import.meta.url),
+);
 const python = resolve(
   repository,
   process.platform === "win32"
@@ -99,6 +105,7 @@ const { values: args } = parseArgs({
     assistive: { type: "boolean", default: false },
     idle: { type: "boolean", default: false },
     "bulk-edit": { type: "boolean", default: false },
+    antigravity: { type: "boolean", default: false },
     "extra-movements": { type: "string", default: "200" },
     "staged-package": { type: "string" },
     "strings-build": { type: "string" },
@@ -265,7 +272,13 @@ try {
       "--test",
       "--test-reporter=spec",
       ...(args.assistive ? ["--test-name-pattern=assistive activation"] : []),
-      args["bulk-edit"] ? bulkEdit : args.idle ? idleCheck : audit,
+      args["bulk-edit"]
+        ? bulkEdit
+        : args.antigravity
+          ? antigravityLane
+          : args.idle
+            ? idleCheck
+            : audit,
     ],
     {
       cwd: repository,
