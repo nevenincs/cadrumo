@@ -213,6 +213,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # No domestic inversión del sujeto pasivo rows in this observation
         # set, so every interior reverse-charge binding, devengado and the
         # deducible half feeding [28]-[31], resolves to zero.
+        "modelo-303-iva-autorepercutido-interior-devengado-base": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-base": Decimal("0"),
