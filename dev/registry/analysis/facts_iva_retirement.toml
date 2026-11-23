@@ -3,7 +3,7 @@ classification = "governed_fact_provider_retirement"
 
 [[remaining_structured_tables]]
 data_path = "src/cadrumo/_data/registry/aeat/iva/catalogues.toml"
-row_count = 21
+row_count = 22
 classification = "needs_typed_schema_and_fact_migration"
 decision = "retain_until_lossless_replacement"
 reason = "Operative category rules carry per-citation quotation, grounding disposition, legal window, and exemption semantics. Existing scalar, mapping, and event facts cannot retain nested citation-level evidence or the unresolved domestic_zero refusal."
@@ -12,7 +12,7 @@ safe_next_scope = "Introduce a typed regulation fact family with citation-level 
 
 [[remaining_structured_tables]]
 data_path = "src/cadrumo/_data/registry/aeat/iva/place_of_supply.toml"
-row_count = 22
+row_count = 23
 classification = "needs_typed_schema_and_fact_migration"
 decision = "retain_until_lossless_replacement"
 reason = "Each classification-rule key carries a closed temporal legal basis, an establishing provision, optional supply nature, and a legal-basis-exempt sentinel. Existing generic facts cannot encode the row-level legal-reference ordering and exempt-versus-silent distinction."
