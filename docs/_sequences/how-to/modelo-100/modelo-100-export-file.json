@@ -165,7 +165,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "checked_revision_id",
-          "value": "036854606f88f5affc87b442282c427efaa0a4dd3c4403f533371ac50408bcca"
+          "value": "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829"
         }
       ],
       "envelope": null,
@@ -184,7 +184,7 @@
         "modelo",
         "work",
         "verify",
-        "036854606f88f5affc87b442282c427efaa0a4dd3c4403f533371ac50408bcca"
+        "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829"
       ],
       "captures": [],
       "envelope": null,
@@ -242,7 +242,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "stated_revision_id",
-          "value": "036854606f88f5affc87b442282c427efaa0a4dd3c4403f533371ac50408bcca"
+          "value": "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829"
         }
       ],
       "envelope": {
@@ -253,11 +253,11 @@
             "action": null,
             "code": "modelo.work.attest_work_income.reused_sealed_revision",
             "context": {
-              "calculation_revision_id": "036854606f88f5affc87b442282c427efaa0a4dd3c4403f533371ac50408bcca",
-              "current_calculation_revision_id": "b6deeded7d38b2cd78acb4537ea86a94b5bcaa7a6a8d208cf0fe67b5da2db23e",
+              "calculation_revision_id": "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829",
+              "current_calculation_revision_id": "985fb5e83f136597e6b6f7a9a61e2e2a030a5c3281c0332d7045c4945ad53e25",
               "state": "verificado_completo"
             },
-            "message": "These inputs match calculation 036854606f88f5affc87b442282c427efaa0a4dd3c4403f533371ac50408bcca (state: checked and complete). No new draft was created. Select this saved calculation by its revision ID, or change the inputs.",
+            "message": "These inputs match calculation 3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829 (state: checked and complete). No new draft was created. Select this saved calculation by its revision ID, or change the inputs.",
             "severity": "info"
           },
           {
@@ -271,11 +271,11 @@
         "result": {
           "applied": true,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "036854606f88f5affc87b442282c427efaa0a4dd3c4403f533371ac50408bcca",
+          "calculation_revision_id": "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829",
           "filing_year": 2025,
           "findings": [],
           "modelo": "100",
-          "receipt_id": "0efce5ee86f4b90fcea76bee3a238f672fbf217c3796256a69b1bbe140dd2af6",
+          "receipt_id": "4e5f08cea4e3a417c5b3c912c0e55fa125908e4221938cba68b80ee88cce3e0f",
           "statements": [
             {
               "action_words": "I have no employer contributions or protected-estate contributions to state",
@@ -311,7 +311,7 @@
         "export",
         "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd",
         "--revision",
-        "036854606f88f5affc87b442282c427efaa0a4dd3c4403f533371ac50408bcca",
+        "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829",
         "--output",
         "./modelo-100.boe"
       ],
@@ -422,10 +422,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "f8ad49d942ec2295ff5203d695fcc924fe8e2da8da6b9fcf052f75fdc7af2b4a",
+          "bucket_event_id": "a97dbfcd405a375756e7f7349db6fc98921f89c73c13f9b040c3e2b57d2cf0ab",
           "bucket_id": "<bucket-id>",
           "byte_size": 2665,
-          "calculation_revision_id": "036854606f88f5affc87b442282c427efaa0a4dd3c4403f533371ac50408bcca",
+          "calculation_revision_id": "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829",
           "file_sha256": "447bf85cf387fdc33ebe422e457c58a8960899389b0552309ce02ce24bd0955a",
           "filing_year": 2025,
           "format": "xml-dictionary",
