@@ -212,6 +212,7 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
             profile=profile,
             transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=work_unit.bucket_id),
             invoice_repository=InvoiceCatalogueFake(),
+            rectification_evidence_recordable=False,
             operation=_authority_operation_for_test,
             work_profile=None,
         )

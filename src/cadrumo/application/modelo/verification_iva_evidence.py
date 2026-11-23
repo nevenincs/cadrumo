@@ -29,6 +29,7 @@ from .preconditions import ModeloPreconditionFailure
 from .verification_finding_contracts import (
     ABSENT_FACT,
     LEDGER_TRANSACTION_SOURCE_REF_PREFIX,
+    RECTIFICATION_DOCUMENT_SCENARIO,
     UNRECORDABLE_DEDUCTION_SCENARIOS,
 )
 from .verification_preconditions import (
@@ -64,12 +65,20 @@ class UnrecordableDeductionDocument:
 def unrecordable_deduction_documents(
     target: CalculationRevision,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    *,
+    rectification_evidence_recordable: bool,
 ) -> tuple[UnrecordableDeductionDocument, ...]:
     """Read each held-back row's registry-required supporting authority.
 
     Only authorities no production supporting-document writer records get a
     terminal refusal. Missing rows and unresolved authorities keep the general
     finding; removing a row never erases its persisted evidence failure.
+
+    ``rectification_evidence_recordable`` is whether the records hold a factura
+    rectificativa that grounds the ``rectification_evidence`` authority. That
+    document is the authority's production writer, so where the catalogue holds
+    one a rectificación de deducciones keeps the general, recoverable finding:
+    the row is linked to its rectificativa rather than filed another way.
 
     Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
@@ -89,6 +98,8 @@ def unrecordable_deduction_documents(
         )
         scenario = None if authority is None else UNRECORDABLE_DEDUCTION_SCENARIOS.get(authority.value)
         if authority is None or scenario is None:
+            continue
+        if scenario == RECTIFICATION_DOCUMENT_SCENARIO and rectification_evidence_recordable:
             continue
         documents.append(UnrecordableDeductionDocument(transaction, authority, scenario))
     return tuple(documents)
@@ -241,6 +252,7 @@ def append_iva_selected_scope_evidence_finding(
     work_unit: WorkUnit,
     target: CalculationRevision,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    rectification_evidence_recordable: bool,
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
@@ -248,7 +260,11 @@ def append_iva_selected_scope_evidence_finding(
 
     Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
-    documents = unrecordable_deduction_documents(target, transaction_repository)
+    documents = unrecordable_deduction_documents(
+        target,
+        transaction_repository,
+        rectification_evidence_recordable=rectification_evidence_recordable,
+    )
     unrecordable_transaction_ids = tuple(document.transaction.transaction_id for document in documents)
     cuota_documents = cuota_disagreeing_documents(
         target, transaction_repository, excluded_transaction_ids=unrecordable_transaction_ids

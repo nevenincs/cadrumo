@@ -183,6 +183,7 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
         work_unit=work,
         target=target,
         transaction_repository=repository,
+        rectification_evidence_recordable=False,
         findings=findings,
         failures_by_finding_id=failures,
     )
@@ -214,3 +215,41 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
     assert failures[id(general)].verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
     assert finding_action_locale_key(general) == "application.modelo.work_form.finding_action.correct_and_recalculate"
+
+
+def test_a_rectification_row_keeps_the_recoverable_finding_once_a_rectificativa_grounds_its_authority() -> None:
+    """A recorded factura rectificativa is the writer of the authority fact 0085 asks for.
+
+    The import and the REAGP receipt stay terminal: no record this application
+    writes establishes either. The rectification row's document now exists, so
+    its refusal is the general one, whose remedy is to correct the row.
+    """
+    transactions = (
+        _transaction("customs", "import_current", "import_third_country"),
+        _transaction("rectification", "rectification", "domestic_general"),
+    )
+    repository = Transactions(
+        bucket_id="13000000-0000-4000-8000-000000000303",
+        catalogue=TransactionCatalogue.from_transactions(transactions),
+    )
+    issues = tuple(_issue(transaction.transaction_id) for transaction in transactions)
+    work, target = work_and_target(repository.bucket_id, issues)
+    findings: list[ModeloVerificationFinding] = []
+    failures: dict[int, ModeloPreconditionFailure] = {}
+    append_iva_selected_scope_evidence_finding(
+        work_unit=work,
+        target=target,
+        transaction_repository=repository,
+        rectification_evidence_recordable=True,
+        findings=findings,
+        failures_by_finding_id=failures,
+    )
+    terminal = {
+        finding.message_facts["transaction_ids"]: finding
+        for finding in findings
+        if "transaction_ids" in finding.message_facts
+    }
+    assert set(terminal) == {transactions[0].transaction_id}
+    general = next(finding for finding in findings if "source_ref_ids" in finding.message_facts)
+    assert general.message_facts["source_ref_ids"] == f"transaction:{transactions[1].transaction_id}"
+    assert failures[id(general)].verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION

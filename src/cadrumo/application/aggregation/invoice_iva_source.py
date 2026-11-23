@@ -44,6 +44,7 @@ from ...domain.invoices.rectification_modification import (
 from ...domain.invoices.rectification_period import RectificationPeriodRefusal
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ..invoices.source_observations import is_rectificativa
 from .errors import AggregationValidationError
 from .invoice_devengo import invoice_devengo_in_period
 from .renta_income_evidence import iva_amount_comparison, taxable_base_comparison
@@ -343,17 +344,62 @@ def invoices_missing_source_document(
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     linked = with_movement_side_links(invoices, window=window)
-    missing: list[Invoice] = []
-    for invoice in linked:
-        if invoice.kind is not InvoiceKind.RECEIVED or not any(line.iva_amount > 0 for line in invoice.lines):
-            continue
-        if invoice.invoice_id in documented:
-            continue
-        paying = (window.get(transaction_id) for transaction_id in invoice.linked_transaction_ids)
-        if any(movement is not None and movement.purchase_invoice_evidence_id is not None for movement in paying):
-            continue
-        missing.append(invoice)
+    missing = (
+        invoice
+        for invoice in linked
+        if invoice.kind is InvoiceKind.RECEIVED
+        and any(line.iva_amount > 0 for line in invoice.lines)
+        and not _holds_its_received_document(invoice, documented=documented, window=window)
+    )
     return tuple(sorted(missing, key=lambda invoice: invoice.invoice_id))
+
+
+def _holds_its_received_document(
+    invoice: Invoice,
+    *,
+    documented: frozenset[str],
+    window: TransactionCatalogue,
+) -> bool:
+    """Whether the records hold the received invoice's own factura (LIVA art. 97).
+
+    The one test for the document behind an input-side claim: a stored document
+    belongs to the invoice, or a movement paying it carries registered
+    purchase-invoice evidence.
+    """
+    if invoice.invoice_id in documented:
+        return True
+    paying = (window.get(transaction_id) for transaction_id in invoice.linked_transaction_ids)
+    return any(movement is not None and movement.purchase_invoice_evidence_id is not None for movement in paying)
+
+
+def rectification_evidence_grounding_invoices(
+    invoices: Sequence[Invoice],
+    *,
+    documented: frozenset[str],
+    window: TransactionCatalogue,
+) -> tuple[Invoice, ...]:
+    """The received facturas rectificativas that ground the ``rectification_evidence`` authority.
+
+    Fact 0085 requires that authority of a rectificación de deducciones, and the
+    document that establishes one is the rectificativa itself (LIVA art. 114.Dos,
+    RIVA art. 24.2.b). A rectificativa grounds it only when the records hold the
+    document, by the same LIVA art. 97 test an ordinary received invoice passes,
+    and when it holds the ``document_received_on`` the period rule consumes: a
+    typed row with neither is the Libro entry, not the document.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+    """
+    linked = with_movement_side_links(invoices, window=window)
+    grounding = (
+        invoice
+        for invoice in linked
+        if invoice.kind is InvoiceKind.RECEIVED
+        and is_rectificativa(invoice)
+        and invoice.document_received_on is not None
+        and _holds_its_received_document(invoice, documented=documented, window=window)
+    )
+    return tuple(sorted(grounding, key=lambda invoice: invoice.invoice_id))
 
 
 def issued_invoices_missing_source_document(
@@ -665,6 +711,7 @@ __all__ = [
     "partition_invoice_payments",
     "period_invoice_iva_findings",
     "period_invoice_iva_side",
+    "rectification_evidence_grounding_invoices",
     "refuse_contradicting_linked_movements",
     "with_movement_side_links",
 ]

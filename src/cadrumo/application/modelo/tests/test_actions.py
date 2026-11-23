@@ -351,6 +351,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
             profile=_resident_profile(),
             transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=_BUCKET_ID),
             invoice_repository=InvoiceCatalogueFake(),
+            rectification_evidence_recordable=False,
             operation=_authority_operation_for_test,
             work_profile=None,
         )

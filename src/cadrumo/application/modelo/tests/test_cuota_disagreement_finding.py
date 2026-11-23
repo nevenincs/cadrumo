@@ -61,6 +61,7 @@ def _verify(
         work_unit=work,
         target=target,
         transaction_repository=repository,
+        rectification_evidence_recordable=False,
         findings=findings,
         failures_by_finding_id=failures,
     )

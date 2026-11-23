@@ -91,6 +91,7 @@ def _content_findings(modelo_code: str, period_code: str) -> list[ModeloVerifica
             profile=TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL")),
             transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=work_unit.bucket_id),
             invoice_repository=InvoiceCatalogueFake(),
+            rectification_evidence_recordable=False,
             operation=operation,
             work_profile=None,
         )
