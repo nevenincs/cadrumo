@@ -30,10 +30,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from ...core.decimal.constants import ZERO
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
@@ -62,8 +62,6 @@ __all__ = [
     "IssuedRectificationDeclarationRefusal",
     "issued_rectification_observations",
 ]
-
-_ZERO = Decimal("0")
 
 
 class IssuedRectificationDeclarationRefusal(StrEnum):
@@ -123,7 +121,7 @@ def issued_rectification_observations(
     :class:`~cadrumo.core.period.Period`,
     :class:`~cadrumo.domain.calculations.registry.ledger_iva_bindings.IvaLedgerObservation`.
     """
-    if modification.recargo is not None and modification.recargo != _ZERO:
+    if modification.recargo is not None and modification.recargo != ZERO:
         return IssuedRectificationDeclaration(refusal=IssuedRectificationDeclarationRefusal.RECARGO_UNBOUND)
     priced_on = resolve_invoice_devengo(original if original is not None else rectificativa).devengo_date
     observations: list[IvaLedgerObservation] = []

@@ -34,6 +34,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from ...core.decimal.constants import ZERO
 from ...core.i18n.translatable import Translatable as tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...domain.calculations.registry.iva_deduction_catalogue import resolve_iva_deduction_catalogue
@@ -62,7 +63,6 @@ __all__ = [
     "rectification_declaration_date",
 ]
 
-_ZERO = Decimal("0")
 _RECTIFICATION_KIND_KEY = "kind.rectification"
 _RECTIFICATION_AUTHORITY_ROLE = "rectification_evidence"
 
@@ -171,7 +171,7 @@ def _row_observation(
     """One rate's signed modification as a rectificación de deducciones, or ``None`` when no box holds it."""
     base_amount = rectification_amount_eur(rectificativa, row.base, row_index=row_index)
     iva_amount = rectification_amount_eur(rectificativa, row.cuota, row_index=row_index)
-    if iva_amount == _ZERO:
+    if iva_amount == ZERO:
         # Fact 0085 requires a rectification to carry signed non-zero base AND
         # cuota, and casillas 40 and 41 declare rectified DEDUCIBLE cuotas. A
         # row that moves only a base therefore has no box here.

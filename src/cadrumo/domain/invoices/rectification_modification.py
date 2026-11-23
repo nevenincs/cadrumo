@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from ...core.decimal.constants import ZERO
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.parsing.codes import IsoCurrencyCode
@@ -61,9 +62,6 @@ __all__ = [
     "RectificationModificationRow",
     "derive_rectification_modification",
 ]
-
-
-_ZERO = Decimal("0")
 
 
 class RectificationModificationRefusal(StrEnum):
@@ -136,12 +134,12 @@ class RectificationModification(BaseModel):
     @property
     def base(self) -> Decimal:
         """The signed total modification of taxable bases."""
-        return round_to_cents(sum((row.base for row in self.rows), _ZERO))
+        return round_to_cents(sum((row.base for row in self.rows), ZERO))
 
     @property
     def cuota(self) -> Decimal:
         """The signed total modification of cuotas."""
-        return round_to_cents(sum((row.cuota for row in self.rows), _ZERO))
+        return round_to_cents(sum((row.cuota for row in self.rows), ZERO))
 
 
 @dataclass(frozen=True, slots=True)
@@ -273,12 +271,12 @@ def _substitution_modification(
             iva_rate=rate,
             iva_category=category,
             base=round_to_cents(
-                substitute_figures.get((rate, category), (_ZERO, _ZERO))[0]
-                - original_figures.get((rate, category), (_ZERO, _ZERO))[0],
+                substitute_figures.get((rate, category), (ZERO, ZERO))[0]
+                - original_figures.get((rate, category), (ZERO, ZERO))[0],
             ),
             cuota=round_to_cents(
-                substitute_figures.get((rate, category), (_ZERO, _ZERO))[1]
-                - original_figures.get((rate, category), (_ZERO, _ZERO))[1],
+                substitute_figures.get((rate, category), (ZERO, ZERO))[1]
+                - original_figures.get((rate, category), (ZERO, ZERO))[1],
             ),
         )
         for rate, category in _row_keys(substitute_figures, original_figures)
@@ -293,8 +291,8 @@ def _substitution_modification(
         original_invoice_id=original.invoice_id,
     )
     expected = _sign(direction, minoracion=catalogue.minoracion_token)
-    net = modification.base + modification.cuota + (recargo or _ZERO)
-    if net != _ZERO and (net > _ZERO) != (expected > _ZERO):
+    net = modification.base + modification.cuota + (recargo or ZERO)
+    if net != ZERO and (net > ZERO) != (expected > ZERO):
         return DerivedRectificationModification(
             refusal=RectificationModificationRefusal.DIRECTION_CONTRADICTS_DIFFERENCE,
             original_candidates=1,
@@ -306,7 +304,7 @@ def _substitution_recargo(invoice: Invoice, original: Invoice) -> Decimal | None
     """The recargo de equivalencia difference, ``None`` when neither invoice states one."""
     if invoice.recargo_amount is None and original.recargo_amount is None:
         return None
-    return round_to_cents((invoice.recargo_amount or _ZERO) - (original.recargo_amount or _ZERO))
+    return round_to_cents((invoice.recargo_amount or ZERO) - (original.recargo_amount or ZERO))
 
 
 def _figures_by_rate(invoice: Invoice) -> dict[tuple[IvaRate, IvaCategory | None], tuple[Decimal, Decimal]]:
@@ -314,7 +312,7 @@ def _figures_by_rate(invoice: Invoice) -> dict[tuple[IvaRate, IvaCategory | None
     figures: dict[tuple[IvaRate, IvaCategory | None], tuple[Decimal, Decimal]] = {}
     for line in invoice.lines:
         key = (line.iva_rate, invoice.iva_category)
-        base, cuota = figures.get(key, (_ZERO, _ZERO))
+        base, cuota = figures.get(key, (ZERO, ZERO))
         figures[key] = (base + line.subtotal, cuota + line.iva_amount)
     return figures
 
@@ -336,4 +334,4 @@ def _row_keys(
 
 def _without_empty_rows(rows: Iterable[RectificationModificationRow]) -> tuple[RectificationModificationRow, ...]:
     """Drop the rates nothing moved on, which modify neither base nor cuota."""
-    return tuple(row for row in rows if row.base != _ZERO or row.cuota != _ZERO)
+    return tuple(row for row in rows if row.base != ZERO or row.cuota != ZERO)
