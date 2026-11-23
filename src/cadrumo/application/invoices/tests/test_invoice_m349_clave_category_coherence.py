@@ -222,7 +222,7 @@ def test_clave_e_on_an_export_invoice_is_refused() -> None:
     no declaración recapitulativa at all; ``E`` would file it to VIES against a
     Member State operator.
     """
-    with pytest.raises(Exception, match=_REFUSAL):
+    with pytest.raises(ValidationError, match=_REFUSAL):
         _written(
             kind=InvoiceKind.ISSUED,
             iva_category=IvaCategory("export_third_country_zero_rated"),
@@ -237,7 +237,7 @@ def test_clave_s_on_a_goods_supply_is_refused_because_the_claves_separate_the_le
     servicios" and so cannot catch this, which is exactly why the check belongs
     on the record.
     """
-    with pytest.raises(Exception, match=_REFUSAL):
+    with pytest.raises(ValidationError, match=_REFUSAL):
         _written(
             kind=InvoiceKind.ISSUED,
             iva_category=IvaCategory("intra_community_supply"),

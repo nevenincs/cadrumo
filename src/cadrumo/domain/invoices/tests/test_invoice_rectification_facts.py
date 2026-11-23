@@ -238,7 +238,7 @@ def test_a_rectificativa_keeps_its_totals_as_non_negative_magnitudes() -> None:
 @pytest.mark.parametrize("field", ["rectification_method", "rectification_cause", "rectification_direction"])
 def test_a_token_the_registry_does_not_declare_is_refused(field: str) -> None:
     """The vocabulary is fact 0141's, so the record admits nothing the registry omits."""
-    with pytest.raises(Exception) as refusal:
+    with pytest.raises(ValidationError) as refusal:
         _rectificativa(**{field: "no_such_token"})
 
     assert field in str(refusal.value)

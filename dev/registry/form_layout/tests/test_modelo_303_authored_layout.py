@@ -41,7 +41,8 @@ def test_the_oldest_form_repeats_activities_to_the_design_limit_and_keeps_histor
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6
     assert all(str(75943 + n) in (page.official_ref or "") for n, page in enumerate(layout.pages))
-    assert len(layout.placements) == len(revision.casillas) == 208
+    assert len(layout.placements) == len(revision.casillas)
+    assert {placement.casilla_id for placement in layout.placements} == {casilla.id for casilla in revision.casillas}
     blocks = [block for page in layout.pages for section in page.sections for block in section.blocks]
     activities = [block for block in blocks if isinstance(block, FormRepeatingGroupBlock)]
     assert len(activities) == 4
@@ -207,7 +208,8 @@ def test_official_page_order_and_scalar_simplified_totals() -> None:
     ]
     assert [block.export_field_id for block in annual_context] == [f"m303-2026.dp30304.f{n:03}" for n in range(6, 19)]
     assert all(resolve_form_context_field(revision, block).projection_ref is not None for block in annual_context)
-    assert len(layout.placements) == len(revision.casillas) == 229
+    assert len(layout.placements) == len(revision.casillas)
+    assert {placement.casilla_id for placement in layout.placements} == {casilla.id for casilla in revision.casillas}
     assert not any(placement.kind == "unplaced" for placement in layout.placements)
     # Placement coverage is not a claim of full paper or temporal fidelity.
     assert layout.review.state == "generated"

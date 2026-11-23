@@ -27,6 +27,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.invoice_legal_classification import (
@@ -136,7 +137,7 @@ def test_an_add_request_with_a_reception_date_on_an_issued_invoice_is_refused(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The write boundary's kind rule reaches the verb rather than the record alone."""
-    with pytest.raises(Exception) as refusal:
+    with pytest.raises(ValidationError) as refusal:
         _built(
             _add_request(kind=InvoiceKind.ISSUED.value, document_received_on=_RECEIVED_ON.isoformat()),
             operation,
