@@ -287,8 +287,10 @@ export function ModelMatrix({
         placeholder={t("desktop.agent.model_matrix_search_label")}
         aria-controls={gridId}
         onChange={(event) => setQuery(event.currentTarget.value)}
+        className="shrink-0"
       />
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+      {/* Narrow, the scroller takes the height left; these keep their own. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1.5">
         {axis("state", "desktop.agent.model_matrix_state", MATRIX_STATES)}
         {axis(
           "availability",
@@ -299,7 +301,7 @@ export function ModelMatrix({
       <p
         role="status"
         data-slot="model-matrix-count"
-        className="text-sm text-muted-foreground"
+        className="shrink-0 text-sm text-muted-foreground"
       >
         {countWords(
           t,
@@ -343,7 +345,7 @@ export function ModelMatrix({
       ) : (
         <div
           data-slot="model-matrix-scroller"
-          className="max-h-96 min-h-0 shrink overflow-auto overscroll-contain rounded-md border bg-card"
+          className="max-h-96 min-h-0 shrink overflow-auto max-sm:max-h-none max-sm:flex-1 overscroll-contain rounded-md border bg-card"
         >
           <table
             id={gridId}

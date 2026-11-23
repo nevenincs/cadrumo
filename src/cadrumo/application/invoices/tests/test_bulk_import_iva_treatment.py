@@ -27,7 +27,7 @@ from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "58585858-5858-4858-8858-585858585858"
-_FRENCH_VAT = "FR40303265045"
+_FRENCH_IVA_NUMBER = "FR40303265045"
 _SPANISH_CIF = "B00010157"
 _HEADER = "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,country_code"
 
@@ -76,8 +76,8 @@ def test_an_eu_b2b_supply_row_keeps_its_stated_category_and_clave(
     issued = _issue_date().isoformat()
     result, stored = _import(
         f"{_HEADER},iva_category,operation_type\n"
-        f"{_FRENCH_VAT},Atelier Lumière SARL,EU-0001,{issued},1000.00,,FR,intra_community_supply,E\n"
-        f"{_FRENCH_VAT},Atelier Lumière SARL,EU-0002,{issued},500.00,,FR,,e\n",
+        f"{_FRENCH_IVA_NUMBER},Atelier Lumière SARL,EU-0001,{issued},1000.00,,FR,intra_community_supply,E\n"
+        f"{_FRENCH_IVA_NUMBER},Atelier Lumière SARL,EU-0002,{issued},500.00,,FR,,e\n",
         tmp_path,
         kind=InvoiceKind.ISSUED,
         operation=operation,
@@ -99,7 +99,7 @@ def test_an_intra_community_supply_without_its_clave_is_refused_alone(
     issued = _issue_date().isoformat()
     result, stored = _import(
         f"{_HEADER},iva_category,operation_type\n"
-        f"{_FRENCH_VAT},Atelier Lumière SARL,EU-0010,{issued},1000.00,,FR,intra_community_supply,\n"
+        f"{_FRENCH_IVA_NUMBER},Atelier Lumière SARL,EU-0010,{issued},1000.00,,FR,intra_community_supply,\n"
         f"{_SPANISH_CIF},Papeleria Sol SL,ES-0011,{issued},100.00,21,ES,,\n",
         tmp_path,
         kind=InvoiceKind.ISSUED,

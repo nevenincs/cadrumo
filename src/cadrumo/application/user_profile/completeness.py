@@ -26,7 +26,11 @@ from ...domain.contribuyente.entity_type import (
 )
 from ...domain.contribuyente.renta_codes import RentaDeclaracionType
 from ...domain.deadlines.models import irnr_representante_fiscal_required_on_every_date
-from ...domain.deadlines.profiles import modelo_iva_profile_required_paths, modelo_iva_unanswered_paths
+from ...domain.deadlines.profiles import (
+    filing_cadence_profile_required_paths,
+    modelo_iva_profile_required_paths,
+    modelo_iva_unanswered_paths,
+)
 
 if TYPE_CHECKING:
     from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition
@@ -113,6 +117,7 @@ def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[s
     entity_type = _token(values.get(ENTITY_TYPE_PATH)).lower() or None
     required: list[str] = [fact.value for fact in taxpayer_model_required_facts(entity_type)]
     required.extend(modelo_iva_profile_required_paths(values))
+    required.extend(filing_cadence_profile_required_paths(values))
 
     if _token(values.get(ENTITY_TYPE_PATH)).lower() == entity_type_legal_entity_token().value:
         # A legal entity without a declared form has no selector for its

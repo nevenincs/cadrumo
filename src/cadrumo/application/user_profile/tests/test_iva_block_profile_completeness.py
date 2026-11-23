@@ -146,6 +146,7 @@ def test_a_satisfied_block_leaves_nothing_outstanding() -> None:
         "iva.cash_accounting_regime_enrolled": "false",
         "iva.voluntary_sii_enrolled": "false",
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        "censo.large_company": "false",
     }
 
     assert conditional_profile_missing_required(values) == ()

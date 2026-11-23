@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ...core.i18n.translatable import Translatable as tr
+from ...domain.deadlines.profiles import FILING_CADENCE_LARGE_COMPANY_PATH, filing_cadence_profile_required_paths
 from .imputation_election import (
     ACCOUNTING_PROFILE_PATH,
     ACCOUNTING_QUESTION_ID,
@@ -130,16 +131,6 @@ def build_enrollment_section() -> WizardSection:
         id="enrollment",
         title=tr("wizard.setup.enrollment.title"),
         questions=(
-            # The large-company condition decides the filing cadence of
-            # Modelos 111, 115, 123, 216 and 303 and whether Modelo 347 is
-            # owed, so it carries no default: an unanswered question stays
-            # absent and reads as undeclared rather than as a "no".
-            confirmation_question(
-                "enrollment-large-company",
-                "censo.large_company",
-                suffix="enrollment",
-                default=None,
-            ),
             confirmation_question(
                 "enrollment-public-administration-budget-gt-6000000",
                 "censo.public_administration_budget_gt_6000000",
@@ -150,10 +141,11 @@ def build_enrollment_section() -> WizardSection:
 
 
 def _obligations_withholding_questions(
+    iva_block_claimed: WizardVisibility,
     wizard_irpf_estimation_regime_choices: tuple[WizardChoice, ...],
 ) -> tuple[WizardQuestion, ...]:
     """Build the withholding and estimation-regime questions of the obligations section."""
-    return (
+    payer_questions = (
         # The withholding payer facts gate Modelos 111, 115, 117, 123, 126,
         # 128, 130, 180, 187, 188, 190, 193, 194, 216, 296 and 349, so they
         # carry no default: an unanswered question stays absent and reads as
@@ -189,6 +181,11 @@ def _obligations_withholding_questions(
             suffix="obligations",
             default=None,
         ),
+    )
+    return (
+        *payer_questions,
+        # After every fact that can owe it, so its gate reads answers given.
+        _large_company_question(iva_block_claimed, payer_questions),
         WizardQuestion(
             id="modelo-111-no-retenciones-periods",
             profile_key="withholding.modelo_111_no_retenciones_periods",
@@ -220,7 +217,37 @@ def _obligations_withholding_questions(
     )
 
 
+def _large_company_question(
+    iva_block_claimed: WizardVisibility,
+    payer_questions: tuple[WizardQuestion, ...],
+) -> WizardQuestion:
+    """Ask the large-company condition exactly where completeness owes it.
+
+    The condition decides the filing cadence of Modelos 111, 115, 123, 216
+    and 303, so the completeness definition owes it once the IVA block is
+    claimed or a payer fact is stated yes. Each payer question is probed
+    against that definition rather than listed here. It carries no default:
+    an unanswered question stays absent and reads as undeclared, not "no".
+    """
+    owing_payers = tuple(
+        WizardCondition(question_id=question.id, equals="true")
+        for question in payer_questions
+        if question.widget is WizardWidget.CONFIRM
+        and question.profile_key is not None
+        and FILING_CADENCE_LARGE_COMPANY_PATH in filing_cadence_profile_required_paths({question.profile_key: True})
+    )
+    return confirmation_question(
+        "enrollment-large-company",
+        FILING_CADENCE_LARGE_COMPANY_PATH,
+        suffix="enrollment",
+        default=None,
+        required=True,
+        visible_when=WizardVisibility(any_of=(*iva_block_claimed.any_of, *owing_payers)),
+    )
+
+
 def build_obligations_section(
+    _iva_block_claimed: WizardVisibility,
     _impatriado_regime: WizardCondition,
     _natural_person: WizardCondition,
     _premio_loteria_declared: WizardCondition,
@@ -235,7 +262,7 @@ def build_obligations_section(
         id="obligations",
         title=tr("wizard.setup.obligations.title"),
         questions=(
-            *_obligations_withholding_questions(wizard_irpf_estimation_regime_choices),
+            *_obligations_withholding_questions(_iva_block_claimed, wizard_irpf_estimation_regime_choices),
             # No default on the three election questions: an unanswered criterion
             # stays absent, and absent means undeclared, never devengo.
             WizardQuestion(

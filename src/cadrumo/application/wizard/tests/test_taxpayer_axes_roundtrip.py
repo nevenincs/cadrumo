@@ -298,6 +298,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
                 "iva-cash-accounting-regime-enrolled": "false",
                 "iva-voluntary-sii-enrolled": "false",
                 "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
+                "enrollment-large-company": "false",
             }
             answers = run_scripted_walk(
                 registry_setup_flow,

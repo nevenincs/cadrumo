@@ -589,6 +589,40 @@ def modelo_iva_unanswered_paths(values: Mapping[str, object]) -> tuple[str, ...]
     return tuple(path for path in modelo_iva_profile_required_paths(values) if not _declared(values.get(path)))
 
 
+#: The large-company condition (LIVA art. 121 volume, RIVA art. 71.3) decides
+#: whether Modelos 303, 111, 115, 123 and 216 are filed monthly or quarterly;
+#: until it is stated no filing window of theirs can be dated.
+FILING_CADENCE_LARGE_COMPANY_PATH = "censo.large_company"
+
+#: The withholding payer facts whose stated "yes" makes one of those
+#: withholding self-assessments owed.
+_CADENCE_DECIDED_PAYER_FACT_PATHS: tuple[str, ...] = (
+    "withholding.has_employees",
+    "withholding.pays_professionals_with_retencion",
+    "withholding.pays_rent_with_retencion",
+    "withholding.pays_capital_income_with_retencion",
+    "withholding.pays_non_resident_income_with_retencion",
+)
+
+
+def filing_cadence_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return the cadence facts ``values`` must carry before its periodic deadlines can be dated.
+
+    The large-company condition is owed once the profile claims the Modelo IVA
+    block or states that it pays withholding-subject income; a profile with
+    neither files none of the modelos whose cadence it decides.
+    """
+    if profile_claims_modelo_iva_block(values) or any(
+        _stated_yes(values.get(path)) for path in _CADENCE_DECIDED_PAYER_FACT_PATHS
+    ):
+        return (FILING_CADENCE_LARGE_COMPANY_PATH,)
+    return ()
+
+
+def _stated_yes(value: object) -> bool:
+    return value is True or (isinstance(value, str) and value.strip().lower() == "true")
+
+
 def iva_regime_owes_m303_regime_composition(regime: str) -> bool:
     """Report whether a filer declaring ``regime`` and no composition still owes the Modelo 303 composition.
 
