@@ -116,6 +116,9 @@ _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
         # Scores against the ingestion measurement corpus, operator data held
         # outside the checkout that no runner holds or installs.
         "private_ingest_corpus",
+        # Needs the publisher's Google Desktop OAuth client, a host secret that
+        # is never committed and that no runner or ordinary checkout holds.
+        "google_publisher_client",
     },
 )
 
@@ -156,6 +159,7 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-workbook-parity",
         "test-locale-spelling",
         "test-ingest-corpus",
+        "test-google-publisher-client",
         "test-powershell-literal",
         "test-calculation-summary-pdf",
         # CTest's package-stage process assertions have their own opt-in lane;

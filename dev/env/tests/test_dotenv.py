@@ -17,7 +17,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import STORAGE_ROOT, ChildEnvironmentProfile, child_environment
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, GOOGLE_OAUTH_RESOURCE
 
-from ..dotenv import provision, provision_google_client
+from ..dotenv import provision, provision_google_client, provision_publisher_google_client
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -280,3 +280,44 @@ def test_setup_refuses_malformed_google_credentials_without_disclosure(
     assert provision_google_client(root) == 1
     assert not (root / GOOGLE_OAUTH_RESOURCE).exists()
     assert _MARKER not in _output(capsys)
+
+
+def test_publisher_staging_refuses_an_unset_client_naming_only_the_variable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.delenv(GOOGLE_OAUTH_ENV)
+    root = _worktree(tmp_path / "checkout", template=GOOGLE_OAUTH_ENV + "=\n")
+    assert provision_publisher_google_client(root) == 1
+    assert not (root / GOOGLE_OAUTH_RESOURCE).exists()
+    assert f"Set {GOOGLE_OAUTH_ENV} in the build environment or env/.env before packaging" in _output(capsys)
+
+
+def test_publisher_staging_refuses_a_malformed_client_without_disclosure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.delenv(GOOGLE_OAUTH_ENV)
+    root = _worktree(
+        tmp_path / "checkout",
+        template=GOOGLE_OAUTH_ENV + "=\n",
+        dotenv=GOOGLE_OAUTH_ENV + "='{invalid-" + _MARKER + "}'\n",
+    )
+    assert provision_publisher_google_client(root) == 1
+    assert not (root / GOOGLE_OAUTH_RESOURCE).exists()
+    output = _output(capsys)
+    assert GOOGLE_OAUTH_ENV in output
+    assert _MARKER not in output
+
+
+def test_publisher_staging_writes_the_configured_client_without_printing_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    synthetic = os.environ[GOOGLE_OAUTH_ENV]
+    root = _worktree(
+        tmp_path / "checkout",
+        template=GOOGLE_OAUTH_ENV + "=\n",
+        dotenv=GOOGLE_OAUTH_ENV + "='" + synthetic + "'\n",
+    )
+    monkeypatch.delenv(GOOGLE_OAUTH_ENV)
+    assert provision_publisher_google_client(root) == 0
+    assert (root / GOOGLE_OAUTH_RESOURCE).read_text(encoding="utf-8") == synthetic
+    assert synthetic not in _output(capsys)

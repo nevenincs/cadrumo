@@ -263,6 +263,24 @@ def provision_google_client(root: Path) -> int:
     return 0
 
 
+def provision_publisher_google_client(root: Path) -> int:
+    """Stage the publisher client the ``google_publisher_client`` tests need, refusing when none is configured.
+
+    Unlike setup, an unset client is an error here: the tests this stages for
+    must fail rather than skip without it. The refusal prints only the
+    variable-naming message, which never carries a parser detail or the value.
+    """
+    from dev.packaging.google_oauth import build_client_json, stage_build_client
+
+    try:
+        stage_build_client(root, build_client_json(root, required=True))
+    except ValueError as error:
+        print(error, file=sys.stderr, flush=True)
+        return 1
+    print("Staged the ignored Google Desktop client resource for the google_publisher_client tests.", flush=True)
+    return 0
+
+
 def env_setup() -> int:
     """Provision this checkout's `env/.env`, porting values from the main worktree."""
     return provision(REPO_ROOT, None)
@@ -271,6 +289,11 @@ def env_setup() -> int:
 def google_client_setup() -> int:
     """Materialize this checkout's ignored Google Desktop client resource from `env/.env`."""
     return provision_google_client(REPO_ROOT)
+
+
+def google_publisher_client_setup() -> int:
+    """Stage this checkout's publisher Google Desktop client, failing when none is configured."""
+    return provision_publisher_google_client(REPO_ROOT)
 
 
 def _port_assignment(

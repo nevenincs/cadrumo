@@ -442,7 +442,10 @@ def test_windows_recipe_provisions_the_component_only_installer_before_pytest() 
     pytest_commands = [index for index, line in enumerate(commands) if line.startswith("uv run --no-sync pytest ")]
     assert len(pytest_commands) == 1
     assert configure < build < publish < pytest_commands[0]
-    assert '-m "windows_only and not os_keychain and not native_package"' in commands[pytest_commands[0]]
+    assert (
+        '-m "windows_only and not os_keychain and not native_package and not google_publisher_client"'
+        in commands[pytest_commands[0]]
+    )
     assert "-n0" in commands[pytest_commands[0]]
     assert not any("cargo " in line or "x86_64-pc-windows-msvc" in line for line in commands)
     selected = _presets("configurePresets")["windows-tests-x64"]
