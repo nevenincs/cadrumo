@@ -822,8 +822,9 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
             }
         };
         tokio::pin!(startup_timeout);
-        let undecided_timeout = async {
-            match undecided_due(&shared, undecided) {
+        let undecided_at = undecided_due(&shared, undecided);
+        let undecided_timeout = async move {
+            match undecided_at {
                 Some(deadline) => tokio::time::sleep_until(deadline.into()).await,
                 None => std::future::pending::<()>().await,
             }
