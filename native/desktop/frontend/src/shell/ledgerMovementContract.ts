@@ -941,6 +941,6 @@ export type LedgerClassifyValidation =
 export type LedgerPropertySetField =
   LedgerBatchUpdatePreviewRequest["rows"][number]["properties"]["fields"][number];
 
-export const BATCH_ROW_LIMIT = 2000;
+export const BATCH_ROW_LIMIT = 2048;
 
 export const BATCH_PLAN_CHANGED = "REFUSED_LEDGER_BATCH_PLAN_CHANGED";

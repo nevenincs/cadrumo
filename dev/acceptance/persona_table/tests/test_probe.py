@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import InvalidOperation
 from importlib import import_module
 from pathlib import Path
 
@@ -129,7 +130,7 @@ def test_a_failure_before_verify_is_owned_by_unknown() -> None:
 
 
 def test_the_raising_module_is_the_innermost_in_tree_frame_of_the_traceback() -> None:
-    with pytest.raises(Exception) as caught:
+    with pytest.raises(InvalidOperation) as caught:
         coerce_decimal_strict("not a number")
     frame = innermost_cadrumo_frame(caught.value)
     assert frame is not None

@@ -49,6 +49,7 @@ from ...core.config import override_settings
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.capital_mobiliario_facts import resolve_capital_mobiliario_concept_vocabulary
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.contribuyente.posicion_facts import POSICION_SECTION
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -223,7 +224,7 @@ def test_every_declared_concept_can_be_linked_through_classification(world: _Wor
 def test_a_concept_the_registry_does_not_declare_is_refused(world: _World, ports: LedgerActionPorts) -> None:
     created = _row(world, ports)
 
-    with pytest.raises(Exception, match="bogus_concepto"):
+    with pytest.raises(RegistryValidationError, match="bogus_concepto"):
         resolve_classification_patch_values(
             LedgerClassifyPatch(concepto_capital_mobiliario="bogus_concepto"),
             ("concepto_capital_mobiliario",),

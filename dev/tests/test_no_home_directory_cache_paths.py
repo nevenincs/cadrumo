@@ -67,6 +67,12 @@ _HOME_IS_CORRECT: Final[dict[str, str]] = {
         "captures the user's home as one typed input to platform state-root resolution, not as a cache location"
     ),
     "dev/env/temp_reaper.py": "Claude Code's session transcript root, written by the tool this module observes",
+    "dev/measure/ledger_classification_speed.py": (
+        "Ollama's own model store, the default place the measured local engine keeps the models it presents"
+    ),
+    "dev/measure/tests/test_ledger_classification_speed.py": (
+        "asserts the measurement's default model store is Ollama's own home-directory store"
+    ),
 }
 
 #: Modules that name the home directory in order to REMOVE it from output, and

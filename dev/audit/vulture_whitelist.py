@@ -8,9 +8,6 @@ consumed in the body:
   ``execute()`` keyword contract on the ``ExecutableRequest`` Protocol stub
   (:mod:`cadrumo.adapters.outbound.google.api`). The stub body is ``...``; the
   names match the wire client's keyword arguments and cannot be renamed.
-* ``prop`` — the parameter of ``append`` on the ``_CustomDocumentProperties``
-  Protocol stub (:mod:`cadrumo.adapters.outbound.workbook.calc_sheets_xlsx`).
-  The stub body is ``...``; the parameter is part of the structural type.
 
 Each entry is kept only while vulture, run without this file, still reports
 its name; ``test_vulture_whitelist_is_not_stale`` enforces that, so a mirror
@@ -30,8 +27,3 @@ from __future__ import annotations
 def _execute(http: object, num_retries: object) -> tuple[object, object]:
     """Mirror ``ExecutableRequest.execute`` keyword contract."""
     return http, num_retries
-
-
-def _custom_document_properties_append(prop: object) -> object:
-    """Mirror ``_CustomDocumentProperties.append`` structural signature."""
-    return prop

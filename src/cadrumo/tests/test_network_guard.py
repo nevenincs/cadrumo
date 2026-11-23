@@ -14,17 +14,19 @@ import sys
 import textwrap
 from collections.abc import Mapping
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 from defusedxml import ElementTree
 
 from ..core.config import Settings
+from .aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from .audited_process import ensure_text_completed_process, run_audited_process
 from .network_guard import GUARD, PROXY_URL_VARIABLE, is_loopback_host, network_guard_armed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SEDE_HOST = "sede.agenciatributaria.gob.es"
+_SEDE_HOST = urlsplit(SEDE_ROOT_URL_FIXTURE).netloc
 
 _CONFTEST = """\
 pytest_plugins = ("cadrumo.tests.network_guard",)
@@ -53,9 +55,10 @@ from playwright.async_api import async_playwright
 from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 from cadrumo.tests.collection_storage_root import link_installed_component
+from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from cadrumo.tests.network_guard import GUARD, PROXY_URL_VARIABLE, NetworkGuardRefusedError, network_guard_armed
 
-SEDE = "https://sede.agenciatributaria.gob.es/"
+SEDE = SEDE_ROOT_URL_FIXTURE
 
 WORKER = """
 import asyncio
@@ -63,6 +66,7 @@ import asyncio
 from cadrumo.adapters.outbound.aeat.browser.factory import create_browser_session
 from cadrumo.adapters.outbound.aeat.browser.profile import Profile
 from cadrumo.core.config import Settings
+from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
 
 async def main():
@@ -73,7 +77,7 @@ async def main():
         context = await session.create_context()
         page = await context.new_page()
         try:
-            await page.goto("https://sede.agenciatributaria.gob.es/", timeout=20000)
+            await page.goto(SEDE_ROOT_URL_FIXTURE, timeout=20000)
             print("reached", flush=True)
         except Exception as error:
             print("refused", str(error).splitlines()[0], flush=True)

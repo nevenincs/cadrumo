@@ -17,7 +17,6 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    authored_revisions_where,
     filing_year_envelope,
     newest_authored_editions,
     open_ended_revision,
@@ -701,30 +700,37 @@ def test_final_live_validator_compiles_the_live_root_without_restaging_the_targe
     assert compiles == [(target_root, {"verify_evidence_bytes": True})]
 
 
-def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authority() -> None:
-    """Bootstrap publication can validate static output without promoting Modelo 200."""
+def test_a_calculation_grade_revision_does_not_widen_its_runtime_filing_authority() -> None:
+    """A revision authored at calculation grade serves a calculation snapshot and refuses a filing one."""
     authority = compiled_bundled_authority()
+    envelope = filing_year_envelope()
 
-    calculation_grade = authored_revisions_where(
-        "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
-    )
-    assert calculation_grade, "Modelo 200 authors no calculation-grade revision to keep from filing"
-    newest = calculation_grade[-1]
-    exercise = newest.valid_from.year
-    revision_id = str(newest.id)
+    candidates = [
+        (str(modelo.id), revision, year, periods[0])
+        for modelo in sorted(authority.modelos, key=lambda item: str(item.id))
+        for revision in modelo.revisions.values()
+        if revision.authority_grade is RegistryAuthorityGrade.CALCULATION
+        for year in sorted(envelope.years)
+        if revision.valid_from.year <= year and (revision.valid_to is None or year <= revision.valid_to.year)
+        if (periods := revision.period_selector.periods_for_year(year))
+    ]
+    assert candidates, "the compiled registry authors no calculation-grade revision inside the support envelope"
+    modelo_id, revision, exercise, period = candidates[0]
+    revision_id = str(revision.id)
+
     calculation = authority.snapshot(
-        "200",
+        modelo_id,
         filing_year=exercise,
-        period="0A",
-        revision_id=revision_id,
+        period=period,
+        revision_id=revision.id,
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     with pytest.raises(RegistryValidationError, match="cannot satisfy the requested 'filing' snapshot authority"):
         authority.snapshot(
-            "200",
+            modelo_id,
             filing_year=exercise,
-            period="0A",
-            revision_id=revision_id,
+            period=period,
+            revision_id=revision.id,
             grade=RegistryAuthorityGrade.FILING,
         )
 
