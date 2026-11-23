@@ -242,6 +242,15 @@
             },
             {
               "directions": [
+                "OUTGOING"
+              ],
+              "id": "premios",
+              "net_paid_invoice": false,
+              "purpose": "prize_payment_withholding",
+              "related_category_ids": []
+            },
+            {
+              "directions": [
                 "INCOMING"
               ],
               "id": "trabajo",
@@ -257,6 +266,7 @@
             "capital_inmobiliario",
             "capital_mobiliario",
             "ganancias_patrimoniales",
+            "premios",
             "trabajo"
           ],
           "net_paid_withholding_irpf_category_ids": [

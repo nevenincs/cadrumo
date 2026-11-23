@@ -65,12 +65,20 @@
           "checked_transaction_count": 2,
           "issues": [
             {
+              "derived_modification_base": null,
+              "derived_modification_cuota": null,
+              "derived_modification_recargo": null,
               "detail": "business classification 'NOT_YET_PROCESSED' is not ready for modelo calculation",
+              "missing_facts": [],
               "reason": "missing_business_classification",
               "transaction_id": "21853f4f5ebb8a636d83ff9d60f410bb414634032df9a120a98691ca1e5c0e80"
             },
             {
+              "derived_modification_base": null,
+              "derived_modification_cuota": null,
+              "derived_modification_recargo": null,
               "detail": "business classification 'NOT_YET_PROCESSED' is not ready for modelo calculation",
+              "missing_facts": [],
               "reason": "missing_business_classification",
               "transaction_id": "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e"
             }

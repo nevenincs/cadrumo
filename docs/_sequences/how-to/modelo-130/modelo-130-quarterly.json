@@ -405,7 +405,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a"
+          "value": "77432dbd569d1adbf6956e81f76d6afe3b1cdb723702e2bc25c70c876ec7130c"
         }
       ],
       "envelope": {
@@ -433,7 +433,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a",
+          "calculation_revision_id": "77432dbd569d1adbf6956e81f76d6afe3b1cdb723702e2bc25c70c876ec7130c",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -583,7 +583,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 77432dbd569d1adbf6956e81f76d6afe3b1cdb723702e2bc25c70c876ec7130c (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -633,7 +633,7 @@
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
+              "fingerprint": "sha256:09e755549c76025b79a7acd4844b529886a8de9d61ea57a610d9facfe8cdd990",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -669,7 +669,7 @@
         "modelo",
         "work",
         "verify",
-        "06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a"
+        "77432dbd569d1adbf6956e81f76d6afe3b1cdb723702e2bc25c70c876ec7130c"
       ],
       "captures": [],
       "envelope": {
@@ -717,7 +717,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "06ab6e15da627123f0ac01af3465cbd3e49b09bc85f1be2ad934a4e58e36f49a",
+          "calculation_revision_id": "77432dbd569d1adbf6956e81f76d6afe3b1cdb723702e2bc25c70c876ec7130c",
           "completeness_status": "complete",
           "findings": [
             {
@@ -763,7 +763,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "e827a72072785fc24613c1c87d8057bbc6ce5807029cb8e8ce22446d57ad1773",
+          "verification_report_id": "65c5bc710475d8f9a2e006070d4448612bc6ecfbd89536c43ec01d766a498bae",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

@@ -245,7 +245,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "5a2d8692e65f375cd0eff26506625b2b904233ce5e560538566739512f2e2883",
+          "calculation_revision_id": "30e57475f1691847c752f99e915e1a6205d114caceda8d794cdf24c0eb499427",
           "casilla_values": {
             "01": "1000",
             "02": "525.00",
@@ -435,7 +435,7 @@
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
+              "fingerprint": "sha256:09e755549c76025b79a7acd4844b529886a8de9d61ea57a610d9facfe8cdd990",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",

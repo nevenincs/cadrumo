@@ -407,7 +407,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "8cbffaec2335dcf91f9c670b186e2f45ba186fdbd253ba9453e16d56fca93a1d"
+          "value": "2caf74dbdd622b8a87a63201142b992a4a57d150550f79f28dce24976d750677"
         }
       ],
       "envelope": {
@@ -451,7 +451,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "8cbffaec2335dcf91f9c670b186e2f45ba186fdbd253ba9453e16d56fca93a1d",
+          "calculation_revision_id": "2caf74dbdd622b8a87a63201142b992a4a57d150550f79f28dce24976d750677",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -601,7 +601,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8cbffaec2335dcf91f9c670b186e2f45ba186fdbd253ba9453e16d56fca93a1d (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 2caf74dbdd622b8a87a63201142b992a4a57d150550f79f28dce24976d750677 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -651,7 +651,7 @@
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
+              "fingerprint": "sha256:09e755549c76025b79a7acd4844b529886a8de9d61ea57a610d9facfe8cdd990",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -687,7 +687,7 @@
         "modelo",
         "work",
         "revision",
-        "8cbffaec2335dcf91f9c670b186e2f45ba186fdbd253ba9453e16d56fca93a1d"
+        "2caf74dbdd622b8a87a63201142b992a4a57d150550f79f28dce24976d750677"
       ],
       "captures": [],
       "envelope": {
@@ -714,7 +714,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "8cbffaec2335dcf91f9c670b186e2f45ba186fdbd253ba9453e16d56fca93a1d",
+          "calculation_revision_id": "2caf74dbdd622b8a87a63201142b992a4a57d150550f79f28dce24976d750677",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -904,7 +904,7 @@
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
+              "fingerprint": "sha256:09e755549c76025b79a7acd4844b529886a8de9d61ea57a610d9facfe8cdd990",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",

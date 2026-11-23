@@ -90,7 +90,7 @@
             }
           ],
           "profile_id": "<profile-id>",
-          "schema_version": 15,
+          "schema_version": 16,
           "setup_state": "complete",
           "valid": true
         },
