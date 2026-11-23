@@ -58,6 +58,19 @@ export const matrixLane = (scope: Locator, way: string) =>
 export const matrixRows = (scope: Locator, way: string) =>
   scope.locator(`tr[data-slot=model-matrix-row][data-way="${way}"]`);
 
+/** How many models a lane that cannot be chosen yet has, said under its
+ * heading in place of its rows, in either of its words. */
+export const laneModelsNote = (scope: Locator, way: string) =>
+  matrixLane(scope, way).locator("[data-slot=model-matrix-lane-models]");
+export const laneModelsWords = new RegExp(
+  [
+    "desktop.agent.model_matrix_lane_models",
+    "desktop.agent.model_matrix_lane_models_one",
+  ]
+    .map((key) => worded(key).source)
+    .join("|"),
+);
+
 /** The cell of `model` on the lane `way` for `effort`, or for the
  * provider's default where none is named. */
 export const matrixCell = (

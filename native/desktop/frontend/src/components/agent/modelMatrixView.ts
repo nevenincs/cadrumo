@@ -23,21 +23,32 @@ import type { Translate } from "../../shell/strings";
  * conversation runs with. */
 export type MatrixMode = "task" | "conversation";
 
-/** The filters a matrix can apply: lanes on and lanes off, lanes ready and
- * lanes that need setting up. In each pair, none pressed shows both. */
+/** Whether a lane is on in the provider settings: every lane, or only those
+ * on, or only those off. */
+export type MatrixState = "all" | "on" | "off";
+
+/** Whether a lane can be chosen now: every lane, or only those ready, or only
+ * those that need setting up first, a lane turned off among them. */
+export type MatrixAvailability = "all" | "ready" | "setup";
+
+export const MATRIX_STATES: readonly MatrixState[] = ["all", "on", "off"];
+export const MATRIX_AVAILABILITIES: readonly MatrixAvailability[] = [
+  "all",
+  "ready",
+  "setup",
+];
+
+/** The two filters of a matrix, each one choice; a lane is shown where both
+ * keep it. */
 export type MatrixFilters = {
-  on: boolean;
-  off: boolean;
-  ready: boolean;
-  setup: boolean;
+  state: MatrixState;
+  availability: MatrixAvailability;
 };
 
 /** Lanes that are on, whatever their standing: what a matrix starts with. */
 export const STARTING_FILTERS: MatrixFilters = {
-  on: true,
-  off: false,
-  ready: false,
-  setup: false,
+  state: "on",
+  availability: "all",
 };
 
 /** A column: the provider's own default, or one effort. */
@@ -88,7 +99,11 @@ export type MatrixLane = {
    * the step is starting its engine. */
   step: MatrixStep | null;
   door: EngineDoor | null;
+  /** The rows that can be shown: a lane that is not ready shows none, only
+   * how many models it has. */
   rows: MatrixRow[];
+  /** How many of the lane's models the search keeps. */
+  models: number;
 };
 
 export type MatrixView = {
@@ -98,8 +113,8 @@ export type MatrixView = {
   offHidden: number;
   /** No lane is on: there is nothing to choose until one is. */
   noneOn: boolean;
-  /** The rows shown. */
-  rows: number;
+  /** The models of the lanes shown, the search's matches. */
+  models: number;
 };
 
 /** The key a row is known by: its lane and its model, which no lane id
@@ -207,6 +222,7 @@ function everyLane(
         }: { step: MatrixStep | null; door: EngineDoor | null } = ready
           ? { step: lane.modelsToDownload ? "download" : null, door: null }
           : stepOf(lane);
+        const rows = laneRows(offer, lane, mode, ready);
         return {
           id: lane.id,
           wayId: lane.wayId,
@@ -227,7 +243,8 @@ function everyLane(
                   : null,
           step: lane.on === false ? "set_up" : step,
           door: lane.on === false ? null : door,
-          rows: laneRows(offer, lane, mode, ready),
+          rows,
+          models: rows.length,
         };
       }),
   );
@@ -247,6 +264,7 @@ function everyLane(
       step: "set_up",
       door: null,
       rows: [],
+      models: 0,
     }),
   );
   return [...offered, ...off];
@@ -269,8 +287,9 @@ const passes = (lane: MatrixLane, filters: MatrixFilters) => {
   const on = lane.standing !== "off";
   const ready = lane.standing === "ready";
   return (
-    (filters.on === filters.off || (on ? filters.on : filters.off)) &&
-    (filters.ready === filters.setup || (ready ? filters.ready : filters.setup))
+    (filters.state === "all" || (filters.state === "on") === on) &&
+    (filters.availability === "all" ||
+      (filters.availability === "ready") === ready)
   );
 };
 
@@ -297,11 +316,23 @@ export function matrixView(
     );
     const kept =
       rows.length > 0 || (lane.rows.length === 0 && offerMatches(words, query));
-    return kept ? [{ ...lane, rows }] : [];
+    // A lane that is not ready offers no choice: its models are counted
+    // under its heading, not listed as cells that cannot be pressed.
+    return kept
+      ? [
+          {
+            ...lane,
+            rows: lane.standing === "ready" ? rows : [],
+            models: rows.length,
+          },
+        ]
+      : [];
   });
   const lanes = found.filter((lane) => passes(lane, filters));
   const shown = new Set(
-    lanes.flatMap((lane) => lane.rows.flatMap((row) => row.efforts)),
+    lanes.flatMap((lane) =>
+      lane.rows.flatMap((row) => (row.choosable ? row.efforts : [])),
+    ),
   );
   return {
     columns: ["default", ...EFFORTS.filter((effort) => shown.has(effort))],
@@ -310,7 +341,7 @@ export function matrixView(
       (lane) => lane.standing === "off" && !lanes.includes(lane),
     ).length,
     noneOn: every.length > 0 && every.every((lane) => lane.standing === "off"),
-    rows: lanes.reduce((count, lane) => count + lane.rows.length, 0),
+    models: lanes.reduce((count, lane) => count + lane.models, 0),
   };
 }
 
@@ -318,14 +349,17 @@ export function matrixView(
 export type MatrixCell = { row: string; column: MatrixColumn };
 
 /** The cells a row has, in column order: the default, then each effort the
- * row's model takes that is a column. */
+ * row's model takes that is a column; none for a row that cannot be chosen,
+ * as a model this computer does not hold yet. */
 export const rowCells = (
-  row: Pick<MatrixRow, "efforts">,
+  row: Pick<MatrixRow, "efforts" | "choosable">,
   columns: readonly MatrixColumn[],
 ): MatrixColumn[] =>
-  columns.filter(
-    (column) => column === "default" || row.efforts.includes(column),
-  );
+  row.choosable
+    ? columns.filter(
+        (column) => column === "default" || row.efforts.includes(column),
+      )
+    : [];
 
 /** The keys that move in the matrix. */
 export type MatrixKey =
@@ -349,8 +383,11 @@ export function matrixMove(
   at: MatrixCell,
   key: MatrixKey,
 ): MatrixCell {
+  // Only rows with cells are stood on.
   const rows = view.lanes.flatMap((lane, group) =>
-    lane.rows.map((row) => ({ row, group })),
+    lane.rows
+      .filter((row) => rowCells(row, view.columns).length > 0)
+      .map((row) => ({ row, group })),
   );
   const index = rows.findIndex((entry) => entry.row.key === at.row);
   const current = rows[index];

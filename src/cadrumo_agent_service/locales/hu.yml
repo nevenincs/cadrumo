@@ -183,16 +183,19 @@ desktop:
     model_does_not_fit_shortfall: Ennek a modellnek körülbelül {needed} token kontextusra
       van szüksége ehhez a beszélgetéshez, többre, mint az a {context}, amelyet befogad.
       Válassz másik modellt vagy másik szolgáltatót ehhez a beszélgetéshez.
+    model_matrix_availability: Elérhetőség
     model_matrix_cell: '{model}, {effort}'
     model_matrix_clear_search: Keresés törlése
     model_matrix_count: '{count} modell látható'
     model_matrix_count_one: 1 modell látható
+    model_matrix_filter_all: Összes
     model_matrix_filter_off: Kikapcsolva
     model_matrix_filter_on: Bekapcsolva
     model_matrix_filter_ready: Kész
     model_matrix_filter_setup: Beállítandó
-    model_matrix_filters: Szolgáltatók megjelenítése
     model_matrix_label: Modellek és ráfordítások
+    model_matrix_lane_models: '{count} modell'
+    model_matrix_lane_models_one: 1 modell
     model_matrix_none_on: Egy szolgáltató sincs bekapcsolva. Kapcsolj be egyet az
       MI-szolgáltatóknál.
     model_matrix_off_hidden: '{count} szolgáltató ki van kapcsolva'
@@ -200,6 +203,7 @@ desktop:
     model_matrix_search_empty: Egy modell sem felel meg a keresésednek.
     model_matrix_search_label: Modellek keresése
     model_matrix_show: Megjelenítés
+    model_matrix_state: Állapot
     model_not_installed: '{name} (nincs letöltve)'
     model_not_installed_refused: A választott modell nincs ezen a gépen. Töltsd le,
       vagy válassz másik modellt.
@@ -472,7 +476,8 @@ desktop:
   providers:
     add_key: API-kulcs hozzáadása
     address: 'Cím: {url}'
-    agent_starting: Az ügynök indul. A szolgáltatók akkor jelennek meg, amikor elkészült.
+    agent_starting: Az ügynök indul. Ezeket a beállításokat akkor módosíthatod, amikor
+      elkészült.
     base_url_default: 'Hagyd üresen, és ezt használjuk: {url}.'
     base_url_label: Kiszolgáló címe
     base_url_required: Add meg a szolgáltatótól kapott címet.
@@ -702,7 +707,13 @@ desktop:
     status_setup_needed: Nincs beállítva
     status_sign_in_needed: Nincs bejelentkezve
     status_signed_in: Bejelentkezve
+    status_starting: Várakozás az ügynökre
     status_unconfirmed: A bejelentkezés nincs megerősítve
+    task_kind_classification: Osztályozás
+    task_kind_classification_description: Címke hozzárendelése egy zárt halmazból
+      egy dokumentumhoz vagy rekordhoz.
+    task_kind_extraction: Kinyerés
+    task_kind_extraction_description: Strukturált mezők kiolvasása egy dokumentumból.
     task_model_change: Módosítás
     task_model_change_label: 'Módosítsd, mivel fut: {task}'
     task_model_model: 'Modell ehhez: {task}'

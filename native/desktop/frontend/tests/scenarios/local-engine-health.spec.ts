@@ -2,6 +2,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import {
   agentColumn as column,
+  laneModelsNote,
+  laneModelsWords,
   matrixLane,
   matrixRows,
   openModelPicker,
@@ -124,16 +126,16 @@ const setupPanel = (target: Page) =>
   target.getByRole("dialog", { name: label("desktop.setup.title") });
 
 /** The picker holds the engine's lane back, says `words` for it rather
- * than that its transport is unreachable, and offers none of its models. */
+ * than that its transport is unreachable, and offers none of its models:
+ * they are counted under its heading, not listed as rows to choose. */
 async function expectHeldInPicker(picker: Locator, way: string, words: string) {
   const lane = matrixLane(picker, way);
   await expect(lane).toHaveAttribute("data-standing", "setup");
   await expect(lane).toContainText(words);
   await expect(lane).not.toContainText(label("desktop.agent.lane_unreachable"));
-  await expect(matrixRows(picker, way).first()).toBeVisible();
-  await expect(
-    matrixRows(picker, way).locator("[role=radio]:not([aria-disabled])"),
-  ).toHaveCount(0);
+  await expect(laneModelsNote(picker, way)).toHaveText(laneModelsWords);
+  await expect(matrixRows(picker, way)).toHaveCount(0);
+  await expect(lane.locator("[role=radio]")).toHaveCount(0);
 }
 
 /** The door led to the provisioning panel, opened on the local AI row. */

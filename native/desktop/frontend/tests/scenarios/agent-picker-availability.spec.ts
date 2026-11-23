@@ -286,9 +286,8 @@ test("with no provider to choose, the picker says why of each lane rather than s
     label("desktop.agent.lane_no_installed_model"),
   );
   await expect(laneSteps(picker, LOCAL, "download")).toHaveCount(1);
-  await expect(
-    picker.locator("[role=radio][data-matrix-cell]:not([aria-disabled])"),
-  ).toHaveCount(0);
+  await expect(picker.locator("tr[data-slot=model-matrix-row]")).toHaveCount(0);
+  await expect(picker.locator("[role=radio][data-matrix-cell]")).toHaveCount(0);
   await expect(picker.locator("[data-slot=model-matrix-empty]")).toHaveCount(0);
 });
 

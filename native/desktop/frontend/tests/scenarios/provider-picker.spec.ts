@@ -11,6 +11,7 @@ import {
   offeredModels,
   pickWay,
   settled,
+  worded,
 } from "../support/agent";
 import { bundledMark, connectionLabel } from "../support/connection";
 import { SERVED_ENGINE } from "../support/servedLocalLanes";
@@ -85,8 +86,22 @@ const searchField = (settings: Locator) =>
   settings.getByRole("searchbox", {
     name: label("desktop.agent.model_matrix_search_label"),
   });
-const filter = (settings: Locator, name: "on" | "off" | "ready" | "setup") =>
-  settings.locator(`[data-filter=${name}]`);
+/** The choice `name` of the filter `axis`: a lane's state in the provider
+ * settings, or whether it can be chosen now. */
+const filter = (
+  settings: Locator,
+  axis: "state" | "availability",
+  name: "all" | "on" | "off" | "ready" | "setup",
+) => settings.locator(`[data-filter-axis=${axis}] [data-filter=${name}]`);
+/** The filter `axis` as the one labelled choice it is. */
+const filterGroup = (settings: Locator, axis: "state" | "availability") =>
+  settings.getByRole("radiogroup", {
+    name: label(
+      axis === "state"
+        ? "desktop.agent.model_matrix_state"
+        : "desktop.agent.model_matrix_availability",
+    ),
+  });
 
 /** The model row whose cell is the one chosen. */
 const chosenRow = (settings: Locator) =>
@@ -158,10 +173,19 @@ test("the searchable matrix has one heading for each connection, with its provid
   const settings = await openSettings(target);
 
   // Nothing offers a way to choose how a provider is reached: a person
-  // chooses a cell of one matrix, and every choice is one of its cells.
-  await expect(settings.getByRole("radiogroup")).toHaveCount(0);
+  // chooses a cell of one matrix, and every choice is one of its cells. The
+  // only other choices are the matrix's two filters.
+  await expect(settings.getByRole("radiogroup")).toHaveCount(2);
+  await expect(filterGroup(settings, "state")).toHaveAttribute(
+    "data-filter-axis",
+    "state",
+  );
+  await expect(filterGroup(settings, "availability")).toHaveAttribute(
+    "data-filter-axis",
+    "availability",
+  );
   await expect(
-    settings.locator("[role=radio]:not([data-matrix-cell])"),
+    settings.locator("[role=radio]:not([data-matrix-cell]):not([data-filter])"),
   ).toHaveCount(0);
   await expect(settings.getByRole("switch")).toHaveCount(0);
   await expect(settings.getByRole("tablist")).toHaveCount(0);
@@ -224,26 +248,76 @@ test("the searchable matrix has one heading for each connection, with its provid
     settings.locator("tr[data-slot=model-matrix-lane][data-standing=setup]"),
   ).toHaveCount(held.length);
 
-  // The lanes that are on are shown to start with; the filters set the ready
-  // ones apart from those that need setting up.
-  await expect(filter(settings, "on")).toHaveAttribute("aria-pressed", "true");
-  await filter(settings, "ready").click();
+  // The lanes that are on are shown to start with, ready or not; the second
+  // filter sets the ready ones apart from those that need setting up.
+  await expect(filter(settings, "state", "on")).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await expect(filter(settings, "availability", "all")).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  // What is shown is counted, in words a screen reader hears as it changes.
+  const count = settings
+    .getByRole("status")
+    .and(settings.locator("[data-slot=model-matrix-count]"));
+  await expect(count).toHaveText(
+    new RegExp(
+      [
+        "desktop.agent.model_matrix_count",
+        "desktop.agent.model_matrix_count_one",
+      ]
+        .map((key) => worded(key).source)
+        .join("|"),
+    ),
+  );
+  const shownAtFirst = (await count.textContent()) ?? "";
+  await filter(settings, "availability", "ready").click();
+  await expect(filter(settings, "availability", "ready")).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await expect(filter(settings, "availability", "all")).toHaveAttribute(
+    "aria-checked",
+    "false",
+  );
   await expect(headings).toHaveCount(lanes.length - held.length);
   await expect(
     settings.locator(
       "tr[data-slot=model-matrix-lane]:not([data-standing=ready])",
     ),
   ).toHaveCount(0);
-  // Both pressed is neither left out.
-  await filter(settings, "setup").click();
+  // All leaves none out.
+  await filter(settings, "availability", "all").click();
   await expect(headings).toHaveCount(lanes.length);
-  await filter(settings, "ready").click();
+  await expect(count).toHaveText(shownAtFirst);
+  await filter(settings, "availability", "setup").click();
   await expect(headings).toHaveCount(held.length);
   await expect(
     settings.locator(
       "tr[data-slot=model-matrix-lane]:not([data-standing=setup])",
     ),
   ).toHaveCount(0);
+  // A lane held back shows no models to choose, only how many it has.
+  await expect(settings.locator("tr[data-slot=model-matrix-row]")).toHaveCount(
+    0,
+  );
+  // The two filters meet: needing setup, a lane turned off is among them,
+  // and the state filter keeps only those, or both.
+  await filter(settings, "state", "off").click();
+  await expect(
+    settings.locator(
+      "tr[data-slot=model-matrix-lane]:not([data-standing=off])",
+    ),
+  ).toHaveCount(0);
+  const off = await headings.count();
+  await filter(settings, "state", "all").click();
+  await expect(headings).toHaveCount(held.length + off);
+  // No lane turned off is ready.
+  await filter(settings, "state", "off").click();
+  await filter(settings, "availability", "ready").click();
+  await expect(headings).toHaveCount(0);
 });
 
 test("search filters connection types and reports no matches", async ({
@@ -530,19 +604,22 @@ test("a held lane cannot be chosen, and says why", async ({ page: target }) => {
     await expect(
       held.locator("[data-slot=model-matrix-lane-words]"),
     ).toHaveText(why);
+    // It offers no model to choose, only how many it has.
+    await expect(matrixRows(settings, wayOf(served))).toHaveCount(0);
+    await expect(held.locator("[role=radio]")).toHaveCount(0);
   }
-  // A model this computer lacks is listed, and cannot be chosen either.
+  // A model this computer lacks is listed, and cannot be chosen either: its
+  // row has no cell to press.
   const lacking = matrixRows(settings, "llamacpp/api").and(
     settings.locator("[data-held=false]"),
   );
   await expect(lacking).toHaveCount(1);
   await expect(lacking).toHaveAttribute("aria-disabled", "true");
-  const lackingCell = lacking.locator('[role=radio][data-column="default"]');
-  await expect(lackingCell).toHaveAttribute("aria-disabled", "true");
-  // Pressed all the same: a disabled cell is still in the grid to be pressed.
-  await lackingCell.click({ force: true });
+  await expect(lacking.getByRole("rowheader")).toHaveText(
+    worded("desktop.agent.model_not_installed"),
+  );
+  await expect(lacking.locator("[role=radio]")).toHaveCount(0);
   // The lane in use stays as it was.
-  await expect(lackingCell).toHaveAttribute("aria-checked", "false");
   await expect(
     matrixCell(settings, "kimi/api", "fixture-deep"),
   ).toHaveAttribute("aria-checked", "true");
@@ -771,8 +848,18 @@ for (const width of [390, 520]) {
         name: label("desktop.agent.model_matrix_label"),
       });
       await expect(laneHeadings(settings)).toHaveCount(lanes.length);
-      // What scrolls the matrix is the box around its grid.
-      const scroller = grid.locator("xpath=..");
+      // What scrolls the matrix is the box around its grid, and nothing else
+      // of the settings scrolls.
+      const scroller = settings.locator("[data-slot=model-matrix-scroller]");
+      await expect(grid.locator("xpath=..")).toHaveAttribute(
+        "data-slot",
+        "model-matrix-scroller",
+      );
+      expect(
+        await settings.evaluate(
+          (node) => node.scrollHeight > node.clientHeight,
+        ),
+      ).toBe(false);
       const edge = (await scroller.boundingBox())!;
       expect(edge.x).toBeGreaterThanOrEqual(0);
       expect(edge.x + edge.width).toBeLessThanOrEqual(width);

@@ -3,9 +3,10 @@ import { label } from "../support/strings";
 
 // The provider status is the service's own store read and waits on nothing:
 // its busy answer only means the host has not yet admitted the service, which
-// takes a moment. The settings say the agent is starting and ask nothing
-// again by time; they read again on the status the host publishes once the
-// service is admitted, so the lanes are drawn soon after.
+// takes a moment. The settings say the agent is starting, drawing each
+// connection as waiting on it, and ask nothing again by time; they read again
+// on the status the host publishes once the service is admitted, so the
+// settings are drawn soon after.
 
 const DRAWN_AFTER_RELEASE_MS = 600;
 
@@ -38,14 +39,22 @@ test("provider settings answered busy wait without a timer and are drawn within 
   expect(await busyReads(target)).toBe(1);
   await target.waitForTimeout(1_500);
   expect(await busyReads(target)).toBe(1);
-  await expect(providers(target).locator("[data-provider]")).toHaveCount(0);
+  // The connections are drawn waiting on the agent; none can be opened yet.
+  await expect(
+    providers(target).locator(
+      "[data-slot=provider-status]:not([data-status=starting])",
+    ),
+  ).toHaveCount(0);
+  await expect(
+    providers(target).locator("[data-slot=lane-expander]"),
+  ).toHaveCount(0);
 
   const released = await target.evaluate(() => {
     window.__scenarioProviderSignIn!.releaseSettingsBusy();
     return performance.now();
   });
   await expect(
-    providers(target).locator("[data-provider]").first(),
+    providers(target).locator("[data-slot=lane-expander]").first(),
   ).toBeVisible({ timeout: 6_000 });
   const drawn = await target.evaluate(() => performance.now());
   expect(drawn - released).toBeLessThanOrEqual(DRAWN_AFTER_RELEASE_MS);

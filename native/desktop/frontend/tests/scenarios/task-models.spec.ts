@@ -1,6 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import {
+  laneModelsNote,
+  laneModelsWords,
   matrixCell,
   matrixLane,
   matrixRows,
@@ -37,10 +39,18 @@ const effortOf = (target: Page, kind: string) =>
 
 type Kind = (typeof FIXTURE_CATALOG.task_kinds)[number];
 
+/** A kind's name and description in the window's own words: the agent
+ * serves them in English only, and the window says the kinds it knows in its
+ * language. */
+const taskName = (kind: Kind) =>
+  label(`desktop.providers.task_kind_${kind.id}`);
+const taskDescription = (kind: Kind) =>
+  label(`desktop.providers.task_kind_${kind.id}_description`);
+
 const changeButton = (target: Page, kind: Kind) =>
   row(target, kind.id).getByRole("button", {
     name: label("desktop.providers.task_model_change_label", {
-      task: kind.display_name,
+      task: taskName(kind),
     }),
   });
 
@@ -50,7 +60,7 @@ async function openChange(target: Page, kind: Kind): Promise<Locator> {
   await changeButton(target, kind).click();
   const chooser = target.getByRole("dialog", {
     name: label("desktop.providers.task_model_model", {
-      task: kind.display_name,
+      task: taskName(kind),
     }),
   });
   await expect(chooser).toBeVisible();
@@ -101,7 +111,12 @@ test("each served task kind uses the reading model until a model and effort are 
     await expect(effortOf(target, kind.id)).toHaveText(
       label("desktop.agent.effort_provider_default"),
     );
-    await expect(row(target, kind.id)).toContainText(kind.description);
+    await expect(row(target, kind.id).getByRole("rowheader")).toContainText(
+      taskName(kind),
+    );
+    await expect(row(target, kind.id)).toContainText(taskDescription(kind));
+    // The served English words stand in for no kind the window knows.
+    await expect(row(target, kind.id)).not.toContainText(kind.display_name);
   }
   expect(await storedTasks(target)).toEqual([]);
 
@@ -180,9 +195,9 @@ test("each served task kind uses the reading model until a model and effort are 
   await useReading(chooser).click();
   await expect.poll(() => storedTasks(target)).toEqual([]);
   await expect(useReading(chooser)).toHaveAttribute("aria-pressed", "true");
-  await expect(chooser.locator("[role=radio][aria-checked=true]")).toHaveCount(
-    0,
-  );
+  await expect(
+    chooser.locator("[role=radio][data-matrix-cell][aria-checked=true]"),
+  ).toHaveCount(0);
   await expect(runsWith(target, first.id)).toHaveText(reading);
   await expect(effortOf(target, first.id)).toHaveText(
     label("desktop.agent.effort_provider_default"),
@@ -327,16 +342,15 @@ test("a lane a task cannot run on yet says why with the picker's step, and a mod
     signedOut.locator("[data-slot=model-matrix-lane-words]"),
   ).toHaveText(label("desktop.agent.lane_signed_out"));
 
-  const absent = matrixRows(chooser, "zai/api")
-    .and(chooser.locator("[data-held=false]"))
-    .first();
-  await expect(absent).toHaveAttribute("aria-disabled", "true");
-  await expect(absent.getByRole("rowheader")).toHaveText(
-    worded("desktop.agent.model_not_installed"),
-  );
-  await expect(
-    absent.locator('[role=radio][data-column="default"]'),
-  ).toBeDisabled();
+  // Neither lane offers a model to set: each counts its models under its
+  // heading, with no row or cell to press.
+  for (const way of ["zai/api", "kimi/cli"]) {
+    await expect(matrixRows(chooser, way)).toHaveCount(0);
+    await expect(matrixLane(chooser, way).locator("[role=radio]")).toHaveCount(
+      0,
+    );
+  }
+  await expect(laneModelsNote(chooser, "zai/api")).toHaveText(laneModelsWords);
 
   const providerExpander = (provider: string) =>
     target

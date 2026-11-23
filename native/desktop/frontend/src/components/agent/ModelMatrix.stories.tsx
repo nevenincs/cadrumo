@@ -116,9 +116,57 @@ export const ManyModels: Story = {
   play: search("example many"),
 };
 
+/** Chooses `state` and `availability` in the matrix's two filters. */
+const filtered =
+  (state: string, availability: string): NonNullable<Story["play"]> =>
+  async (context) => {
+    await press(`[data-filter-axis=state] [data-filter=${state}]`)(context);
+    await press(
+      `[data-filter-axis=availability] [data-filter=${availability}]`,
+    )(context);
+  };
+
 export const NeedsSetup: Story = {
   name: "Filtered to needs setup",
-  play: press("[data-slot=model-matrix] [data-filter=setup]"),
+  play: filtered("on", "setup"),
+};
+
+export const UnavailableLane: Story = {
+  name: "A lane not available yet, its models counted",
+  play: search("llamacpp"),
+};
+
+export const FilterAllAll: Story = {
+  name: "Filter: every status, every availability",
+  play: filtered("all", "all"),
+};
+export const FilterAllReady: Story = {
+  name: "Filter: every status, ready",
+  play: filtered("all", "ready"),
+};
+export const FilterAllSetup: Story = {
+  name: "Filter: every status, needs setup",
+  play: filtered("all", "setup"),
+};
+export const FilterOnAll: Story = {
+  name: "Filter: on, every availability",
+  play: filtered("on", "all"),
+};
+export const FilterOnReady: Story = {
+  name: "Filter: on, ready",
+  play: filtered("on", "ready"),
+};
+export const FilterOffAll: Story = {
+  name: "Filter: off, every availability",
+  play: filtered("off", "all"),
+};
+export const FilterOffReady: Story = {
+  name: "Filter: off, ready (nothing)",
+  play: filtered("off", "ready"),
+};
+export const FilterOffSetup: Story = {
+  name: "Filter: off, needs setup",
+  play: filtered("off", "setup"),
 };
 
 export const OffShown: Story = {
