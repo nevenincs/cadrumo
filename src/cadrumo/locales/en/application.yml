@@ -904,6 +904,10 @@ application:
         active: Active
         retired: Retired
   invoices:
+    add:
+      errors:
+        elected_period_not_a_period: '''{period}'' is not a period. Write the year
+          and the period code separated by a space, for example 2026 2T.'
     bulk_import:
       errors:
         column_role_not_accepted: The invoice book import has no field for the role
@@ -1916,6 +1920,12 @@ application:
           covers several VAT rates.
         what_to_do: 'Calculate again: the surcharge will be declared under each rate,
           or you will be shown the invoice to correct.'
+      invoice_rectificativa_declared_in_another_period:
+        what: A factura rectificativa changes your figures, but its modification is
+          declared in another period, so it adds nothing to this return.
+        what_to_do: No action is needed if that is the period you chose. If it is
+          not, correct the invoice's cause, direction or recorded election, then calculate
+          again.
       invoice_reverse_charge_cuota_not_derivable:
         what: A received invoice with reverse charge has no VAT rate, so the VAT you
           owe on it was not worked out.

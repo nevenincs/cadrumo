@@ -949,6 +949,10 @@ application:
         active: Aktív
         retired: Kivonva
   invoices:
+    add:
+      errors:
+        elected_period_not_a_period: A(z) '{period}' nem időszak. Írd az évet és az
+          időszak kódját szóközzel elválasztva, például 2026 2T.
     bulk_import:
       errors:
         column_role_not_accepted: A számlakönyv importálásában nincs mező a(z) {role}
@@ -1978,6 +1982,12 @@ application:
           ki.
         what_to_do: 'Számold újra: a pótlék kulcsonként bekerül a bevallásba, vagy
           megmutatjuk a javítandó számlát.'
+      invoice_rectificativa_declared_in_another_period:
+        what: Egy helyesbítő számla (factura rectificativa) módosítja az adataidat,
+          de a módosítását másik időszakban vallják be, ezért ehhez a bevalláshoz
+          (declaración-liquidación) nem ad hozzá semmit.
+        what_to_do: Nincs teendőd, ha ezt az időszakot választottad. Ha nem, javítsd
+          a számla okát, irányát vagy rögzített választását, majd számolj újra.
       invoice_reverse_charge_cuota_not_derivable:
         what: Egy fordított adózású beérkezett számlán nincs áfakulcs, ezért a rá
           fizetendő áfa nem lett kiszámolva.

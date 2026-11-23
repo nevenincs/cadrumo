@@ -102,6 +102,9 @@ aggregation:
         the row stays unresolved rather than being declared at the general recargo.
       rectification_consumed_more_than_once: A corrected IVA entry may be rectified
         only once.
+      rectification_deduction_kind_ambiguous: The deduction catalogue does not name
+        exactly one deduction kind for the correction of deductions (found %{kind_count}).
+        Correct the catalogue before declaring a factura rectificativa.
       sectorized_apportionment_duplicate_sectors: The sectorised IVA apportionment
         declares the same sector more than once.
       sectorized_especial_missing_input_classification: Sectorised prorrata especial

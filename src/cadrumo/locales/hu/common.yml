@@ -106,6 +106,10 @@ aggregation:
         pótlék közé.
       rectification_consumed_more_than_once: Egy már helyesbített IVA-tétel csak egyszer
         helyesbíthető.
+      rectification_deduction_kind_ambiguous: A levonási katalógus nem pontosan egy
+        levonástípust nevez meg a levonások helyesbítéséhez (%{kind_count} található).
+        Javítsd a katalógust, mielőtt helyesbítő számlát (factura rectificativa) vallanál
+        be.
       sectorized_apportionment_duplicate_sectors: A szektorizált áfa-megosztás ugyanazt
         a szektort többször deklarálja.
       sectorized_especial_missing_input_classification: A szektorizált különleges

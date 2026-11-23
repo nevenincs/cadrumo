@@ -954,6 +954,10 @@ application:
         active: Actiu
         retired: Retirat
   invoices:
+    add:
+      errors:
+        elected_period_not_a_period: '''{period}'' no és un període. Escriu l''any
+          i el codi del període separats per un espai, per exemple 2026 2T.'
     bulk_import:
       errors:
         column_role_not_accepted: La importació del llibre de factures no té cap camp
@@ -2008,6 +2012,12 @@ application:
           cobreix diversos tipus d'IVA.
         what_to_do: 'Torna a calcular: el recàrrec es declararà en cada tipus, o se
           t''indicarà la factura que cal corregir.'
+      invoice_rectificativa_declared_in_another_period:
+        what: Una factura rectificativa modifica les teves xifres, però la seva modificació
+          es declara en un altre període, així que no aporta res a aquesta declaració-liquidació.
+        what_to_do: No cal fer res si aquest és el període que vas triar. Si no ho
+          és, corregeix la causa, el sentit o l'opció registrada de la factura i torna
+          a calcular.
       invoice_reverse_charge_cuota_not_derivable:
         what: Una factura rebuda amb inversió del subjecte passiu no té tipus d'IVA,
           així que no s'ha calculat l'IVA que en deus.

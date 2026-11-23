@@ -110,6 +110,10 @@ aggregation:
         de declarar-se al recàrrec general.
       rectification_consumed_more_than_once: Un apunt d'IVA ja corregit només es pot
         rectificar una vegada.
+      rectification_deduction_kind_ambiguous: El catàleg de deduccions no anomena
+        exactament un tipus de deducció per a la rectificació de deduccions (se n'han
+        trobat %{kind_count}). Corregeix el catàleg abans de declarar una factura
+        rectificativa.
       sectorized_apportionment_duplicate_sectors: El repartiment sectoritzat d'IVA
         declara el mateix sector més d'una vegada.
       sectorized_especial_missing_input_classification: La prorrata especial sectoritzada

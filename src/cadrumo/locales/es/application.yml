@@ -960,6 +960,10 @@ application:
         active: Activo
         retired: Retirado
   invoices:
+    add:
+      errors:
+        elected_period_not_a_period: '''{period}'' no es un periodo. Escribe el año
+          y el código del periodo separados por un espacio, por ejemplo 2026 2T.'
     bulk_import:
       errors:
         column_role_not_accepted: La importación del libro de facturas no tiene ningún
@@ -2021,6 +2025,12 @@ application:
           varios tipos de IVA.
         what_to_do: 'Vuelve a calcular: el recargo se declarará en cada tipo, o se
           te indicará la factura que hay que corregir.'
+      invoice_rectificativa_declared_in_another_period:
+        what: Una factura rectificativa modifica tus cifras, pero su modificación
+          se declara en otro periodo, así que no aporta nada a esta declaración-liquidación.
+        what_to_do: No hace falta hacer nada si ese es el periodo que elegiste. Si
+          no lo es, corrige la causa, el sentido o la opción registrada de la factura
+          y vuelve a calcular.
       invoice_reverse_charge_cuota_not_derivable:
         what: Una factura recibida con inversión del sujeto pasivo no tiene tipo de
           IVA, así que no se ha calculado el IVA que debes por ella.
