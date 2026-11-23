@@ -35,6 +35,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -56,6 +57,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.percentage import fraction_of_percentage
+from ...core.period import Period, PeriodError
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
@@ -208,6 +210,16 @@ class BulkInvoiceImportRow(BaseModel):
     rectification_cause: str | None = None
     rectification_direction: str | None = None
     document_received_on: date | None = None
+    # The elections and the attestation LIVA art. 89.Cinco, art. 114.Dos and
+    # art. 80.Tres leave the taxpayer. A book may state them and a book may
+    # not; a rectificativa whose row states none imports and is held where the
+    # Modelo 303 would place it, naming the election it still needs.
+    issuer_increase_election: str | None = None
+    issuer_minoracion_election: str | None = None
+    issuer_minoracion_regularisation_period: Period | None = None
+    recipient_increase_period: Period | None = None
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: Period | None = None
 
 
 class BulkInvoiceImportRowFailure(BaseModel):
@@ -579,6 +591,101 @@ def _parse_bulk_row_rectification_facts(
     return method, cause, direction, received_on
 
 
+#: The cell texts a book may state an attestation with. A blank cell is neither:
+#: it is the unanswered state that holds an art. 80.Tres modification, which is
+#: why "false" cannot be the default for an absent column.
+_ROW_ATTESTATION_TRUE: frozenset[str] = frozenset({"true", "yes", "si", "sí", "1"})
+_ROW_ATTESTATION_FALSE: frozenset[str] = frozenset({"false", "no", "0"})
+
+
+@dataclass(frozen=True, slots=True)
+class _RowRectificationElections:
+    """The elections and attestation one import row states, each as given."""
+
+    issuer_increase_election: str | None = None
+    issuer_minoracion_election: str | None = None
+    issuer_minoracion_regularisation_period: Period | None = None
+    recipient_increase_period: Period | None = None
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: Period | None = None
+
+
+def _parse_bulk_row_rectification_elections(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    operation: PinnedAuthorityOperation,
+) -> _RowRectificationElections:
+    """Return the elections a row states, each admitted by its own vocabulary or grammar.
+
+    The two election tokens come from fact 0141's choices for the invoice's
+    date, as the method, cause and direction do. Each elected
+    declaración-liquidación is read from the canonical display form, a filing
+    year and a bare registry period code, so a calendar cell refuses under its
+    own column rather than selecting a period nobody stated. The attestation is
+    the one tri-state cell: blank holds the modification, false refuses it.
+    """
+    with validating_governed_facts(operation):
+        catalogue = resolve_invoice_legal_classification_catalogue(effective_date=invoice_date)
+        increase_election = _bulk_row_declared_token(
+            raw_row,
+            field="issuer_increase_election",
+            row_number=row_number,
+            choices=catalogue.issuer_increase_election_choices,
+        )
+        minoracion_election = _bulk_row_declared_token(
+            raw_row,
+            field="issuer_minoracion_election",
+            row_number=row_number,
+            choices=catalogue.issuer_minoracion_election_choices,
+        )
+    return _RowRectificationElections(
+        issuer_increase_election=increase_election,
+        issuer_minoracion_election=minoracion_election,
+        issuer_minoracion_regularisation_period=_parse_row_elected_period(
+            raw_row, field="issuer_minoracion_regularisation_period", row_number=row_number
+        ),
+        recipient_increase_period=_parse_row_elected_period(
+            raw_row, field="recipient_increase_period", row_number=row_number
+        ),
+        art_80_tres_obligations_attested=_parse_row_attestation(
+            raw_row, field="art_80_tres_obligations_attested", row_number=row_number
+        ),
+        exercised_deduction_period=_parse_row_elected_period(
+            raw_row, field="exercised_deduction_period", row_number=row_number
+        ),
+    )
+
+
+def _parse_row_elected_period(raw_row: Mapping[str, object], *, field: str, row_number: int) -> Period | None:
+    """Read one elected declaración-liquidación from its canonical display form, or ``None``."""
+    text = coerce_cell_text(raw_row.get(field)).strip()
+    if not text:
+        return None
+    try:
+        return Period.from_string(text)
+    except PeriodError as exc:
+        raise RowParseError(
+            row_number=row_number,
+            field=field,
+            reason="must be a filing year and a registry period code, such as a year followed by 1T",
+        ) from exc
+
+
+def _parse_row_attestation(raw_row: Mapping[str, object], *, field: str, row_number: int) -> bool | None:
+    """Read one stated attestation, keeping a blank cell apart from a stated denial."""
+    text = coerce_cell_text(raw_row.get(field)).strip().lower()
+    if not text:
+        return None
+    if text in _ROW_ATTESTATION_TRUE:
+        return True
+    if text in _ROW_ATTESTATION_FALSE:
+        return False
+    accepted = ", ".join(sorted(_ROW_ATTESTATION_TRUE | _ROW_ATTESTATION_FALSE))
+    raise RowParseError(row_number=row_number, field=field, reason=f"must be one of: {accepted}")
+
+
 def _bulk_row_declared_token(
     raw_row: Mapping[str, object],
     *,
@@ -625,6 +732,7 @@ def _build_bulk_invoice_row(
     rectification_cause: str | None,
     rectification_direction: str | None,
     document_received_on: date | None,
+    elections: _RowRectificationElections,
 ) -> BulkInvoiceImportRow:
     try:
         return BulkInvoiceImportRow(
@@ -650,6 +758,12 @@ def _build_bulk_invoice_row(
             rectification_cause=rectification_cause,
             rectification_direction=rectification_direction,
             document_received_on=document_received_on,
+            issuer_increase_election=elections.issuer_increase_election,
+            issuer_minoracion_election=elections.issuer_minoracion_election,
+            issuer_minoracion_regularisation_period=elections.issuer_minoracion_regularisation_period,
+            recipient_increase_period=elections.recipient_increase_period,
+            art_80_tres_obligations_attested=elections.art_80_tres_obligations_attested,
+            exercised_deduction_period=elections.exercised_deduction_period,
         )
     except ValidationError as exc:
         first = exc.errors()[0] if exc.errors() else {"loc": ("row",), "msg": "invalid row"}
@@ -722,6 +836,12 @@ def _parse_bulk_invoice_row(
         invoice_date=invoice_date,
         operation=operation,
     )
+    elections = _parse_bulk_row_rectification_elections(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        operation=operation,
+    )
     return _build_bulk_invoice_row(
         raw_row,
         row_number=row_number,
@@ -740,6 +860,7 @@ def _parse_bulk_invoice_row(
         rectification_cause=cause,
         rectification_direction=direction,
         document_received_on=received_on,
+        elections=elections,
     )
 
 
@@ -1243,6 +1364,12 @@ def import_invoices_from_rows(
                 rectification_cause=parsed.rectification_cause,
                 rectification_direction=parsed.rectification_direction,
                 document_received_on=parsed.document_received_on,
+                issuer_increase_election=parsed.issuer_increase_election,
+                issuer_minoracion_election=parsed.issuer_minoracion_election,
+                issuer_minoracion_regularisation_period=parsed.issuer_minoracion_regularisation_period,
+                recipient_increase_period=parsed.recipient_increase_period,
+                art_80_tres_obligations_attested=parsed.art_80_tres_obligations_attested,
+                exercised_deduction_period=parsed.exercised_deduction_period,
                 declared_fx_rate=parsed.fx_rate,
                 rate_provider=ports.rate_provider,
                 operation=operation,

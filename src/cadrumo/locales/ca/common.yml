@@ -4402,7 +4402,7 @@ desktop:
       invoice_recargo_not_declarable: Recàrrec
       invoice_recargo_split_unresolved: Recàrrec
       invoice_rectificativa_deduction_row_undeclarable: Deducció rectificada
-      invoice_rectificativa_issued_modification_unbound: Rectificativa emesa
+      invoice_rectificativa_issued_row_undeclarable: Rectificativa emesa
       invoice_rectificativa_modification_unmodelled: Rectificativa
       invoice_rectificativa_period_needs_fact: Període de la rectificativa
       invoice_used_goods_margin_unmodelled: Béns usats
@@ -4438,8 +4438,8 @@ desktop:
         tipus d'IVA
       invoice_rectificativa_deduction_row_undeclarable: La factura que rectifica no
         és un únic registre, o una línia no té quota deduïble
-      invoice_rectificativa_issued_modification_unbound: Escriu tu la modificació
-        a les caselles del Model 303
+      invoice_rectificativa_issued_row_undeclarable: El tipus d'una línia no té tram
+        en aquesta data, o la rectificació mou un recàrrec d'equivalència
       invoice_rectificativa_modification_unmodelled: Indica com expressa els seus
         imports i a quina factura substitueix
       invoice_rectificativa_period_needs_fact: La rectificació es coneix; el seu període

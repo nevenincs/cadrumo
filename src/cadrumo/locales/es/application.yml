@@ -3276,10 +3276,11 @@ application:
           recibida pertenece a este periodo y su rectificación de deducciones no se
           puede situar: la factura que rectifica no es un único registro de tu catálogo,
           o una línea lleva base sin cuota deducible'
-        invoice_rectificativa_issued_modification_unbound: una factura rectificativa
-          emitida pertenece a este periodo, y las casillas de modificación de este
-          Modelo 303 se escriben a mano, por lo que sus importes no llegan desde la
-          factura
+        invoice_rectificativa_issued_row_undeclarable: 'una factura rectificativa
+          emitida pertenece a este periodo y su modificación no se puede situar: una
+          línea lleva un tipo que ningún tramo de esa fecha recoge, o la rectificación
+          mueve un recargo de equivalencia, que llevan las casillas 25 y 26 y al que
+          todavía no llega ninguna factura'
         invoice_rectificativa_modification_unmodelled: 'el registro de una factura
           rectificativa no indica la modificación que hace: cómo expresa sus importes
           y, si los sustituye, la única factura a la que sustituye'
@@ -3945,6 +3946,24 @@ application:
         con un recuento ponderado de %{weighted_count}, puede darte derecho a la deducción
         de la Comunidad de Madrid por nacimiento o adopción.
       missing_required_casilla: La casilla obligatoria [%{casilla_id}] está vacía.
+      modification_recargo_base_missing: La casilla 26 recoge %{recargo_value} EUR
+        de modificación del recargo de equivalencia, y la casilla %{casilla_id}, su
+        base imponible, está vacía. La base la indicas tú, igual que en las demás
+        filas de recargo. La modificación de bases de este periodo es %{modification_base_value}
+        EUR; indica la parte sobre la que se repercutió el recargo y vuelve a calcular.
+      modification_typed_beside_invoice_sourced: La casilla %{casilla_id} ya recoge
+        %{invoice_sourced_value} EUR procedentes de las facturas rectificativas de
+        este periodo, y además has escrito %{typed_value} EUR en %{contribution_casilla_id}.
+        El importe que escribes es para una modificación de la que no consta documento
+        en tu catálogo, y en el registro no figura a qué operaciones corresponde,
+        por lo que la casilla podría estar recogiendo el mismo documento dos veces.
+        Quítalo, o registra el documento al que corresponde, y vuelve a calcular.
+      modification_value_stored_on_computed_box: La casilla %{casilla_id} conserva
+        %{stored_value} EUR que escribiste antes de que esta casilla leyera las facturas
+        rectificativas. Ahora la casilla es la suma de lo que indican ellas y de lo
+        que indicas tú, así que ese importe ni se descarta ni se usa. Vuelve a introducirlo
+        en %{contribution_casilla_id}, para la modificación de la que no consta documento
+        en tu catálogo, y vuelve a calcular.
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
         el valor %{declared} que indicaste en tu perfil supera el límite de %{threshold}
         de la estimación objetiva (módulos).'

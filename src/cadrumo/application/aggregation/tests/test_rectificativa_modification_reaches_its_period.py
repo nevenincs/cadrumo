@@ -49,7 +49,7 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus, RectificationFact
 from ....domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceLine
-from ....domain.iva.schema import InvoiceKind
+from ....domain.iva.schema import InvoiceKind, IvaLedgerObservationRole
 from ....domain.transactions.models import TransactionCatalogue
 from ...ledger.preflight import HeldTransactionCatalogue
 from ..invoice_iva_source import (
@@ -81,6 +81,10 @@ _Q3 = Period.from_year_and_code(_YEAR, "3T")
 #: and 41.
 _CASILLA_BASE = "iva.rectificacion-deducciones.interiores.base"
 _CASILLA_CUOTA = "iva.rectificacion-deducciones.interiores"
+#: The semantic carriers of the invoice-sourced half of boxes 14 and 15.
+_CASILLA_MODIFICACION_BASE = "iva.modificacion-bases-cuotas.base"
+_CASILLA_MODIFICACION_CUOTA = "iva.modificacion-bases-cuotas"
+_CASILLA_MODIFICACION_RECARGO = "iva.modificacion-recargo"
 
 
 @pytest.fixture(autouse=True)
@@ -261,8 +265,16 @@ def test_a_received_modification_whose_original_the_catalogue_lacks_blocks_rathe
     assert side.source.observations == ()
 
 
-def test_an_issued_modification_this_period_declares_blocks_until_casillas_14_and_15_are_bound() -> None:
-    """Art. 89.Cinco places it here, and this Modelo 303 edition takes those boxes as operator input."""
+def test_an_issued_minoracion_this_period_declares_reaches_casillas_14_and_15_signed() -> None:
+    """Art. 89.Cinco places it here, and the instructions declare it "con el signo que corresponda".
+
+    A minoración by difference of a 100.00 base at 21 % is a 100.00 base and a
+    21.00 cuota the document reduces, so both are declared negative. The
+    observation carries the rectification-modification role, which is what
+    keeps the correction out of the ordinary rate boxes [01] and [03] the sale
+    itself is declared in, and the semantic carriers of boxes 14 and 15 are the
+    ones that read it.
+    """
     catalogue = resolve_invoice_legal_classification_catalogue(effective_date=_ISSUED_AT)
     rectificativa = _rectificativa(
         kind=InvoiceKind.ISSUED,
@@ -273,8 +285,70 @@ def test_an_issued_modification_this_period_declares_blocks_until_casillas_14_an
 
     side = _side((_invoice(issued_at=_ORIGINAL_ISSUED_AT, kind=InvoiceKind.ISSUED), rectificativa), period=_Q2)
 
-    finding = _finding(side)
-    assert finding.reason is InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND
-    assert finding.rectification_modification is not None
-    assert (finding.rectification_modification.base, finding.rectification_modification.cuota) == (-_BASE, -_CUOTA)
+    assert side.source.findings == ()
+    (observation,) = side.source.observations
+    assert observation.observation_role is IvaLedgerObservationRole.RECTIFICATION_MODIFICATION
+    assert observation.deduction_fact_kind is None
+    assert _Q2.contains(observation.transaction_date)
+    values = _casilla_values(side, period=_Q2)
+    assert values[_CASILLA_MODIFICACION_BASE] == -_BASE
+    assert values[_CASILLA_MODIFICACION_CUOTA] == -_CUOTA
+
+
+def test_the_same_minoracion_under_the_art_120_3_route_is_disclosed_and_declared_nowhere_here() -> None:
+    """The art. 120.3 LGT procedure is outside these returns, so this period declares nothing."""
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=_ISSUED_AT)
+    rectificativa = _rectificativa(
+        kind=InvoiceKind.ISSUED,
+        document_received_on=None,
+        issuer_minoracion_election=str(catalogue.procedimiento_120_3_lgt_token),
+    )
+
+    side = _side((_invoice(issued_at=_ORIGINAL_ISSUED_AT, kind=InvoiceKind.ISSUED), rectificativa), period=_Q2)
+
     assert side.source.observations == ()
+    assert side.source.findings == ()
+    (disclosure,) = excluded_rectification_diagnostics(side.source.screen.rectificativas, resolver_id="ledger-iva")
+    assert disclosure.reason == "invoice_rectificativa_declared_in_another_period"
+
+
+def test_the_14_and_15_projections_add_the_invoice_half_to_the_operator_contribution() -> None:
+    """Each box states one figure the record keeps as two contributions that never merge earlier."""
+    revision = published_snapshot("303", filing_year=_Q2.filing_year, period=_Q2.registry_token).revision
+    formulas = {str(formula.target_casilla_id): formula for formula in revision.formulas}
+    for box, carrier, operator in (
+        ("14", _CASILLA_MODIFICACION_BASE, "iva.modificacion-bases-cuotas.operador.base"),
+        ("15", _CASILLA_MODIFICACION_CUOTA, "iva.modificacion-bases-cuotas.operador"),
+    ):
+        expression = formulas[box].expression
+        assert str(expression.op) == "add"
+        assert [str(arg.casilla_id) for arg in expression.args] == [carrier, operator]
+
+
+def test_an_issued_minoracion_carrying_recargo_reaches_casilla_26_signed() -> None:
+    """The instructions put the recargo half of a modification in casillas 25 and 26.
+
+    LIVA art. 161 pairs one recargo rate with each IVA rate, so a modification
+    at one rate carries its recargo on that rung. Box 26 states the cuota; box
+    25, the base, stays the operator's exactly as the ordinary recargo bases
+    [16], [19] and [22] do, because a base sum cannot select only the rows that
+    bore recargo.
+    """
+    catalogue = resolve_invoice_legal_classification_catalogue(effective_date=_ISSUED_AT)
+    recargo = Decimal("5.20")
+    rectificativa = _rectificativa(
+        kind=InvoiceKind.ISSUED,
+        document_received_on=None,
+        issuer_minoracion_election=str(catalogue.regularizacion_en_autoliquidacion_token),
+        issuer_minoracion_regularisation_period=_Q2,
+        recargo_amount=recargo,
+        grand_total=_BASE + _CUOTA + recargo,
+    )
+
+    side = _side((_invoice(issued_at=_ORIGINAL_ISSUED_AT, kind=InvoiceKind.ISSUED), rectificativa), period=_Q2)
+
+    assert side.source.findings == ()
+    (observation,) = side.source.observations
+    assert observation.recargo_amount == -recargo
+    values = _casilla_values(side, period=_Q2)
+    assert values[_CASILLA_MODIFICACION_RECARGO] == -recargo

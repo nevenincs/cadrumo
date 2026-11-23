@@ -3272,9 +3272,11 @@ application:
           rebuda pertany a aquest període i la seva rectificació de deduccions no
           es pot situar: la factura que rectifica no és un únic registre del teu catàleg,
           o una línia porta base sense quota deduïble'
-        invoice_rectificativa_issued_modification_unbound: una factura rectificativa
-          emesa pertany a aquest període, i les caselles de modificació d'aquest Model
-          303 s'escriuen a mà, per això els seus imports no hi arriben des de la factura
+        invoice_rectificativa_issued_row_undeclarable: 'una factura rectificativa
+          emesa pertany a aquest període i la seva modificació no es pot situar: una
+          línia porta un tipus que cap tram d''aquesta data recull, o la rectificació
+          mou un recàrrec d''equivalència, que porten les caselles 25 i 26 i al qual
+          encara no hi arriba cap factura'
         invoice_rectificativa_modification_unmodelled: 'el registre d''una factura
           rectificativa no indica la modificació que fa: com expressa els seus imports
           i, si els substitueix, la factura única a la qual substitueix'
@@ -3938,6 +3940,24 @@ application:
         amb un recompte ponderat de %{weighted_count}, et pot donar dret a la deducció
         de la Comunitat de Madrid per naixement o adopció.
       missing_required_casilla: La casella obligatòria [%{casilla_id}] és buida.
+      modification_recargo_base_missing: La casella 26 recull %{recargo_value} EUR
+        de modificació del recàrrec d'equivalència, i la casella %{casilla_id}, la
+        seva base imposable, és buida. La base la indiques tu, igual que a la resta
+        de files de recàrrec. La modificació de bases d'aquest període és %{modification_base_value}
+        EUR; indica la part sobre la qual es va repercutir el recàrrec i torna a calcular.
+      modification_typed_beside_invoice_sourced: La casella %{casilla_id} ja recull
+        %{invoice_sourced_value} EUR procedents de les factures rectificatives d'aquest
+        període, i a més has escrit %{typed_value} EUR a %{contribution_casilla_id}.
+        L'import que escrius és per a una modificació de la qual no consta document
+        al teu catàleg, i al registre no hi figura a quines operacions correspon,
+        de manera que la casella podria estar recollint el mateix document dues vegades.
+        Treu-lo, o registra el document al qual correspon, i torna a calcular.
+      modification_value_stored_on_computed_box: La casella %{casilla_id} conserva
+        %{stored_value} EUR que vas escriure abans que aquesta casella llegís les
+        factures rectificatives. Ara la casella és la suma del que indiquen elles
+        i del que indiques tu, així que aquest import ni es descarta ni s'utilitza.
+        Torna a introduir-lo a %{contribution_casilla_id}, per a la modificació de
+        la qual no consta document al teu catàleg, i torna a calcular.
       objective_estimation_exclusion_threshold_exceeded: 'Model %{modelo_id} %{filing_year}:
         el valor %{declared} que vas indicar al teu perfil supera el límit de %{threshold}
         de l''estimació objectiva (mòduls).'

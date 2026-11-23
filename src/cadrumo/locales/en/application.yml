@@ -3124,9 +3124,10 @@ application:
           belongs to this period and its correction of the deductions cannot be placed:
           the invoice it corrects is not a single record of your catalogue, or a line
           carries a base with no deductible cuota'
-        invoice_rectificativa_issued_modification_unbound: an issued factura rectificativa
-          belongs to this period, and the modification casillas of this Modelo 303
-          are typed in by hand, so its figures do not reach them from the invoice
+        invoice_rectificativa_issued_row_undeclarable: 'an issued factura rectificativa
+          belongs to this period and its modification cannot be placed: a line carries
+          a rate no tier of that date holds, or the correction moves a recargo de
+          equivalencia, which casillas 25 and 26 hold and no invoice reaches yet'
         invoice_rectificativa_modification_unmodelled: 'the record of a factura rectificativa
           does not state the modification it makes: how it states its figures, and,
           where it substitutes them, the single invoice it replaces'
@@ -3748,6 +3749,23 @@ application:
         weighted count of %{weighted_count}, may entitle you to the Madrid deduction
         for birth or adoption.
       missing_required_casilla: Required box [%{casilla_id}] is empty.
+      modification_recargo_base_missing: Casilla 26 states %{recargo_value} EUR of
+        modified recargo de equivalencia, and casilla %{casilla_id}, its taxable base,
+        is empty. The base is yours to state, as it is for the other recargo rows.
+        This period's modification of bases is %{modification_base_value} EUR; enter
+        the part of it that the recargo was charged on, then calculate again.
+      modification_typed_beside_invoice_sourced: Casilla %{casilla_id} already states
+        %{invoice_sourced_value} EUR from the facturas rectificativas of this period,
+        and you have typed %{typed_value} EUR into %{contribution_casilla_id} as well.
+        The typed figure is for a modification your catalogue holds no document for,
+        and nothing on the record says which operations it covers, so the box could
+        be stating the same document twice. Remove it, or record the document it stands
+        for, and calculate again.
+      modification_value_stored_on_computed_box: Casilla %{casilla_id} holds %{stored_value}
+        EUR that you typed before this box read the facturas rectificativas. The box
+        is now the sum of what they state and what you state, so this figure is neither
+        dropped nor used. Re-enter it in %{contribution_casilla_id}, for the modification
+        your catalogue holds no document for, and calculate again.
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
         the value %{declared} you gave in your profile is over the %{threshold} limit
         for estimación objetiva (módulos).'

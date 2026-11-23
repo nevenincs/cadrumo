@@ -271,6 +271,12 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Belföldi tárgyi eszköz ügyletek előzetesen felszámított ÁFA-jának
               adóalapja (a hivatalos 30. rovat része)
+          iva-base-modificacion-bases-cuotas:
+            label: Az időszak helyesbítő számláiból eredő módosítás adóalapja (LIVA
+              80. és 89. cikk; hivatalos 14. rovat)
+          iva-base-modificacion-bases-cuotas-operador:
+            label: Az általad megadott módosítás adóalapja, arra, amihez a katalógusban
+              nincs dokumentum (hivatalos 14. rovat)
           iva-base-repercutida-general:
             label: Felszámított ÁFA adóalapja általános kulccsal (21%) (a hivatalos
               07. rovat része)
@@ -324,6 +330,18 @@ modelo:
               önfogyasztásával együtt (hivatalos 03. rovat)
           iva-cuota-devengada-total:
             label: Összes keletkezett ÁFA összeg
+          iva-cuota-modificacion-bases-cuotas:
+            label: Az időszak helyesbítő számláiból eredő módosítás adója (LIVA 80.
+              és 89. cikk; hivatalos 15. rovat)
+          iva-cuota-modificacion-bases-cuotas-operador:
+            label: Az általad megadott módosítás adója, arra, amihez a katalógusban
+              nincs dokumentum (hivatalos 15. rovat)
+          iva-cuota-modificacion-recargo:
+            label: Az időszak helyesbítő számláiból eredő egyenértékűségi felár-módosítás
+              összege (LIVA 80. és 161. cikk; hivatalos 26. rovat)
+          iva-cuota-modificacion-recargo-operador:
+            label: Az általad megadott egyenértékűségi felár-módosítás összege, arra,
+              amihez a katalógusban nincs dokumentum (hivatalos 26. rovat)
           iva-cuota-repercutida-general:
             help: A 21%-os általános kulccsal számított felszámított IVA teljes összege.
             label: Felszámított ÁFA összeg általános kulccsal (21%)

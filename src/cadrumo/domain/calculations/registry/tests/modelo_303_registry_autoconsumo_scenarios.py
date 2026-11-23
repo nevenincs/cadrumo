@@ -235,7 +235,11 @@ def check_early_2026_112_zero_preserves_prior_result_and_nonzero_is_refused(
     modelo, _ = load_modelo_303()
     revision = select_revision(modelo, filing_year=_SPLIT_EXERCISE, period=period)
     assert revision.id == _EARLY_DESIGN.id
-    assert len(revision.casillas) == 229
+    # The claim is that the early 2026 design carries the prior exercise's
+    # casillas and exactly one more, [112]; reading it off the two revisions
+    # keeps it true as editions gain casillas, which a frozen count cannot.
+    prior = select_revision(modelo, filing_year=_PRIOR_EXERCISE, period="1T")
+    assert {casilla.id for casilla in revision.casillas} == {casilla.id for casilla in prior.casillas} | {"112"}
     actual = calculate(
         load_modelo_303,
         revision,
@@ -289,7 +293,10 @@ def check_historical_2025_contract_keeps_its_prior_casillas_and_result(
     modelo, _ = load_modelo_303()
     revision = select_revision(modelo, filing_year=_PRIOR_EXERCISE, period="1T")
     assert revision.id == revision_covering("303", _PRIOR_EXERCISE).id
-    assert len(revision.casillas) == 228
+    # The mirror of the early-2026 claim, read the same way: this exercise's
+    # casillas are the early design's without [112].
+    early = select_revision(modelo, filing_year=_SPLIT_EXERCISE, period="01")
+    assert {casilla.id for casilla in revision.casillas} == {casilla.id for casilla in early.casillas} - {"112"}
     assert not any(casilla.id == "112" for casilla in revision.casillas)
     actual = calculate(load_modelo_303, revision, profile_base=Decimal("0"), row_bases={}, period="1T")
     assert box(actual, "71") == box(actual, "iva.resultado") - box(actual, "70") + box(actual, "109")

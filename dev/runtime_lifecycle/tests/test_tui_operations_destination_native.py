@@ -62,6 +62,7 @@ from cadrumo.entrypoints.tui.operations.destination import (
 )
 from cadrumo.entrypoints.tui.operations.palette import WorkbenchOperationProviderV1
 from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
+from cadrumo.entrypoints.tui.refusal.panel import RefusalPanel, RefusalSlot
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -331,7 +332,10 @@ async def _run_a_read(
     viewed = _result(run)
     assert viewed["profile_id"] == str(client.profile_id)
     assert viewed["page_kind"] == "status"
-    assert not _text(run.query_one("#operation-result-stopped", Static))
+    # A read that succeeded shows no refusal: the slot holds none and mounts no panel.
+    stopped = run.query_one("#operation-result-stopped", RefusalSlot)
+    assert stopped.refusal is None
+    assert not stopped.query(RefusalPanel)
     await _close(pilot, run, listing)
 
 

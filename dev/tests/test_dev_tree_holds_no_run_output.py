@@ -70,6 +70,12 @@ _RESOLUTION_DEPTH: Final[int] = 6
 #: Adding a run's output to this mapping is the mistake the gate exists to stop
 #: -- send it to `.tmp/logs/` through `allocate_run_directory` instead.
 _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
+    "dev/acceptance/persona_table/calendar_sweep.py": (
+        "the calendar pytest module the persona table runner collects; read, never written"
+    ),
+    "dev/acceptance/persona_table/probe_sweep.py": (
+        "the probe pytest module the persona table runner collects; read, never written"
+    ),
     "dev/acceptance/persona_table/sweep.py": "the pytest module the persona table runner collects; read, never written",
     "dev/ci/python-runtime-matrix.json": "the pinned interpreter matrix the runtime gates read",
     "dev/desktop_agent_live/fixtures/ledger-seed.csv": "synthetic bank movements a disposable root seeds; read only",
@@ -109,6 +115,9 @@ _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     ),
     "dev/registry/pipeline/generated_export_bootstrap_targets.toml": "the authored targets candidate staging reads",
     "dev/registry/pipeline/generated_tree_dispositions.toml": "the authored dispositions the tree screens read",
+    "dev/registry/pipeline/reviewed_rename_sets.toml": (
+        "the reviewed casilla-rename repair sets the static repair reads; its diff is reviewed"
+    ),
     "dev/release/burned_versions.json": "the release ledger of burned versions; durable state",
     "dev/tui/review_page.html": "the page the visual review server serves; read, never written",
 }

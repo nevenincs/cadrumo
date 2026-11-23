@@ -73,6 +73,15 @@ BULK_IMPORT_FIELD_BY_ROLE: dict[FieldRole, str] = {
     FieldRole.RECTIFICATION_CAUSE: "rectification_cause",
     FieldRole.RECTIFICATION_DIRECTION: "rectification_direction",
     FieldRole.DOCUMENT_RECEIVED_ON: "document_received_on",
+    # The elections and the attestation ride with them for the same reason: a
+    # row stating one without the class and the facts it belongs to states
+    # nothing that imports.
+    FieldRole.ISSUER_INCREASE_ELECTION: "issuer_increase_election",
+    FieldRole.ISSUER_MINORACION_ELECTION: "issuer_minoracion_election",
+    FieldRole.ISSUER_MINORACION_REGULARISATION_PERIOD: "issuer_minoracion_regularisation_period",
+    FieldRole.RECIPIENT_INCREASE_PERIOD: "recipient_increase_period",
+    FieldRole.ART_80_TRES_OBLIGATIONS_ATTESTED: "art_80_tres_obligations_attested",
+    FieldRole.EXERCISED_DEDUCTION_PERIOD: "exercised_deduction_period",
     FieldRole.RETENCION_AMOUNT: "retencion_amount",
     FieldRole.RETENCION_RATE: "retencion_rate",
     FieldRole.RECARGO_AMOUNT: "recargo_amount",

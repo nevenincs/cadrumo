@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
 from dev.paths import REPO_ROOT
 
 from ..lane_verification_core import (
@@ -21,6 +22,7 @@ from ..lane_verification_core import (
 )
 from ..shared_cohort import shared_cohort
 from ..smoke_split_install import COHORT_PROBE, install_cohort_with_pip
+from .test_google_oauth_provisioning import client_document
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -38,7 +40,11 @@ def real_cohort_wheels() -> tuple[Path, tuple[Path, ...]]:
     Returns:
         The root wheel and the companion data wheels.
     """
-    cohort = shared_cohort()
+    # A module fixture runs before the function-scoped synthetic client exists,
+    # so the build subprocesses inherit a synthetic client directly.
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv(GOOGLE_OAUTH_ENV, client_document())
+        cohort = shared_cohort()
     return cohort.wheel, cohort.companions
 
 

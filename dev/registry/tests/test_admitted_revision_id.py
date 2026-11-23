@@ -17,17 +17,16 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where, filing_year_envelope
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    first_calculation_grade_edition,
+)
 
 from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _HORIZON = filing_year_envelope().horizon
-_CALCULATION_GRADE_YEAR = authored_revisions_where(
-    "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
-)[0].valid_from.year
-"""An exercise whose Modelo 200 revision declares calculation grade, so filing grade cannot be demanded of it."""
 
 
 @pytest.fixture(scope="module")
@@ -49,20 +48,23 @@ def test_it_returns_the_revision_the_snapshot_boundary_admits(authority, modelo,
 def test_it_refuses_exactly_where_the_snapshot_boundary_refuses(authority) -> None:
     """A grade the revision cannot satisfy is refused identically by both accessors.
 
-    A Modelo 200 revision declares calculation grade, so demanding filing
-    grade from it is a refusal the shipped registry really makes rather than a
-    contrived one. Refusing identically is the whole safety argument: an accessor
-    that skipped the copy but also skipped a refusal would hand back an
-    identifier the boundary never admitted.
+    The subject is an edition the registry authors at calculation grade, so
+    demanding filing grade from it is a refusal the shipped registry really
+    makes rather than a contrived one. Refusing identically is the whole safety
+    argument: an accessor that skipped the copy but also skipped a refusal would
+    hand back an identifier the boundary never admitted.
     """
+    edition = first_calculation_grade_edition()
+    assert edition is not None, "the registry authors no calculation-grade edition inside the support envelope"
+    modelo, year, period = edition.modelo, edition.filing_year, edition.period
+
     with pytest.raises(RegistryValidationError) as snapshot_refusal:
-        authority.snapshot("200", filing_year=_CALCULATION_GRADE_YEAR, period="0A", grade=RegistryAuthorityGrade.FILING)
+        authority.snapshot(modelo, filing_year=year, period=period, grade=RegistryAuthorityGrade.FILING)
     with pytest.raises(RegistryValidationError) as identifier_refusal:
-        admitted_revision_id(
-            authority, "200", filing_year=_CALCULATION_GRADE_YEAR, period="0A", grade=RegistryAuthorityGrade.FILING
-        )
+        admitted_revision_id(authority, modelo, filing_year=year, period=period, grade=RegistryAuthorityGrade.FILING)
 
     assert str(identifier_refusal.value) == str(snapshot_refusal.value)
+    assert "'filing' snapshot authority" in str(snapshot_refusal.value)
 
 
 def test_it_hands_out_a_plain_string_and_not_registry_state(authority) -> None:

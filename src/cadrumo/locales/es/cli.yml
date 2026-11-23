@@ -465,6 +465,11 @@ cli:
         arrendamiento_local_negocio_help: Marca que la factura emitida por el arrendador
           corresponde al alquiler de un local de negocio. Usa las opciones de situación
           y referencia catastral para registrar los datos del inmueble.
+        art_80_tres_obligations_attested_help: 'Declara que se hicieron la comunicación
+          y la remisión del art. 24 RIVA para una modificación del art. 80.Tres, o
+          indica con --no-art-80-tres-obligations-attested que no se hicieron. Déjalo
+          sin indicar mientras no lo sepas: la modificación queda retenida y nunca
+          se admite solo con el documento.'
         attach_document_help: Guarda el documento de una factura (su PDF o la factura
           electrónica) junto a ella.
         attach_document_source_help: Ruta del archivo del documento.
@@ -479,10 +484,19 @@ cli:
         duplicate_invalid: El tipo de factura y los datos del documento deben tener
           la forma esperada.
         duplicate_kind_help: 'Sentido de la factura: `issued` o `received`.'
+        elected_year_without_period: El ejercicio %{year} no identifica por sí solo
+          ninguna declaración-liquidación. Indica también el token de periodo que
+          le corresponde (0A, 1T-4T, 01-12), o deja ambos sin indicar.
         euro_rate_unavailable_message: No se encontró tipo de cambio a euros para
           {currency} el {date}, así que la factura se registró sin valor en euros
           y queda fuera de los totales en euros hasta que se añada un tipo. Indica
           el tipo con app ledger invoice update --fx-rate.
+        exercised_deduction_period_help: Token de periodo de esa declaración-liquidación
+          (0A, 1T-4T, 01-12). Indícalo junto con el ejercicio; una cadena de calendario
+          combinada se rechaza.
+        exercised_deduction_year_help: Ejercicio de la declaración-liquidación en
+          la que se ejerció la deducción original (AAAA). El art. 24.2.b.3 RIVA lleva
+          allí una minoración del art. 80.Tres; indícalo junto con el token de periodo.
         fx_rate_help: 'Tipo de cambio de una factura en moneda extranjera: el valor
           en euros de una unidad de su moneda en el momento del devengo, que es la
           fecha de operación si la indicas y, si no, la fecha de la factura, por ejemplo
@@ -515,6 +529,21 @@ cli:
         invoice_class_help: Clase de factura. Una rectificativa exige además --rectifies-invoice-number
           indicando la factura que corrige.
         invoice_id_help: Identificador de factura del catálogo (o prefijo no ambiguo).
+        issuer_increase_election_help: 'Qué vía eliges para un aumento emitido fundado
+          en un motivo del art. 80 LIVA o en un error fundado de derecho (art. 89.Cinco):
+          incluir_en_el_periodo para declarar la diferencia en el periodo en que se
+          efectúa la rectificación, autoliquidacion_rectificativa para presentar una
+          autoliquidación rectificativa con recargo e intereses.'
+        issuer_minoracion_election_help: 'Qué vía eliges para una minoración emitida
+          (art. 89.Cinco LIVA): procedimiento_120_3_lgt para el procedimiento del
+          art. 120.3 LGT, regularizacion_en_autoliquidacion para regularizarla en
+          una declaración-liquidación, lo que además te obliga a reintegrar al destinatario.'
+        issuer_minoracion_regularisation_period_help: Token de periodo de esa declaración-liquidación
+          (0A, 1T-4T, 01-12). Indícalo junto con el ejercicio; una cadena de calendario
+          combinada se rechaza.
+        issuer_minoracion_regularisation_year_help: Ejercicio de la declaración-liquidación
+          en la que regularizas la minoración emitida (AAAA). Indícalo junto con el
+          token de periodo; el art. 89.Cinco LIVA admite hasta un año.
         iva_category_help: Tratamiento de IVA de la operación. Necesario para que
           un cálculo de renta pueda fundamentarla.
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
@@ -561,6 +590,13 @@ cli:
           con él, el veredicto cubre solo los datos indicados.
         recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
           161). Va incluido en el total de la factura, a diferencia de una retención.
+        recipient_increase_period_help: Token de periodo de esa declaración-liquidación
+          (0A, 1T-4T, 01-12). Indícalo junto con el ejercicio; una cadena de calendario
+          combinada se rechaza.
+        recipient_increase_year_help: Ejercicio de la declaración-liquidación en la
+          que declaras un aumento recibido (AAAA). Indícalo junto con el token de
+          periodo; el art. 114.Dos.1 LIVA admite el periodo de recepción o uno posterior
+          dentro de cuatro años.
         rectification_cause_help: Por qué la rectificativa modifica la base y la cuota,
           con una de las causas que el registro declara para la fecha de la factura
           (los apartados del art. 80 de la LIVA, error_fundado_de_derecho u otra_modificacion).

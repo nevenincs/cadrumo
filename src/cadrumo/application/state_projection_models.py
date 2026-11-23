@@ -366,11 +366,8 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE: (
             OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
         ),
-        # Nothing is missing from the record: this Modelo 303 edition takes
-        # casillas 14 and 15 as operator input, so the remaining act is the
-        # person's own review of the return.
-        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND: (
-            OperatorActionAxis.REVIEW_ADVISORY
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
         ),
         LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },

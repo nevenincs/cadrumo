@@ -19,6 +19,7 @@ from typing import cast
 import pytest
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
 
 from ..command_execution import CommandResult, run_command
 from ..lane_verification_core import (
@@ -31,6 +32,7 @@ from ..lane_verification_core import (
     venv_cadrumo_path,
     venv_python_path,
 )
+from .test_google_oauth_provisioning import client_document
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -72,8 +74,12 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> _InstalledCoho
     assert uv is not None, "uv is required to build the installed action-envelope cohort"
 
     work_dir = tmp_path_factory.mktemp("overview-optional-extra-action-recovery")
-    build_root = build_root_snapshot(_REPO_ROOT, work_dir)
-    root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
+    # A module fixture runs before the function-scoped synthetic client exists,
+    # so the snapshot and the build subprocess receive a synthetic client directly.
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv(GOOGLE_OAUTH_ENV, client_document())
+        build_root = build_root_snapshot(_REPO_ROOT, work_dir)
+        root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
     data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
     targets = (str(root_wheel.resolve()), *(str(wheel.resolve()) for wheel in data_wheels))
 
