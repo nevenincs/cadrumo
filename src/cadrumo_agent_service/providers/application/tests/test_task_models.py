@@ -6,6 +6,7 @@ import pytest
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 
+from ...domain.catalog import BackgroundOption
 from ...domain.record import ListedModel, LocalEngine, LocalPlacement
 from ..contracts import (
     LocalEngineStatus,
@@ -15,6 +16,7 @@ from ..contracts import (
     TaskModelEntry,
 )
 from ..local_model_list import LocalModelListService
+from ..ports import LiveLaneBackground
 from .memory_store import MemoryLocalModelListStore
 from .synthetic_catalog import (
     HOSTED_TEXT_MODELS,
@@ -37,11 +39,21 @@ _HOSTED = ListedModel(lane=KEY_LANE, model=HOSTED_TEXT_MODELS[0])
 _ABSENT = ABSENT_SECURE_OBJECT_REVISION_ID
 
 
-def _service(store: MemoryLocalModelListStore, *, engines: bool = False) -> LocalModelListService:
+def _effort_live(*levels: str, model: str = HOSTED_TEXT_MODELS[0]) -> StaticLiveModels:
+    """A running agent whose hosted lane honours effort and states ``levels`` for ``model``."""
+    background = LiveLaneBackground(
+        accepted_media=None, options=(BackgroundOption.EFFORT,), model_efforts={model: tuple(levels)}
+    )
+    return StaticLiveModels(backgrounds={("example", "api"): background})
+
+
+def _service(
+    store: MemoryLocalModelListStore, *, engines: bool = False, live: StaticLiveModels | None = None
+) -> LocalModelListService:
     return LocalModelListService(
         store=store,
         catalog_source=ProvidedProviderCatalogSource(engine_catalog() if engines else synthetic_catalog()),
-        live_models=StaticLiveModels(),
+        live_models=_effort_live("low", "high") if live is None else live,
         default_engine=LocalEngine.LLAMACPP,
     )
 
@@ -134,6 +146,57 @@ def test_a_task_setting_outside_the_served_vocabulary_is_refused_and_nothing_is_
     store = MemoryLocalModelListStore()
 
     assert _service(store).choose_task(task_kind, model=model, effort=effort, expected_revision=_ABSENT) == _unknown()
+    assert store.stored is None
+
+
+def test_an_effort_the_lane_offers_for_the_model_is_stored_and_none_is_always_accepted() -> None:
+    store = MemoryLocalModelListStore()
+    service = _service(store, live=_effort_live("low", "high"))
+
+    with_effort = _status(service.choose_task(_EXTRACTION, model=_HOSTED, effort="low", expected_revision=_ABSENT))
+    default = _status(
+        service.choose_task(_CLASSIFICATION, model=_HOSTED, effort=None, expected_revision=with_effort.revision)
+    )
+
+    assert [(task.task_kind, task.effort) for task in default.tasks] == [(_EXTRACTION, "low"), (_CLASSIFICATION, None)]
+
+
+def test_none_is_accepted_when_the_lane_states_no_effort_at_all() -> None:
+    service = _service(MemoryLocalModelListStore(), live=StaticLiveModels())
+
+    stored = _status(service.choose_task(_CLASSIFICATION, model=_HOSTED, effort=None, expected_revision=_ABSENT))
+
+    assert [(task.task_kind, task.effort) for task in stored.tasks] == [(_CLASSIFICATION, None)]
+
+
+@pytest.mark.parametrize(
+    "live",
+    [
+        pytest.param(_effort_live("low", "high"), id="level-the-model-does-not-offer"),
+        pytest.param(_effort_live("medium", model=HOSTED_TEXT_MODELS[1]), id="levels-stated-for-another-model"),
+        pytest.param(StaticLiveModels(), id="no-live-catalogue"),
+        pytest.param(
+            StaticLiveModels(
+                backgrounds={
+                    ("example", "api"): LiveLaneBackground(
+                        accepted_media=None, options=(), model_efforts={HOSTED_TEXT_MODELS[0]: ("medium",)}
+                    )
+                }
+            ),
+            id="lane-does-not-honour-effort",
+        ),
+    ],
+)
+def test_an_effort_the_lane_does_not_offer_for_the_model_is_refused_and_nothing_is_written(
+    live: StaticLiveModels,
+) -> None:
+    store = MemoryLocalModelListStore()
+
+    refused = _service(store, live=live).choose_task(
+        _CLASSIFICATION, model=_HOSTED, effort="medium", expected_revision=_ABSENT
+    )
+
+    assert refused == _unknown()
     assert store.stored is None
 
 

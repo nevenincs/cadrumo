@@ -76,7 +76,7 @@ from ..domain.catalog import (
 )
 from ..domain.record import ListedModel, LocalEngine, LocalModelListRecord, TaskModel
 from .lane_entries import current_lane_entries
-from .local_model_list import TaskModelUsability, effective_reading, task_model_usability
+from .local_model_list import TaskModelUsability, effective_reading, model_offers_effort, task_model_usability
 from .ports import (
     LiveCatalogModels,
     LocalModelListRead,
@@ -342,10 +342,7 @@ class _LaneAnswers:
 
     def offers_effort(self, lane: ModelRunLane, effort: EffortLevel) -> bool:
         """Return whether ``lane`` honours effort, from the same snapshot, and lists ``effort`` for its model."""
-        background = self._live_models.lane_background(lane.provider_id, lane.transport)
-        if background is None or BackgroundOption.EFFORT not in background.options:
-            return False
-        return effort in background.model_efforts.get(lane.model, ())
+        return model_offers_effort(self._live_models, lane.provider_id, lane.transport, lane.model, effort)
 
     def _decided(self, entry: ProviderCatalogEntry) -> _DecidedLane | ModelRunRefusal:
         decided = self._lanes.get(entry.id)
