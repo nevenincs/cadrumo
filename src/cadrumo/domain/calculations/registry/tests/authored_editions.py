@@ -163,6 +163,49 @@ def authored_editions_below_filing_grade(period: str) -> tuple[EditionBelowFilin
     return tuple(found)
 
 
+@dataclass(frozen=True, slots=True)
+class CalculationGradeEdition:
+    """One supported exercise whose only authored edition declares calculation grade, with its first period."""
+
+    modelo: str
+    revision_id: str
+    filing_year: int
+    period: str
+
+
+def first_calculation_grade_edition() -> CalculationGradeEdition | None:
+    """Return the first authored calculation-grade edition inside the support envelope, or ``None``.
+
+    Editions rise to filing grade as their evidence lands, so a test that needs a
+    filing-grade demand the registry really refuses reads its subject here rather
+    than naming a modelo. Modelos come in identifier order and revisions oldest
+    first. The exercise is one no other edition of the modelo also covers, so a
+    snapshot asked for that year and period cannot select a mid-year successor.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        years = sorted(operation.supported_filing_years().years)
+        for modelo in sorted(operation.modelo_ids()):
+            revisions = sorted(operation.modelo_directory(modelo).revisions, key=lambda item: item.valid_from)
+            for metadata in revisions:
+                grade = operation.revision(modelo, str(metadata.id)).authority_grade
+                if grade is not RegistryAuthorityGrade.CALCULATION:
+                    continue
+                for year in years:
+                    covering = [
+                        revision
+                        for revision in revisions
+                        if revision.valid_from.year <= year
+                        and (revision.valid_to is None or year <= revision.valid_to.year)
+                    ]
+                    if [str(revision.id) for revision in covering] != [str(metadata.id)]:
+                        continue
+                    if periods := metadata.period_selector.periods_for_year(year):
+                        return CalculationGradeEdition(
+                            modelo=modelo, revision_id=str(metadata.id), filing_year=year, period=periods[0]
+                        )
+    return None
+
+
 def single_exercise_editions(modelo_id: str) -> tuple[int, ...]:
     """Return the exercises of the revisions authored for exactly one calendar year."""
     return tuple(

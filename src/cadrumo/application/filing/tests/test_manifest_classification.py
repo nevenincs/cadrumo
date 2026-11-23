@@ -38,6 +38,7 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.authored_editions import (
     authored_revisions_where,
     filing_year_envelope,
+    first_calculation_grade_edition,
     revision_covering,
 )
 
@@ -53,8 +54,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # Modelo 200 joins the table only while the edition serving that exercise declares
 # filing grade, read from the registry. An edition below it refuses at the snapshot
 # boundary before the gate runs; that refusal is asserted in
-# ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below, and the
-# module asserts that one of the two always covers Modelo 200.
+# ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below, which
+# takes that edition as its subject whenever Modelo 200 is left out of the table.
 _NEWEST_EXERCISE = filing_year_envelope().horizon
 _M200_NEWEST_IS_FILING_GRADE = str(revision_covering("200", _NEWEST_EXERCISE).id) in {
     str(revision.id)
@@ -120,25 +121,24 @@ def test_gate_required_set_equals_computed_plus_schema_required(modelo: str, yea
     assert required, f"modelo {modelo} has an empty gate-required set (vacuous gate)"
 
 
-# The coordinates whose registry revision declares a rung below filing. Modelo
-# 200's calculation-grade revisions compute, but their filing evidence is not
-# established, so claiming filing authority for them would be a false
-# capability claim, whether or not they carry an export layout.
-_CALCULATION_GRADE_REVISIONS = authored_revisions_where(
-    "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
-)
-_CALCULATION_GRADE_COORDINATES = tuple(
-    ("200", revision.valid_from.year, "0A", date(revision.valid_from.year, 12, 31))
-    for revision in _CALCULATION_GRADE_REVISIONS
-)
-assert _CALCULATION_GRADE_COORDINATES, "Modelo 200 authors no calculation-grade revision to refuse"
-assert _M200_NEWEST_IS_FILING_GRADE or str(revision_covering("200", _NEWEST_EXERCISE).id) in {
-    str(revision.id) for revision in _CALCULATION_GRADE_REVISIONS
-}, "the Modelo 200 edition serving the newest exercise is neither gated nor asserted to refuse"
+def _calculation_grade_coordinate() -> tuple[str, int, str, date]:
+    """Return the coordinate the refusal test demands filing grade of.
+
+    While Modelo 200's newest edition is below filing grade it is the gap the
+    table leaves, so it is the coordinate proven to refuse. Once it is gated,
+    the refusal is still exercised on a real calculation-grade edition read from
+    the registry, since a calculation-grade revision computes without
+    established filing evidence and claiming filing authority for it would be a
+    false capability claim.
+    """
+    if not _M200_NEWEST_IS_FILING_GRADE:
+        return ("200", _NEWEST_EXERCISE, "0A", date(_NEWEST_EXERCISE, 12, 31))
+    edition = first_calculation_grade_edition()
+    assert edition is not None, "the registry authors no calculation-grade edition inside the support envelope"
+    return (edition.modelo, edition.filing_year, edition.period, date(edition.filing_year, 12, 31))
 
 
-@pytest.mark.parametrize("coordinate", _CALCULATION_GRADE_COORDINATES, ids=lambda coordinate: str(coordinate[1]))
-def test_calculation_grade_coordinate_refuses_at_the_manifest_gate(coordinate: tuple[str, int, str, date]) -> None:
+def test_calculation_grade_coordinate_refuses_at_the_manifest_gate() -> None:
     """The gate cannot be reached for a coordinate that is not filing grade.
 
     The table above is meant to be exhaustive over the gated set, so the
@@ -148,7 +148,7 @@ def test_calculation_grade_coordinate_refuses_at_the_manifest_gate(coordinate: t
     declared rung, so a future promotion to filing grade turns this test red
     instead of letting the modelo re-enter the gate unnoticed.
     """
-    modelo, year, period, on = coordinate
+    modelo, year, period, on = _calculation_grade_coordinate()
 
     with pytest.raises(RegistryValidationError) as exc_info:
         _manifest_and_casillas(modelo, year, period, on)
