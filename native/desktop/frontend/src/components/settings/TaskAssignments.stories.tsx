@@ -149,6 +149,22 @@ export const StaleStored: Story = {
   },
 };
 
+export const StoredOnHeldLane: Story = {
+  name: "Stored on a lane that cannot run now",
+  args: {
+    scene: {
+      tasks: [
+        {
+          task_kind: "classification",
+          lane: "llamacpp_api",
+          model: "synthetic-llamacpp:1",
+          effort: null,
+        },
+      ],
+    },
+  },
+};
+
 export const ChangeOpen: Story = {
   name: "Change, the shared matrix open",
   args: AssignedWithEffort.args,

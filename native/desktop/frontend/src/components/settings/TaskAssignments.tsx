@@ -48,6 +48,14 @@ function runsWith(t: Translate, offer: AgentOffer, task: OfferedTask): string {
   if (setting) {
     const lane = offer.lanes.get(setting.lane);
     const model = modelOf(offer, setting.lane, setting.model);
+    // A lane that cannot run now keeps the setting: it is said with the
+    // reason the lane gives, and runs again once the lane does.
+    if (lane && model && !lane.runs)
+      return noted(
+        t,
+        described(t, model.name, lane.name, connectionWords(t, lane)),
+        lane.held?.words ?? t("desktop.agent.unavailable"),
+      );
     if (!task.offered || !lane || !model)
       return t("desktop.providers.task_model_stored_unoffered", {
         model: model?.name ?? setting.model,
@@ -284,7 +292,9 @@ export function TaskAssignments({
           <PopoverContent
             align="end"
             aria-labelledby={headingId}
-            className="grid w-dialog-lg grid-cols-1 gap-3"
+            // The matrix scrolls inside its own box; the popover holds it
+            // whole, so nothing it lists is drawn past the popover's edge.
+            className="flex w-dialog-lg flex-col gap-3 overflow-hidden"
             onCloseAutoFocus={(event) => {
               event.preventDefault();
               if (!ledAway.current) anchor.current?.focus();

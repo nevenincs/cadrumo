@@ -9,6 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Input } from "@/components/ui/input";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@/components/ui/segmented-control";
 import { effortWords } from "../../shell/agentOffer";
 import { useAgentOffer } from "../../shell/agentOfferContext";
 import { described, noted } from "../../shell/compose";
@@ -18,11 +22,15 @@ import {
   columnWords,
   matrixMove,
   matrixView,
+  MATRIX_AVAILABILITIES,
+  MATRIX_STATES,
   rowCells,
   STARTING_FILTERS,
+  type MatrixAvailability,
   type MatrixCell,
   type MatrixColumn,
   type MatrixFilters,
+  type MatrixState,
   type MatrixKey,
   type MatrixLane,
   type MatrixMode,
@@ -68,6 +76,14 @@ const STEP_WORDS = {
   download: "desktop.agent.download_models",
   set_up: "desktop.agent.set_up_providers",
 } as const satisfies Record<MatrixStep, string>;
+
+const FILTER_WORDS = {
+  all: "desktop.agent.model_matrix_filter_all",
+  on: "desktop.agent.model_matrix_filter_on",
+  off: "desktop.agent.model_matrix_filter_off",
+  ready: "desktop.agent.model_matrix_filter_ready",
+  setup: "desktop.agent.model_matrix_filter_setup",
+} as const satisfies Record<MatrixState | MatrixAvailability, string>;
 
 /** The words of a row's default cell: the provider's own default, and the
  * catalog's where it names one. A conversation takes the catalog's default;
@@ -178,8 +194,10 @@ export function ModelMatrix({
       (first ? { row: first.row.key, column: first.column } : null)
     );
   })();
-  const toggle = (filter: keyof MatrixFilters) =>
-    setFilters((held) => ({ ...held, [filter]: !held[filter] }));
+  const filter = <Axis extends keyof MatrixFilters>(
+    axis: Axis,
+    choice: MatrixFilters[Axis],
+  ) => setFilters((held) => ({ ...held, [axis]: choice }));
   const stepOf = (lane: MatrixLane) => {
     if (lane.door) return <EngineDoor door={lane.door} />;
     const act = lane.step ? steps[lane.step] : undefined;
@@ -218,16 +236,38 @@ export function ModelMatrix({
     setActive(next);
     cells.current.get(cellKey(next))?.focus();
   };
-  const filterChip = (filter: keyof MatrixFilters, key: string) => (
-    <Button
-      variant="pill"
-      size="xs"
-      aria-pressed={filters[filter]}
-      data-filter={filter}
-      onClick={() => toggle(filter)}
-    >
-      {t(key)}
-    </Button>
+  // Each filter is one labelled choice with "all" among its options, so what
+  // is shown is always what both say.
+  const axis = <Axis extends keyof MatrixFilters>(
+    name: Axis,
+    heading: string,
+    options: readonly MatrixFilters[Axis][],
+  ) => (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <span id={`${gridId}-${name}`} className="text-sm text-muted-foreground">
+        {t(heading)}
+      </span>
+      <SegmentedControl
+        aria-labelledby={`${gridId}-${name}`}
+        data-filter-axis={name}
+        value={filters[name]}
+        onValueChange={(choice) => {
+          const held = options.find((option) => option === choice);
+          if (held) filter(name, held);
+        }}
+      >
+        {options.map((option) => (
+          <SegmentedControlItem
+            key={option}
+            value={option}
+            data-filter={option}
+            className="text-sm"
+          >
+            {t(FILTER_WORDS[option])}
+          </SegmentedControlItem>
+        ))}
+      </SegmentedControl>
+    </div>
   );
   const span = view.columns.length + 1;
   return (
@@ -238,7 +278,7 @@ export function ModelMatrix({
     <div
       data-slot="model-matrix"
       data-mode={mode}
-      className="@container/matrix grid min-w-0 gap-2"
+      className="@container/matrix flex min-h-0 min-w-0 flex-1 flex-col gap-2"
     >
       <Input
         type="search"
@@ -248,28 +288,30 @@ export function ModelMatrix({
         aria-controls={gridId}
         onChange={(event) => setQuery(event.currentTarget.value)}
       />
-      <div
-        role="group"
-        aria-label={t("desktop.agent.model_matrix_filters")}
-        className="flex flex-wrap gap-1"
-      >
-        {filterChip("on", "desktop.agent.model_matrix_filter_on")}
-        {filterChip("off", "desktop.agent.model_matrix_filter_off")}
-        {filterChip("ready", "desktop.agent.model_matrix_filter_ready")}
-        {filterChip("setup", "desktop.agent.model_matrix_filter_setup")}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        {axis("state", "desktop.agent.model_matrix_state", MATRIX_STATES)}
+        {axis(
+          "availability",
+          "desktop.agent.model_matrix_availability",
+          MATRIX_AVAILABILITIES,
+        )}
       </div>
-      <p role="status" className="sr-only">
+      <p
+        role="status"
+        data-slot="model-matrix-count"
+        className="text-sm text-muted-foreground"
+      >
         {countWords(
           t,
-          view.rows,
+          view.models,
           {
             one: "desktop.agent.model_matrix_count_one",
             other: "desktop.agent.model_matrix_count",
           },
-          { count: view.rows },
+          { count: view.models },
         )}
       </p>
-      {view.noneOn && !filters.off ? (
+      {view.noneOn && filters.state === "on" ? (
         <div
           data-slot="model-matrix-none-on"
           className="grid justify-items-start gap-1.5 text-sm text-muted-foreground"
@@ -301,7 +343,7 @@ export function ModelMatrix({
       ) : (
         <div
           data-slot="model-matrix-scroller"
-          className="max-h-96 overflow-auto overscroll-contain rounded-md border bg-card"
+          className="max-h-96 min-h-0 shrink overflow-auto overscroll-contain rounded-md border bg-card"
         >
           <table
             id={gridId}
@@ -366,6 +408,22 @@ export function ModelMatrix({
                           </span>
                         )}
                         {stepOf(lane)}
+                        {lane.standing !== "ready" && lane.models > 0 && (
+                          <span
+                            data-slot="model-matrix-lane-models"
+                            className="text-muted-foreground"
+                          >
+                            {countWords(
+                              t,
+                              lane.models,
+                              {
+                                one: "desktop.agent.model_matrix_lane_models_one",
+                                other: "desktop.agent.model_matrix_lane_models",
+                              },
+                              { count: lane.models },
+                            )}
+                          </span>
+                        )}
                       </span>
                     </th>
                   </tr>
@@ -538,7 +596,11 @@ export function ModelMatrix({
             )}
           </span>
           <span aria-hidden>·</span>
-          <Button variant="link" size="xs" onClick={() => toggle("off")}>
+          <Button
+            variant="link"
+            size="xs"
+            onClick={() => filter("state", "all")}
+          >
             {t("desktop.agent.model_matrix_show")}
           </Button>
         </p>

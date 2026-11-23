@@ -218,6 +218,10 @@ export type ProviderSignInFixtureControls = {
   /** Every settings status read answers `busy`, as the host does before it
    * has admitted the service, until `releaseSettingsBusy`. */
   holdSettingsBusy: () => void;
+  /** Every settings status read fails as the host's does once the service
+   * is not starting and holds no admitted endpoint (`read_failed`, reason
+   * `agent_admin_unavailable`), until `releaseSettingsBusy`. */
+  holdSettingsUnavailable: () => void;
   releaseSettingsBusy: () => void;
   /** A browser sign-in asks for an authorization code to be pasted back. */
   askForCode: () => void;
@@ -279,6 +283,7 @@ let rejectNextStart: {
 let fixtureSignInProviders: readonly string[] = FIXTURE_SIGN_IN_PROVIDERS;
 let pendingSignInReads = 0;
 let settingsBusy = false;
+let settingsUnavailable = false;
 let askForCode = false;
 let fixtureSignInCalls: ProviderSignInFixtureCall[] = [];
 let failNextStatus: {
@@ -416,6 +421,7 @@ export function providerSettingsFixture({
   fixtureSignInCalls = [];
   pendingSignInReads = 0;
   settingsBusy = false;
+  settingsUnavailable = false;
   let changes = 0;
   const records = new Map<string, ProviderSettingsRecord>(
     SEEDS.map((seed) => [
@@ -495,8 +501,12 @@ export function providerSettingsFixture({
     holdSettingsBusy() {
       settingsBusy = true;
     },
+    holdSettingsUnavailable() {
+      settingsUnavailable = true;
+    },
     releaseSettingsBusy() {
       settingsBusy = false;
+      settingsUnavailable = false;
       settled?.();
     },
     askForCode() {
@@ -781,6 +791,10 @@ export function providerSettingsFixture({
       if (settingsBusy) {
         say("providerStatusBusy");
         throw coded("busy");
+      }
+      if (settingsUnavailable) {
+        say("providerStatusUnavailable");
+        throw coded("read_failed", { reason: "agent_admin_unavailable" });
       }
       if (deferNextStatus) {
         deferNextStatus = false;

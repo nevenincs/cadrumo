@@ -4,6 +4,8 @@ import { formatSize } from "../../src/shared/numbers";
 import { catalogLanes } from "../../src/shell/agentOffer";
 import {
   ask,
+  laneModelsNote,
+  laneModelsWords,
   matrixCell,
   matrixLane,
   matrixRows,
@@ -335,10 +337,7 @@ for (const engine of ENGINES) {
       const absentRow = pickerRow(picker, way, missing.id);
       await expect(absentRow).toHaveAttribute("data-held", "false");
       await expect(absentRow).toHaveAttribute("aria-disabled", "true");
-      await expect(matrixCell(picker, way, missing.id)).toHaveAttribute(
-        "aria-disabled",
-        "true",
-      );
+      await expect(absentRow.getByRole("radio")).toHaveCount(0);
       await expect(absentRow.getByRole("rowheader")).toHaveText(
         label("desktop.agent.model_not_installed", { name: missing.name }),
       );
@@ -427,9 +426,8 @@ for (const engine of ENGINES) {
       await expect(entry).toContainText(
         label("desktop.agent.lane_no_installed_model"),
       );
-      await expect(
-        matrixRows(picker, way).locator("[role=radio]:not([aria-disabled])"),
-      ).toHaveCount(0);
+      await expect(matrixRows(picker, way)).toHaveCount(0);
+      await expect(laneModelsNote(picker, way)).toHaveText(laneModelsWords);
       await expect(laneStep(picker, way, "download")).toHaveCount(1);
       // The way chosen is a hosted one, whose models are not downloaded: the
       // local download hint belongs to the local lane alone.

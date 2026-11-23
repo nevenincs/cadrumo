@@ -37,7 +37,7 @@ const statusReads = (target: Page) =>
 const drawnWithin = async (target: Page) => {
   const began = Date.now();
   await expect(
-    providers(target).locator("[data-provider]").first(),
+    providers(target).locator("[data-slot=lane-expander]").first(),
   ).toBeVisible({ timeout: FIRST_DRAW_MS + 2_000 });
   return Date.now() - began;
 };
@@ -53,7 +53,7 @@ async function openAndTime(target: Page): Promise<number> {
   const began = Date.now();
   await settingsDoor(target).click();
   await expect(
-    providers(target).locator("[data-provider]").first(),
+    providers(target).locator("[data-slot=lane-expander]").first(),
   ).toBeVisible({ timeout: FIRST_DRAW_MS + 2_000 });
   return Date.now() - began;
 }

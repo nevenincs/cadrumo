@@ -1042,7 +1042,11 @@ test("a provider's separate catalog lanes each offer their own models", async ({
     new RegExp(`${escaped(nameOf("qwen"))}, Fixture Ultra`),
   );
   await pickWay(target, settings, "zhipu/cli");
-  await expect(settings.getByRole("radiogroup")).toHaveCount(0);
+  // No choice but the matrix's own two filters stands beside its cells.
+  await expect(settings.getByRole("radiogroup")).toHaveCount(2);
+  await expect(
+    settings.locator("[role=radiogroup]:not([data-filter-axis])"),
+  ).toHaveCount(0);
 });
 
 test("the efforts offered follow the model chosen", async ({

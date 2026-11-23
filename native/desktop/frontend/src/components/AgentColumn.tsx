@@ -267,6 +267,18 @@ export function AgentColumn({
   const ready = status?.state === "ready";
   const unsupported =
     status?.state === "refused" && status.code === "agent_platform_unsupported";
+  // A service that published a refusal is started again by the person; how
+  // that start ends is the next status it publishes.
+  const retryService =
+    status?.state === "refused" && !unsupported && session?.retry
+      ? () => {
+          void session
+            .retry?.()
+            .catch((error: unknown) =>
+              change({ sendFailure: failureCode(error) }),
+            );
+        }
+      : undefined;
   // A signed-in profile can precede its agent service. Reopening this gate
   // also refreshes reads after the service has recovered.
   const serviceReadable = readable && (!session || ready);
@@ -1011,6 +1023,8 @@ export function AgentColumn({
               catalogFailure={catalog.kind === "failed" ? catalog.code : null}
               onRetryCatalog={agentCatalog.retry}
               onLocalModelRemoved={agentCatalog.refresh}
+              service={status}
+              {...(retryService ? { onRetryService: retryService } : {})}
             />
           ) : documentsOpen ? (
             <ConversationDocuments
@@ -1174,21 +1188,7 @@ export function AgentColumn({
               noticeFault={catalogFailed !== null && catalogState === null}
               logRef={catalogFailed?.logRef}
               engines={engineHeld ? engineNotices : undefined}
-              onRetry={
-                catalogAsked
-                  ? agentCatalog.retry
-                  : status?.state === "refused" &&
-                      !unsupported &&
-                      session?.retry
-                    ? () => {
-                        void session
-                          .retry?.()
-                          .catch((error: unknown) =>
-                            change({ sendFailure: failureCode(error) }),
-                          );
-                      }
-                    : undefined
-              }
+              onRetry={catalogAsked ? agentCatalog.retry : retryService}
               onSetUpProviders={
                 noProvider && !noModelHeld && !engineHeld && !laneOffered
                   ? openSettings
