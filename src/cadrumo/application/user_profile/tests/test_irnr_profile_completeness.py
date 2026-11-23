@@ -39,6 +39,7 @@ _BASE_VALUES: dict[str, str] = {
     "iva.cash_accounting_regime_enrolled": "false",
     "iva.voluntary_sii_enrolled": "false",
     "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    "censo.large_company": "false",
 }
 
 

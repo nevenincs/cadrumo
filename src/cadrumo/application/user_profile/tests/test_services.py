@@ -331,6 +331,7 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
     payroll_at_a_school = (
         UserProfileFact(path="withholding.has_employees", value=True),
         UserProfileFact(path="activities.iae_epigraph", value="931.1"),
+        UserProfileFact(path="censo.large_company", value=False),
     )
     period = Period.from_year_and_code(2026, "1T")
 
