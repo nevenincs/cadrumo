@@ -82,6 +82,8 @@ _INSTALLED_MODEL: Final = "synthetic-installed:1"
 _INSTALLED_SIZE: Final = 4_096
 _INSTALLED_CONTEXT: Final = 2_048
 _INSTALLED_LICENCE: Final = "Synthetic licence text for a synthetic model."
+_REPLY_OPTIONS: Final = frozenset(BackgroundOption) - {BackgroundOption.EFFORT}
+"""The options a background request carries in its ``background`` member; effort travels in its ``agent`` member."""
 _PNG: Final = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
@@ -105,7 +107,9 @@ class _Gateway:
                 return self._lane_of(record)
         pytest.fail("the agent catalog lists no measured lane with a declared model that is unselectable here")
 
-    def lane_that_runs_off_host(self, *, takes_image: bool = False, honours_no_option: bool = False) -> ModelRunLane:
+    def lane_that_runs_off_host(
+        self, *, takes_image: bool = False, honours_no_reply_option: bool = False
+    ) -> ModelRunLane:
         """Choose the first selectable, background-runnable lane that reads off host, by its served properties.
 
         The disposable profile holds no sign-in, so an off-host lane fails at the
@@ -119,13 +123,13 @@ class _Gateway:
                 continue
             if takes_image and support["image"] == "unsupported":
                 continue
-            if honours_no_option and support["options"]:
+            if honours_no_reply_option and _REPLY_OPTIONS.intersection(map(BackgroundOption, support["options"])):
                 continue
             lane = self._lane_of(record)
             if lane.reads_off_host:
                 return lane
         wanted = ["selectable", "executable", "background text", "off-host"]
-        wanted += ["background image"] * takes_image + ["no honoured reply option"] * honours_no_option
+        wanted += ["background image"] * takes_image + ["no honoured reply option"] * honours_no_reply_option
         pytest.fail("the agent catalog serves no lane with: " + ", ".join(wanted))
 
     def lane_that_takes_no_image(self) -> ModelRunLane:
@@ -524,7 +528,7 @@ def test_a_run_uploads_starts_reads_its_reply_and_deletes_what_it_left(gateway: 
 
 def test_a_reply_option_the_lane_does_not_honour_is_refused_by_the_agent_and_never_sent(gateway: _Gateway) -> None:
     run_id = secrets.token_hex(16)
-    lane = gateway.lane_that_runs_off_host(honours_no_option=True)
+    lane = gateway.lane_that_runs_off_host(honours_no_reply_option=True)
     status, answer = gateway.background(
         run_id,
         lane,
@@ -536,7 +540,8 @@ def test_a_reply_option_the_lane_does_not_honour_is_refused_by_the_agent_and_nev
         update={"temperature": 0.0, "context_tokens": 4096, "response_schema": {"type": "object"}}
     )
     honoured = gateway.honoured(lane)
-    assert honoured == ()
+    # The lane may still honour effort, which is no reply option and which this run does not set.
+    assert _REPLY_OPTIONS.isdisjoint(honoured), honoured
     outcome = gateway.runs().run(lane=lane, body=body, deadline_seconds=30, options=honoured, effort=None)
 
     # Admitted without the options, the run then fails at the provider the disposable profile is not signed in to.
