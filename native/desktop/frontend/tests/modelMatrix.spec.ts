@@ -90,7 +90,7 @@ test("a task runs a local lane's list in its order, a model not held not choosab
     ["synthetic-vision:1", false, false],
     ["synthetic-text:1", true, true],
     // Added by name; the catalog does not list it.
-    ["example-added:7b", true, true],
+    ["synthetic-added:1", true, true],
   ]);
   expect(local?.models).toBe(3);
 });
