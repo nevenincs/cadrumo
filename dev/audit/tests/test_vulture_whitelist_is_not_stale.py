@@ -33,7 +33,6 @@ import vulture
 from vulture.config import make_config
 
 from cadrumo.adapters.outbound.google import api as google_api
-from cadrumo.adapters.outbound.workbook import calc_sheets_xlsx
 from dev.first_party_source import SOURCE_PACKAGES
 from dev.paths import REPO_ROOT
 
@@ -42,7 +41,6 @@ from .. import vulture_whitelist
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CITATIONS: dict[str, tuple[ModuleType, str | None, str]] = {
-    "_custom_document_properties_append": (calc_sheets_xlsx, "_CustomDocumentProperties", "append"),
     "_execute": (google_api, "ExecutableRequest", "execute"),
 }
 
