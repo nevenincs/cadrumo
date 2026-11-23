@@ -12,7 +12,6 @@ catalogue and its events.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime
@@ -23,6 +22,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from ...core.errors.hierarchy import CadrumoError
+from ...core.hashing import sha256_hex
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.classification_effects import takes_changes
@@ -254,7 +254,7 @@ def plan_digest(
         ],
     }
     encoded = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
-    return hashlib.sha256(encoded).hexdigest()
+    return sha256_hex(encoded)
 
 
 def plan_batch_update(
