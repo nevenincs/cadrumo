@@ -261,8 +261,16 @@ def test_a_received_modification_whose_original_the_catalogue_lacks_blocks_rathe
     assert side.source.observations == ()
 
 
-def test_an_issued_modification_this_period_declares_blocks_until_casillas_14_and_15_are_bound() -> None:
-    """Art. 89.Cinco places it here, and this Modelo 303 edition takes those boxes as operator input."""
+def test_an_issued_minoracion_this_period_declares_is_held_while_its_edition_binds_no_modification() -> None:
+    """Art. 89.Cinco places it here, and the selected edition decides whether a box holds it.
+
+    The modification IS derived and signed; what the edition does not yet hold
+    is a binding that selects the modification role. Emitting the observation
+    anyway would reach no casilla, and a cuota-less row is excluded from the
+    unrouted-observation screen too, so the period would be filed short without
+    saying so. The hold names the figures, and it retires for an edition whose
+    casillas 14 and 15 read the modification.
+    """
     catalogue = resolve_invoice_legal_classification_catalogue(effective_date=_ISSUED_AT)
     rectificativa = _rectificativa(
         kind=InvoiceKind.ISSUED,
@@ -274,7 +282,7 @@ def test_an_issued_modification_this_period_declares_blocks_until_casillas_14_an
     side = _side((_invoice(issued_at=_ORIGINAL_ISSUED_AT, kind=InvoiceKind.ISSUED), rectificativa), period=_Q2)
 
     finding = _finding(side)
-    assert finding.reason is InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND
+    assert finding.reason is InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_ROW_UNDECLARABLE
     assert finding.rectification_modification is not None
     assert (finding.rectification_modification.base, finding.rectification_modification.cuota) == (-_BASE, -_CUOTA)
     assert side.source.observations == ()

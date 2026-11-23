@@ -3276,10 +3276,11 @@ application:
           recibida pertenece a este periodo y su rectificación de deducciones no se
           puede situar: la factura que rectifica no es un único registro de tu catálogo,
           o una línea lleva base sin cuota deducible'
-        invoice_rectificativa_issued_modification_unbound: una factura rectificativa
-          emitida pertenece a este periodo, y las casillas de modificación de este
-          Modelo 303 se escriben a mano, por lo que sus importes no llegan desde la
-          factura
+        invoice_rectificativa_issued_row_undeclarable: 'una factura rectificativa
+          emitida pertenece a este periodo y su modificación no se puede situar: una
+          línea lleva un tipo que ningún tramo de esa fecha recoge, o la rectificación
+          mueve un recargo de equivalencia, que llevan las casillas 25 y 26 y al que
+          todavía no llega ninguna factura'
         invoice_rectificativa_modification_unmodelled: 'el registro de una factura
           rectificativa no indica la modificación que hace: cómo expresa sus importes
           y, si los sustituye, la única factura a la que sustituye'

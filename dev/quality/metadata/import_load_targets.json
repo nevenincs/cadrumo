@@ -542,6 +542,7 @@
         "cadrumo.application.aggregation.invoice_filing_fingerprint",
         "cadrumo.application.aggregation.invoice_iva_source",
         "cadrumo.application.aggregation.invoice_kind",
+        "cadrumo.application.aggregation.invoice_rectification_issued_observations",
         "cadrumo.application.aggregation.invoice_rectification_observations",
         "cadrumo.application.aggregation.invoice_retencion",
         "cadrumo.application.aggregation.irnr_income_ledger",

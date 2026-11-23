@@ -4407,7 +4407,7 @@ desktop:
       invoice_recargo_not_declarable: Recargo
       invoice_recargo_split_unresolved: Recargo
       invoice_rectificativa_deduction_row_undeclarable: Deducción rectificada
-      invoice_rectificativa_issued_modification_unbound: Rectificativa emitida
+      invoice_rectificativa_issued_row_undeclarable: Rectificativa emitida
       invoice_rectificativa_modification_unmodelled: Rectificativa
       invoice_rectificativa_period_needs_fact: Periodo de la rectificativa
       invoice_used_goods_margin_unmodelled: Bienes usados
@@ -4442,8 +4442,8 @@ desktop:
         IVA
       invoice_rectificativa_deduction_row_undeclarable: La factura que rectifica no
         es un único registro, o una línea no tiene cuota deducible
-      invoice_rectificativa_issued_modification_unbound: Escribe tú la modificación
-        en las casillas del Modelo 303
+      invoice_rectificativa_issued_row_undeclarable: El tipo de una línea no tiene
+        tramo en esa fecha, o la rectificación mueve un recargo de equivalencia
       invoice_rectificativa_modification_unmodelled: Indica cómo expresa sus importes
         y a qué factura sustituye
       invoice_rectificativa_period_needs_fact: La rectificación se conoce; su periodo

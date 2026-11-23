@@ -3231,9 +3231,11 @@ application:
           számla ehhez az időszakhoz tartozik, és a levonás helyesbítése nem helyezhető
           el: a helyesbített számla nem egyetlen nyilvántartási tétel, vagy egy sor
           adóalapot visz levonható adó nélkül'
-        invoice_rectificativa_issued_modification_unbound: egy kiállított helyesbítő
-          számla ehhez az időszakhoz tartozik, és ennek a Modelo 303-nak a módosítási
-          rubrikáit kézzel írod be, ezért az összegei nem jutnak el oda a számláról
+        invoice_rectificativa_issued_row_undeclarable: 'egy kiállított helyesbítő
+          számla ehhez az időszakhoz tartozik, és a módosítása nem helyezhető el:
+          egy sor olyan adókulcsot visz, amelyhez azon a napon egyetlen sáv sem tartozik,
+          vagy a helyesbítés egyenértékűségi felárat mozgat, amelyet a 25. és 26.
+          rubrika visz, és oda még egyetlen számla sem jut el'
         invoice_rectificativa_modification_unmodelled: 'a helyesbítő számla (factura
           rectificativa) nyilvántartása nem adja meg, milyen módosítást végez: hogyan
           adja meg az összegeit, és ha azokat helyettesíti, melyik egyetlen számlát

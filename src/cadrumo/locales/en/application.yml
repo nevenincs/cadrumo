@@ -3124,9 +3124,10 @@ application:
           belongs to this period and its correction of the deductions cannot be placed:
           the invoice it corrects is not a single record of your catalogue, or a line
           carries a base with no deductible cuota'
-        invoice_rectificativa_issued_modification_unbound: an issued factura rectificativa
-          belongs to this period, and the modification casillas of this Modelo 303
-          are typed in by hand, so its figures do not reach them from the invoice
+        invoice_rectificativa_issued_row_undeclarable: 'an issued factura rectificativa
+          belongs to this period and its modification cannot be placed: a line carries
+          a rate no tier of that date holds, or the correction moves a recargo de
+          equivalencia, which casillas 25 and 26 hold and no invoice reaches yet'
         invoice_rectificativa_modification_unmodelled: 'the record of a factura rectificativa
           does not state the modification it makes: how it states its figures, and,
           where it substitutes them, the single invoice it replaces'
