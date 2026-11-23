@@ -235,6 +235,28 @@ export function rejectionSummary(reason: unknown): Summary {
   );
 }
 
+/** Whether a console error is Tauri's echo of a WebDriver result message, in
+ * a window a WebDriver run drives. The automation plugin returns each async
+ * script's result through `chrome.webview.postMessage` with `error: null`;
+ * Tauri's IPC listener receives that same message, cannot read it as a command
+ * call (whose `error` is a callback number) and writes this one line to the
+ * console. No command of the window failed. Only a host built for automation
+ * and given a WebDriver port marks the window as automated, so a shipped
+ * window never matches. */
+export function isAutomationIpcEcho(
+  args: readonly unknown[],
+  automated: boolean,
+): boolean {
+  return (
+    automated &&
+    args.length === 1 &&
+    typeof args[0] === "string" &&
+    /^JSON error: invalid type: null, expected u32 at line 1 column \d+$/.test(
+      args[0],
+    )
+  );
+}
+
 /** Whether an uncaught error event is the browser's own notice that a
  * ResizeObserver could not deliver every resize in one frame: nothing
  * failed, and the next frame delivers the rest. */
