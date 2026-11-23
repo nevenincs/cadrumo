@@ -84,3 +84,93 @@ test("a host application error keeps its own code and reason", async ({
     },
   ]);
 });
+
+/** The records the window makes of a settings status read refused with
+ * `failure`, asked as the settings ask it while a person is signed in. */
+async function statusRejected(
+  target: Page,
+  failure: object,
+): Promise<Report[]> {
+  await target.goto("/scenarios.html?scenario=signed-in&bar=off");
+  await target.waitForFunction(() => Boolean(window.__scenarioModules));
+  return target.evaluate(async (failure) => {
+    const reports: Report[] = [];
+    Object.assign(window, {
+      __CADRUMO_SHELL__: { token: "f".repeat(64) },
+      __TAURI_INTERNALS__: {
+        async invoke(command: string, args: unknown) {
+          if (command === "desktop_frontend_diagnostic") {
+            reports.push((args as { report: Report }).report);
+            return null;
+          }
+          if (command === "provider_settings_status") throw failure;
+          return null;
+        },
+      },
+    });
+    const { tauriHost } = await window.__scenarioModules!.tauriHost();
+    await tauriHost()
+      .providerSettings!.status()
+      .catch(() => null);
+    // A refusal for a missing session is recorded once the window has
+    // learned whether the session ended, which takes up to a few seconds.
+    for (
+      let waited = 0;
+      waited < 5_000 &&
+      !reports.some((report) => report.event === "command_rejected");
+      waited += 50
+    )
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    return reports.filter((report) => report.event === "command_rejected");
+  }, failure);
+}
+
+// Where the agent's start or the person's setup stands is a state the
+// settings show with its way on, never a fault: not signed in while the
+// service takes up the session, busy while the host admits it, a locked
+// profile or a runtime still coming.
+for (const code of [
+  "not_signed_in",
+  "busy",
+  "profile_locked",
+  "runtime_unavailable",
+]) {
+  test(`a settings status refused ${code} is noted at INFO, not as an error`, async ({
+    page: target,
+  }) => {
+    const reports = await statusRejected(target, { code });
+    expect(reports).toHaveLength(1);
+    expect(reports[0]).toMatchObject({
+      level: "INFO",
+      command: "provider_settings_status",
+    });
+  });
+}
+
+test("a settings status that fails in the host is still an error, and a service failure a warning", async ({
+  page: target,
+}) => {
+  const failed = await statusRejected(target, {
+    code: "read_failed",
+    operation: "cli",
+    message: "The command output could not be read.",
+    reason: "provider_settings_task_failed",
+  });
+  expect(failed).toMatchObject([
+    {
+      level: "ERROR",
+      command: "provider_settings_status",
+      code: "read_failed",
+    },
+  ]);
+  const refused = await statusRejected(target, { code: "service_failed" });
+  expect(refused).toMatchObject([
+    {
+      level: "WARNING",
+      command: "provider_settings_status",
+      code: "refused",
+      reason: "service_failed",
+    },
+  ]);
+});

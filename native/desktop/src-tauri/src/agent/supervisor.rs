@@ -793,9 +793,17 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
     let mut serving: Option<String> = None;
     // Since when the runtime has not read as available, while it has not.
     let mut runtime_awaited: Option<Instant> = None;
+    // Since when no sign-in observation has decided whether the agent may serve:
+    // before the first one answers, and while a sign-in change fences it. A
+    // launcher's service is read as starting meanwhile, so the wait has the
+    // start's own bound, past which it is refused as timed out.
+    let mut undecided: Option<Instant> = Some(Instant::now());
     'supervision: while !shared.closed.load(Ordering::Acquire) {
         if shared.retry_requested.swap(false, Ordering::AcqRel) {
             retries = RetryBudget::default();
+            if undecided.is_some() {
+                undecided = Some(Instant::now());
+            }
         }
         let wake = shared.wake.notified();
         tokio::pin!(wake);
@@ -814,6 +822,14 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
             }
         };
         tokio::pin!(startup_timeout);
+        let undecided_at = undecided_due(&shared, undecided);
+        let undecided_timeout = async move {
+            match undecided_at {
+                Some(deadline) => tokio::time::sleep_until(deadline.into()).await,
+                None => std::future::pending::<()>().await,
+            }
+        };
+        tokio::pin!(undecided_timeout);
         // CLI status reads can take seconds. Launcher refusal/exit must clear
         // the gateway and publish its cause while that read is still pending.
         let observed = loop {
@@ -891,6 +907,10 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     }
                     continue 'supervision;
                 }
+                () = &mut undecided_timeout => {
+                    refuse_undecided(&shared);
+                    continue 'supervision;
+                }
                 observed = &mut observation => break observed,
             }
         };
@@ -908,6 +928,15 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         // refused.
         let awaiting_runtime =
             runtime_awaited.is_some_and(|since| since.elapsed() < shared.startup_timeout);
+        // A fenced sign-in keeps the wait it began; a decided observation ends it,
+        // and a runtime still awaited is bounded by its own readiness wait.
+        if matches!(allowed, Allowed::Pending) {
+            undecided.get_or_insert_with(Instant::now);
+        } else {
+            undecided = None;
+        }
+        let undecided_lapsed =
+            undecided.is_some_and(|since| since.elapsed() >= shared.startup_timeout);
         if let Some(preparing) = lock(&shared.preparing).as_ref()
             && !matches!(&allowed, Allowed::Serve(profile) if *profile == preparing.profile)
         {
@@ -1061,6 +1090,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                 };
                 let _ = stop_running(&shared, None, cause).await;
                 match &allowed {
+                    Allowed::Pending if undecided_lapsed => refuse_undecided(&shared),
                     Allowed::Pending => publish(&shared, State::Stopped),
                     Allowed::Refuse(_) if awaiting_runtime => await_runtime(&shared),
                     Allowed::Refuse(code) => {
@@ -1078,6 +1108,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     }
                 }
             }
+            (None, Allowed::Pending) if undecided_lapsed => refuse_undecided(&shared),
             (None, Allowed::Pending) => publish(&shared, State::Stopped),
             (None, Allowed::Refuse(_)) if awaiting_runtime => await_runtime(&shared),
             (None, Allowed::Refuse(code)) => {
@@ -1116,6 +1147,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     .map(|since| since + shared.startup_timeout)
                     .filter(|at| *at > Instant::now()),
             )
+            .chain(undecided_due(&shared, undecided).filter(|at| *at > Instant::now()))
             .min();
         // Starting this round may have installed a different held session.
         let failed_person = person_failed(&shared);
@@ -1136,6 +1168,7 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     // rather than being told the person is signed out.
                     if lock(&shared.status).state == (State::Refused { code: Refusal::SignedOut }) {
                         publish(&shared, State::Stopped);
+                        undecided.get_or_insert_with(Instant::now);
                     }
                     break;
                 }
@@ -1230,6 +1263,40 @@ fn await_runtime(shared: &Shared) {
         log::info!("agent waits for the runtime to read as available");
     }
     publish(shared, State::Stopped);
+}
+
+/// When a launcher's service read as starting, with no start under way, must
+/// stop being waited for: `since` plus the start's bound, while the published
+/// state is still the Stopped a read is told to wait on.
+fn undecided_due(shared: &Shared, since: Option<Instant>) -> Option<Instant> {
+    let waited_on = lock(&shared.status).state == State::Stopped
+        && lock(&shared.running).is_none()
+        && lock(&shared.preparing).is_none();
+    since
+        .filter(|_| waited_on)
+        .map(|since| since + shared.startup_timeout)
+}
+
+/// A sign-in that stayed undecided past the start's bound: the agent is refused
+/// as timed out, with its log line, rather than read as starting forever. A
+/// later decided observation, or a retry, starts it as usual.
+fn refuse_undecided(shared: &Shared) {
+    if lock(&shared.status).state
+        != (State::Refused {
+            code: Refusal::Timeout,
+        })
+    {
+        log::warn!(
+            "agent start refused: no sign-in observation decided within {} s",
+            shared.startup_timeout.as_secs()
+        );
+    }
+    publish(
+        shared,
+        State::Refused {
+            code: Refusal::Timeout,
+        },
+    );
 }
 
 fn next_due(shared: &Shared, retries: &RetryBudget) -> Option<Instant> {

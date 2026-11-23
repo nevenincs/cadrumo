@@ -203,6 +203,14 @@ function provenCapabilities(t: Translate, lane: ServedProviderLane): string[] {
   return [...new Set(words)];
 }
 
+/** Whether the service has not yet measured one of the axes a lane is held
+ * by: its configuration, transport, login or launcher admission. */
+const healthAxisUnread = (health: ServedProviderLane["health"]): boolean =>
+  health.configured === "unknown" ||
+  health.transport === "unknown" ||
+  health.authentication === "unknown" ||
+  health.admission === "unknown";
+
 /** Interim (backend B1/B2): why a lane cannot be chosen, from the first of
  * its health axes that says so, and the step the person can take where one
  * exists: signing in to a lane that is signed out, and asking again for a
@@ -230,6 +238,10 @@ function laneHeld(
     return { words: t("desktop.agent.lane_not_admitted") };
   if (health.catalog === "unavailable" || health.catalog === "unknown")
     return { words: t("desktop.agent.lane_no_catalog"), step: "retry" };
+  // An axis the service has not measured yet is not a fault: it settles on a
+  // later read, as `laneStillReading` says, so it is said as not checked yet.
+  if (healthAxisUnread(health))
+    return { words: t("desktop.agent.lane_not_observed"), step: "retry" };
   return { words: t("desktop.agent.unavailable"), step: "retry" };
 }
 

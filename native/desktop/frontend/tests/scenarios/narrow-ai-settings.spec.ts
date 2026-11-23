@@ -10,7 +10,7 @@ import { label } from "../support/strings";
 // itself rather than moving the page.
 
 const WIDTH = 420;
-const HEIGHT = 900;
+const HEIGHT = 811;
 
 test.use({
   viewport: { width: WIDTH, height: HEIGHT },
@@ -184,6 +184,15 @@ test("a task's Change is reached by scrolling, and its matrix fits the window an
     name: label("desktop.providers.task_model_model", { task }),
   });
   const scroller = await fitsTheWindow(target, chooser);
+  // Opened from a button low on the page, the matrix still has the window's
+  // height: the popover fills it and the list takes what the controls above
+  // it leave, at least half the window, not the sliver below the button.
+  await scroller.evaluate((node) => node.scrollTo({ top: 0 }));
+  const box = (await chooser.boundingBox())!;
+  expect(box.height).toBeGreaterThan(HEIGHT * 0.9);
+  expect(
+    await scroller.evaluate((node) => node.clientHeight),
+  ).toBeGreaterThanOrEqual(HEIGHT / 2);
 
   // A tap on a cell that can be chosen chooses it.
   const cell = scroller

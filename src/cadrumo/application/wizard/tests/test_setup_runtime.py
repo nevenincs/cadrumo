@@ -16,6 +16,8 @@ import pytest
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.deadlines.profiles import FILING_CADENCE_LARGE_COMPANY_PATH, filing_cadence_profile_required_paths
 
 from ....core.flows import FlowMode
 from ....domain.contribuyente.entity_type import LegalEntityForm
@@ -475,3 +477,48 @@ def test_a_simplified_regime_walk_is_still_asked_the_modelo_303_composition(*, r
 
     assert committed["iva-m303-regime-composition"] == "mixed"
     assert answers.iva_m303_regime_composition == "mixed"
+
+
+def _without_iva(canonical: dict[str, str]) -> dict[str, str]:
+    return {key: value for key, value in canonical.items() if not key.startswith("iva-")} | {"iva-regime": ""}
+
+
+def _owed_by_definition(committed: dict[str, str], registry_setup_flow: WizardFlow) -> bool:
+    """Ask the completeness definition itself whether the committed answers owe the condition."""
+    keys = {
+        question.id: question.profile_key
+        for section in registry_setup_flow.sections
+        for question in section.questions
+        if question.profile_key is not None
+    }
+    values = {keys[qid]: token for qid, token in committed.items() if qid in keys and token != ""}
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        return FILING_CADENCE_LARGE_COMPANY_PATH in filing_cadence_profile_required_paths(values)
+
+
+@pytest.mark.parametrize(
+    ("iva", "payer"),
+    [(False, None), (True, None), (False, "has-employees"), (False, "pays-non-resident-income-with-retencion")],
+)
+def test_the_large_company_question_is_asked_exactly_where_completeness_owes_it(
+    iva: bool, payer: str | None, *, registry_setup_flow: WizardFlow
+) -> None:
+    canonical = individual_declaration_canonical()
+    if not iva:
+        canonical = _without_iva(canonical)
+    if payer is not None:
+        canonical[payer] = "true"
+
+    _answers, committed = _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
+
+    asked = "enrollment-large-company" in committed
+    assert asked == (iva or payer is not None)
+    assert asked == _owed_by_definition(committed, registry_setup_flow)
+
+
+def test_a_walk_that_owes_the_large_company_answer_cannot_leave_it_blank(*, registry_setup_flow: WizardFlow) -> None:
+    canonical = individual_declaration_canonical()
+    canonical["enrollment-large-company"] = ""
+
+    with pytest.raises((FlowAnswerError, FlowSubmitError)):
+        _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
