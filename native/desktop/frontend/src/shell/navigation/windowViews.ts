@@ -77,7 +77,11 @@ const panel = (tab: PanelTab | null): WindowViewEntry => ({
 /** Register id to how the window opens it. The movements and invoices
  * grids reveal the row a `select` names. */
 export const WINDOW_VIEWS: Readonly<Record<string, WindowViewEntry>> = {
-  profile: page("profile", null, "userProfile"),
+  profile: {
+    ...page("profile", null, "userProfile"),
+    // The profile reveals and opens the field a `field` names.
+    honours: ["field"],
+  },
   "profile/aeat-access": {
     ...page("profile", null, "userProfile"),
     view: {

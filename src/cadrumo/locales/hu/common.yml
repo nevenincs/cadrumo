@@ -5419,6 +5419,7 @@ desktop:
       hide_details: Részletek elrejtése
       incomplete: A profilod hiányos
       missing_fields: Hiányzó kötelező adatok
+      open_field: '{field} megnyitása a profilodban'
       open_profile: Profil megnyitása
       show_details: Részletek megjelenítése
     open_from_form: Nyisd meg a profilodat, ahol ezek vannak

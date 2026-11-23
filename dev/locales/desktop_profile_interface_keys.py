@@ -179,6 +179,7 @@ DESKTOP_PROFILE_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.profile.notice.hide_details",
         "desktop.profile.notice.incomplete",
         "desktop.profile.notice.missing_fields",
+        "desktop.profile.notice.open_field",
         "desktop.profile.notice.open_profile",
         "desktop.profile.notice.show_details",
         "desktop.profile.password.again",

@@ -43,7 +43,10 @@ def navigation_projection(register: NavigationRegister) -> dict[str, object]:
             "prefer_key": PREFER_KEY,
         },
         "surfaces": [surface.value for surface in NavigationSurface],
-        "kinds": [{"name": kind.name, "alphabet": kind.alphabet, "length": kind.length} for kind in register.kinds],
+        "kinds": [
+            {"name": kind.name, "alphabet": kind.alphabet, "length": kind.length, "max_length": kind.max_length}
+            for kind in register.kinds
+        ],
         "retired": list(register.retired),
         "elements": [
             {

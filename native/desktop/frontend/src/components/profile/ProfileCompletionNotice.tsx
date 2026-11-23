@@ -39,11 +39,12 @@ export function ProfileCompletionNotice({
   ]);
   const attention = profile !== null && (!profile.valid || missing.size > 0);
   const profileAttention = attention || (profile?.notices.length ?? 0) > 0;
+  // Each missing detail by its served path, so its link opens that field.
   const labels =
     profile?.sections.flatMap((section) =>
       section.fields
         .filter((field) => missing.has(field.path))
-        .map((field) => field.label),
+        .map((field) => ({ path: field.path, label: field.label })),
     ) ?? [];
   const messages = [
     ...new Set([
@@ -122,8 +123,18 @@ export function ProfileCompletionNotice({
             <div>
               <p>{t("desktop.profile.notice.missing_fields")}</p>
               <ul className="list-inside list-disc">
-                {labels.map((label, index) => (
-                  <li key={index}>{label}</li>
+                {labels.map(({ path, label }) => (
+                  <li key={path}>
+                    {onNavigate ? (
+                      <FieldLink
+                        path={path}
+                        label={label}
+                        onNavigate={onNavigate}
+                      />
+                    ) : (
+                      label
+                    )}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -138,5 +149,34 @@ export function ProfileCompletionNotice({
         </div>
       )}
     </Alert>
+  );
+}
+
+/** A missing detail named as a link that opens the profile at that field. */
+function FieldLink({
+  path,
+  label,
+  onNavigate,
+}: {
+  path: string;
+  label: string;
+  onNavigate: (url: string) => void;
+}) {
+  const t = useStrings();
+  const href = formatViewLink(NAVIGATION, "profile", { field: path });
+  return (
+    <a
+      href={href}
+      data-profile-field={path}
+      aria-label={t("desktop.profile.notice.open_field", { field: label })}
+      className="underline underline-offset-2 hover:text-foreground focus-visible:outline-(length:--focus-ring) focus-visible:outline-offset-(length:--focus-ring) focus-visible:outline-solid"
+      onClick={(event) => {
+        event.preventDefault();
+        onNavigate(href);
+      }}
+      onAuxClick={(event) => event.preventDefault()}
+    >
+      {label}
+    </a>
   );
 }

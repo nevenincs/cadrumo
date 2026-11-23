@@ -5442,6 +5442,7 @@ desktop:
       hide_details: Ocultar detalles
       incomplete: Tu perfil está incompleto
       missing_fields: Falta información obligatoria
+      open_field: Abrir {field} en tu perfil
       open_profile: Abrir perfil
       show_details: Mostrar detalles
     open_from_form: Abre tu perfil, donde se guardan

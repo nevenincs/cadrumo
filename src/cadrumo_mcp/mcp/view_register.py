@@ -76,6 +76,7 @@ def _row(register: NavigationRegister, element: NavigationElement, language: str
             "kind": kind,
             "alphabet": register.value_kind(kind).alphabet,
             "length": register.value_kind(kind).length,
+            "max_length": register.value_kind(kind).max_length,
         }
         for name, kind in sorted(element.params.items())
     }
