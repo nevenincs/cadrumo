@@ -69,6 +69,50 @@ test("a starting agent draws each declared connection as starting, then the sett
   ).toHaveCount(0);
 });
 
+test("an admitted service that has not yet taken up the session answers not signed in: still starting, never a load failure", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&catalog=declared",
+  );
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.failNextSettingsRead({
+      code: "not_signed_in",
+    }),
+  );
+  await openSettings(target);
+  await expect(
+    providers(target)
+      .getByRole("status")
+      .filter({ hasText: label("desktop.providers.agent_starting") }),
+  ).toBeVisible();
+  await expect(
+    providers(target).locator("[data-status=starting]").first(),
+  ).toBeVisible();
+  await expect(
+    pane(target).getByText(label("desktop.providers.load_failed")),
+  ).toHaveCount(0);
+  await expect(providers(target).getByRole("alert")).toHaveCount(0);
+  // It waits on the service's next status, not on a timer.
+  const reads = async () =>
+    (await hostCalls(target)).filter((call) => call === "providerStatus")
+      .length;
+  const asked = await reads();
+  await target.waitForTimeout(1_000);
+  expect(await reads()).toBe(asked);
+  await expect(
+    pane(target).getByText(label("desktop.providers.load_failed")),
+  ).toHaveCount(0);
+
+  await target.evaluate(() => window.__scenarioAgentPublishStatus?.());
+  await expect(
+    providers(target).locator("[data-slot=lane-expander]").first(),
+  ).toBeVisible();
+  await expect(providers(target).locator("[data-status=starting]")).toHaveCount(
+    0,
+  );
+});
+
 test("a start that fails ends the wait with its cause and a Retry that starts the agent again", async ({
   page: target,
 }) => {

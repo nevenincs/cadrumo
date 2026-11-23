@@ -343,7 +343,7 @@ export function ModelMatrix({
       ) : (
         <div
           data-slot="model-matrix-scroller"
-          className="max-h-96 min-h-0 shrink overflow-auto overscroll-contain rounded-md border bg-card"
+          className="max-h-96 min-h-0 shrink overflow-auto max-sm:max-h-none max-sm:flex-1 overscroll-contain rounded-md border bg-card"
         >
           <table
             id={gridId}
