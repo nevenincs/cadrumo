@@ -466,7 +466,9 @@ async def test_a_rows_left_edge_carries_its_most_severe_cell_and_a_cell_its_own_
     }
     assert _line_with(lines, "153")[1] == NOT_IMPORTED_MARK.glyph
     assert _line_with(lines, "10")[1] == NOT_CALCULATED_MARK.glyph
-    assert _line_with(lines, "14")[1] == " ", "a row with nothing to do and nothing waiting has no mark"
+    # The modification row reads the period's facturas rectificativas, so before a calculation it waits on one.
+    assert _line_with(lines, "14")[1] == NOT_CALCULATED_MARK.glyph
+    assert _line_with(lines, "16")[1] == " ", "a row with nothing to do and nothing waiting has no mark"
 
 
 def test_a_grid_cell_is_named_by_its_row_its_column_and_its_own_label(operation: PinnedAuthorityOperation) -> None:
