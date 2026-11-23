@@ -354,6 +354,7 @@ const mountProbe = (target: Page) =>
         readingHost: null,
         setupSettled: null,
         settingsChanges: 0,
+        settings: null,
         opened: 0,
         listChanges: 0,
         pickerOpened: 0,

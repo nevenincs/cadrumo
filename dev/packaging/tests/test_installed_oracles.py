@@ -36,7 +36,7 @@ from dev.source_tree import repository_files, snapshot
 
 from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
 from ..distribution_names import normalise_distribution_name
-from ..google_oauth import build_client_json, stage_build_client
+from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json, stage_build_client
 from ..hashing import sha256_path
 from ..installed_runtime import run_installed_tax_oracle_with_runtime
 from ..installed_tax_oracle import (
@@ -53,6 +53,7 @@ from ..lane_verification_core import (
     venv_python_path,
 )
 from ..python_cohort import PythonCohort, build_python_cohort
+from .test_google_oauth_provisioning import client_document
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -485,7 +486,6 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     # shared checkout's canonical build outputs.
     snapshot(_REPO_ROOT, repository_files(_REPO_ROOT), clean_repo)
     _stage_authority_candidate(clean_repo)
-    stage_build_client(clean_repo, build_client_json(_REPO_ROOT))
     # Under the snapshot's OWN build/, not beside it. `build_python_cohort` refuses
     # an output that is not below `<repo_root>/build`, and repo_root here is the
     # snapshot -- so a sibling of it can never satisfy it and this fixture
@@ -494,7 +494,12 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     # inconsistent and reported the module's other tests as bare internal
     # AssertionErrors naming nothing.
     cohort_dir = clean_repo / "build" / "python-cohort"
-    supplied = build_python_cohort(clean_repo, cohort_dir)
+    # A module fixture runs before the function-scoped synthetic client exists,
+    # so the staged client and the cohort build receive a synthetic client directly.
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv(GOOGLE_OAUTH_ENV, client_document())
+        stage_build_client(clean_repo, build_client_json(_REPO_ROOT))
+        supplied = build_python_cohort(clean_repo, cohort_dir)
     source_digest = supplied.source_digest
     root_wheel = supplied.root_wheel
     data_wheels = supplied.companion_wheels

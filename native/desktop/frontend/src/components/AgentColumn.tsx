@@ -18,6 +18,8 @@ import {
   modelDisplayName,
   providerModelsToDownload,
 } from "../shell/agentCatalog";
+import { wayIdOf } from "../shell/agentOffer";
+import { AgentOfferContext } from "../shell/agentOfferContext";
 import { acceptedExtensions, DocumentLister } from "../shell/agentDocuments";
 import { useDocumentInventory } from "../shell/agentDocumentInventory";
 import { useStagedDocuments } from "../shell/agentStaging";
@@ -433,6 +435,13 @@ export function AgentColumn({
     if (engineChanges > 0 && ready) refreshSettings();
     else if (turnedReady) rereadSettings();
   }, [engineChanges, ready, refreshSettings, rereadSettings]);
+  // The provider settings records as served, which the offer carries per lane.
+  const settingsRecords =
+    settings.read.kind === "ready" ? settings.read.value.records : null;
+  const settingsAnswer = useMemo(
+    () => (settingsRecords ? { providers: settingsRecords } : null),
+    [settingsRecords],
+  );
   const ranWith =
     conversationId !== null && live.read.kind === "ready"
       ? newestRanWith(live.read.value)
@@ -440,7 +449,7 @@ export function AgentColumn({
   // A conversation that has run is fixed to the lane it ran on: its next
   // message goes there, and another lane is a new conversation carrying it.
   const fixedWay = ranWith?.provider
-    ? `${ranWith.provider}/${ranWith.transport}`
+    ? wayIdOf(ranWith.provider, ranWith.transport)
     : null;
   const agentCatalog = useAgentCatalog({
     t,
@@ -450,6 +459,7 @@ export function AgentColumn({
     readingHost,
     setupSettled,
     settingsChanges: settings.changes,
+    settings: settingsAnswer,
     opened,
     listChanges,
     pickerOpened,
@@ -461,8 +471,6 @@ export function AgentColumn({
     catalog,
     catalogBusy,
     lists,
-    localLanes,
-    engines,
     offer,
     selection,
     provider: onProvider,
@@ -822,6 +830,7 @@ export function AgentColumn({
     carryFrom: view.carryFrom,
     changeAsk: view.changeAsk,
     catalog,
+    offer,
     selection,
     newest,
     ready,
@@ -909,419 +918,421 @@ export function AgentColumn({
                 : serviceNotice;
 
   return (
-    <div
-      ref={dropping.target}
-      className="relative flex min-h-0 flex-1 flex-col"
-    >
-      <AgentHeader
-        // A conversation keeps the new-conversation heading until the agent
-        // serves its title; an availability note is never a title.
-        title={current?.title || t("desktop.agent.new_conversation")}
-        onRename={
-          renameHost && current
-            ? (title) => rename(current.id, title, "header")
-            : undefined
-        }
-        onMenu={onMenu}
-        historyOpen={historyOpen}
-        documentsOpen={documentsOpen}
-        documentCount={
-          documents.read.kind === "ready" ? documents.read.value.length : 0
-        }
-        onToggleDocuments={
-          serviceReadable && agent?.documents
-            ? () => {
-                documents.refresh();
-                toggle("documents");
-              }
-            : undefined
-        }
-        onNewConversation={
-          agent
-            ? () => {
-                pendingPrompt.current = null;
-                change(NEW_CONVERSATION);
-              }
-            : undefined
-        }
-        newConversationHeldBy={
-          (
-            Object.keys(NEW_CONVERSATION) as (keyof typeof NEW_CONVERSATION)[]
-          ).every((key) => view[key] === NEW_CONVERSATION[key])
-            ? t("desktop.agent.already_new")
-            : undefined
-        }
-        onToggleHistory={agent ? () => toggle("history") : undefined}
-        settingsOpen={settingsOpen}
-        onToggleSettings={openSettings ? () => toggle("settings") : undefined}
-        onToggleMaximize={onToggleMaximize}
-        trailing={trailing}
-      />
-      {status?.lane === "development" && (
-        // Said for as long as the lane is in use, whatever the agent's state.
-        <p
-          role="note"
-          className="agent-lane flex shrink-0 items-start gap-2 bg-accent px-3 py-2 text-xs text-foreground"
-        >
-          <Icon name="alert" size="xs" className="mt-0.5 shrink-0" />
-          <span>{t("desktop.agent.lane_notice")}</span>
-        </p>
-      )}
-      <section
-        ref={body}
-        tabIndex={-1}
-        aria-label={t("desktop.pane.agent")}
-        className="agent-body flex min-h-0 flex-1 flex-col overflow-y-auto focus-visible:-outline-offset-2"
+    <AgentOfferContext.Provider value={offer}>
+      <div
+        ref={dropping.target}
+        className="relative flex min-h-0 flex-1 flex-col"
       >
-        {settingsOpen ? (
-          <AgentSettingsPanel
-            query={settingsQuery}
-            onQuery={setSettingsQuery}
-            providerMatches={providerMatches}
-            onProviderMatch={setProviderMatches}
-            accessMatches={accessMatches}
-            onAccessMatch={setAccessMatches}
-            providerSettings={providerSettings}
-            settings={settings}
-            agentAccess={agentAccess}
-            access={access}
-            reader={reader}
-            locale={locale}
-            writeClipboard={writeClipboard}
-            onSignInTerminal={refreshProviderAfterSignIn}
-            localModelHost={localModelHost}
-            localLanes={localLanes}
-            engines={engines}
-            localProviderId={localProvider?.id}
-            catalogStatus={
-              catalog.kind === "ready"
-                ? "ready"
-                : catalog.kind === "loading"
-                  ? "loading"
-                  : "failed"
-            }
-            catalogFailure={catalog.kind === "failed" ? catalog.code : null}
-            catalog={catalog.kind === "ready" ? catalog.value : null}
-            onRetryCatalog={agentCatalog.retry}
-            onLocalModelRemoved={agentCatalog.refresh}
-          />
-        ) : documentsOpen ? (
-          <ConversationDocuments
-            documents={documents}
-            reader={reader}
-            conversationId={conversationId}
-            session={session}
-            locale={locale}
-            named={staging
-              .namedFor(conversationId)
-              .map((document) => document.name)}
-            onClose={() => change({ panel: "none" })}
-            onAddFiles={attach ? () => void attach() : undefined}
-            onName={(name) => {
-              const document =
-                documents.read.kind === "ready"
-                  ? documents.read.value.find(
-                      (document) => document.name === name,
-                    )
-                  : undefined;
-              if (document) staging.name(document);
-            }}
-            onRemove={
-              documents.remove ? (name) => void removeDocument(name) : undefined
-            }
-          />
-        ) : historyOpen ? (
-          groups ? (
-            <div className="flex min-h-0 flex-1 flex-col">
-              {view.archiveFailure !== null && (
-                <p
-                  role="alert"
-                  className="flex shrink-0 items-start gap-2 px-3 pt-3 text-sm"
-                >
-                  <Icon name="alert" className="mt-0.5 text-destructive" />
-                  <span>{refusalWords(t, view.archiveFailure)}</span>
+        <AgentHeader
+          // A conversation keeps the new-conversation heading until the agent
+          // serves its title; an availability note is never a title.
+          title={current?.title || t("desktop.agent.new_conversation")}
+          onRename={
+            renameHost && current
+              ? (title) => rename(current.id, title, "header")
+              : undefined
+          }
+          onMenu={onMenu}
+          historyOpen={historyOpen}
+          documentsOpen={documentsOpen}
+          documentCount={
+            documents.read.kind === "ready" ? documents.read.value.length : 0
+          }
+          onToggleDocuments={
+            serviceReadable && agent?.documents
+              ? () => {
+                  documents.refresh();
+                  toggle("documents");
+                }
+              : undefined
+          }
+          onNewConversation={
+            agent
+              ? () => {
+                  pendingPrompt.current = null;
+                  change(NEW_CONVERSATION);
+                }
+              : undefined
+          }
+          newConversationHeldBy={
+            (
+              Object.keys(NEW_CONVERSATION) as (keyof typeof NEW_CONVERSATION)[]
+            ).every((key) => view[key] === NEW_CONVERSATION[key])
+              ? t("desktop.agent.already_new")
+              : undefined
+          }
+          onToggleHistory={agent ? () => toggle("history") : undefined}
+          settingsOpen={settingsOpen}
+          onToggleSettings={openSettings ? () => toggle("settings") : undefined}
+          onToggleMaximize={onToggleMaximize}
+          trailing={trailing}
+        />
+        {status?.lane === "development" && (
+          // Said for as long as the lane is in use, whatever the agent's state.
+          <p
+            role="note"
+            className="agent-lane flex shrink-0 items-start gap-2 bg-accent px-3 py-2 text-xs text-foreground"
+          >
+            <Icon name="alert" size="xs" className="mt-0.5 shrink-0" />
+            <span>{t("desktop.agent.lane_notice")}</span>
+          </p>
+        )}
+        <section
+          ref={body}
+          tabIndex={-1}
+          aria-label={t("desktop.pane.agent")}
+          className="agent-body flex min-h-0 flex-1 flex-col overflow-y-auto focus-visible:-outline-offset-2"
+        >
+          {settingsOpen ? (
+            <AgentSettingsPanel
+              query={settingsQuery}
+              onQuery={setSettingsQuery}
+              providerMatches={providerMatches}
+              onProviderMatch={setProviderMatches}
+              accessMatches={accessMatches}
+              onAccessMatch={setAccessMatches}
+              providerSettings={providerSettings}
+              settings={settings}
+              agentAccess={agentAccess}
+              access={access}
+              reader={reader}
+              locale={locale}
+              writeClipboard={writeClipboard}
+              onSignInTerminal={refreshProviderAfterSignIn}
+              localModelHost={localModelHost}
+              localProviderId={localProvider?.id}
+              catalogStatus={
+                catalog.kind === "ready"
+                  ? "ready"
+                  : catalog.kind === "loading"
+                    ? "loading"
+                    : "failed"
+              }
+              catalogFailure={catalog.kind === "failed" ? catalog.code : null}
+              catalog={catalog.kind === "ready" ? catalog.value : null}
+              onRetryCatalog={agentCatalog.retry}
+              onLocalModelRemoved={agentCatalog.refresh}
+            />
+          ) : documentsOpen ? (
+            <ConversationDocuments
+              documents={documents}
+              reader={reader}
+              conversationId={conversationId}
+              session={session}
+              locale={locale}
+              named={staging
+                .namedFor(conversationId)
+                .map((document) => document.name)}
+              onClose={() => change({ panel: "none" })}
+              onAddFiles={attach ? () => void attach() : undefined}
+              onName={(name) => {
+                const document =
+                  documents.read.kind === "ready"
+                    ? documents.read.value.find(
+                        (document) => document.name === name,
+                      )
+                    : undefined;
+                if (document) staging.name(document);
+              }}
+              onRemove={
+                documents.remove
+                  ? (name) => void removeDocument(name)
+                  : undefined
+              }
+            />
+          ) : historyOpen ? (
+            groups ? (
+              <div className="flex min-h-0 flex-1 flex-col">
+                {view.archiveFailure !== null && (
+                  <p
+                    role="alert"
+                    className="flex shrink-0 items-start gap-2 px-3 pt-3 text-sm"
+                  >
+                    <Icon name="alert" className="mt-0.5 text-destructive" />
+                    <span>{refusalWords(t, view.archiveFailure)}</span>
+                  </p>
+                )}
+                <HistoryList
+                  groups={groups}
+                  viewingArchived={archived}
+                  archivedCount={
+                    conversations.kind === "ready"
+                      ? archivedCount(conversations.value)
+                      : 0
+                  }
+                  onToggleArchived={() => change({ archived: !archived })}
+                  onOpen={open}
+                  busy={view.historyBusy}
+                  onArchive={
+                    archiveHost
+                      ? (id) => void mutateHistory(id, "archive")
+                      : undefined
+                  }
+                  onDelete={
+                    session?.delete
+                      ? (id) => void mutateHistory(id, "delete")
+                      : undefined
+                  }
+                  onRename={
+                    renameHost
+                      ? (id, title) => rename(id, title, "history")
+                      : undefined
+                  }
+                  onMenu={onMenu}
+                />
+              </div>
+            ) : (
+              <ReadState read={conversations} icon="clock" />
+            )
+          ) : conversationId === null && !pending ? (
+            <AgentWelcome />
+          ) : history.kind === "ready" ? (
+            // Replying again to a failed turn is the agent's to offer; until
+            // a host can, Retry says it is not available.
+            <>
+              {live.read.kind === "failed" && (
+                <p role="alert" className="px-3 py-2 text-sm text-destructive">
+                  {t("desktop.agent.read_failed")}
                 </p>
               )}
-              <HistoryList
-                groups={groups}
-                viewingArchived={archived}
-                archivedCount={
-                  conversations.kind === "ready"
-                    ? archivedCount(conversations.value)
-                    : 0
-                }
-                onToggleArchived={() => change({ archived: !archived })}
-                onOpen={open}
-                busy={view.historyBusy}
-                onArchive={
-                  archiveHost
-                    ? (id) => void mutateHistory(id, "archive")
-                    : undefined
-                }
-                onDelete={
-                  session?.delete
-                    ? (id) => void mutateHistory(id, "delete")
-                    : undefined
-                }
-                onRename={
-                  renameHost
-                    ? (id, title) => rename(id, title, "history")
-                    : undefined
-                }
-                onMenu={onMenu}
-              />
-            </div>
-          ) : (
-            <ReadState read={conversations} icon="clock" />
-          )
-        ) : conversationId === null && !pending ? (
-          <AgentWelcome />
-        ) : history.kind === "ready" ? (
-          // Replying again to a failed turn is the agent's to offer; until
-          // a host can, Retry says it is not available.
-          <>
-            {live.read.kind === "failed" && (
-              <p role="alert" className="px-3 py-2 text-sm text-destructive">
-                {t("desktop.agent.read_failed")}
-              </p>
-            )}
-            <Transcript
-              items={history.value}
-              onOpenProviderSettings={openSettings}
-              onChooseModel={openModelPicker}
-              onOpenLink={(url) => {
-                // Cadrumo's own addresses never reach the browser.
-                if (!isCadrumoLink(url)) {
-                  onOpenLink?.(url);
-                  return;
-                }
-                const origin =
-                  reader === null
-                    ? null
-                    : { reader, conversation: conversationId };
-                onOpenView?.(url, (opened) => {
-                  // Back from setting up AEAT access, the person can have
-                  // the agent check it again.
-                  if (origin && opened === "profile/aeat-access")
-                    setSetupCheck(origin);
-                });
-              }}
-            />
-          </>
-        ) : (
-          <ReadState read={history} icon="agent" />
-        )}
-      </section>
-      {/* The history and the settings take the column's whole height, as the
-          composer would sit under a list it does not write to. */}
-      {!historyOpen && !settingsOpen && (
-        <div className="grid shrink-0 gap-2 p-3 pt-0">
-          {setupCheck?.reader === reader &&
-            setupCheck?.conversation === conversationId && (
-              <Button
-                disabled={!send || !!live.open}
-                onClick={() => {
-                  if (!send) return;
-                  send(t("desktop.agent.aeat_setup_resume_message"), {
-                    skills: [],
+              <Transcript
+                items={history.value}
+                onOpenProviderSettings={openSettings}
+                onChooseModel={openModelPicker}
+                onOpenLink={(url) => {
+                  // Cadrumo's own addresses never reach the browser.
+                  if (!isCadrumoLink(url)) {
+                    onOpenLink?.(url);
+                    return;
+                  }
+                  const origin =
+                    reader === null
+                      ? null
+                      : { reader, conversation: conversationId };
+                  onOpenView?.(url, (opened) => {
+                    // Back from setting up AEAT access, the person can have
+                    // the agent check it again.
+                    if (origin && opened === "profile/aeat-access")
+                      setSetupCheck(origin);
                   });
-                  setSetupCheck(null);
                 }}
-              >
-                {t("desktop.agent.aeat_setup_check")}
-              </Button>
+              />
+            </>
+          ) : (
+            <ReadState read={history} icon="agent" />
+          )}
+        </section>
+        {/* The history and the settings take the column's whole height, as the
+          composer would sit under a list it does not write to. */}
+        {!historyOpen && !settingsOpen && (
+          <div className="grid shrink-0 gap-2 p-3 pt-0">
+            {setupCheck?.reader === reader &&
+              setupCheck?.conversation === conversationId && (
+                <Button
+                  disabled={!send || !!live.open}
+                  onClick={() => {
+                    if (!send) return;
+                    send(t("desktop.agent.aeat_setup_resume_message"), {
+                      skills: [],
+                    });
+                    setSetupCheck(null);
+                  }}
+                >
+                  {t("desktop.agent.aeat_setup_check")}
+                </Button>
+              )}
+            <RunPrompts
+              key={conversationId ?? "new"}
+              session={session}
+              approvals={live.approvals}
+              questionnaire={questionnaire}
+              answering={!!answering}
+              onDecide={decide}
+              onAnswer={(asked, reply) => void answer(asked, reply)}
+              onResolved={live.resolved}
+              onOpenProfile={
+                onOpenView
+                  ? () => onOpenView(formatViewLink(NAVIGATION, "profile"))
+                  : undefined
+              }
+            />
+            {conversationId !== null && (
+              <ReplyFacts
+                state={newest?.status ? runStateWords(t, newest.status) : null}
+                queued={
+                  newest?.queued_messages
+                    ? queuedWords(t, newest.queued_messages)
+                    : null
+                }
+                ranWith={facts.ranWith}
+                usage={facts.usage}
+              />
             )}
-          <RunPrompts
-            key={conversationId ?? "new"}
-            session={session}
-            approvals={live.approvals}
-            questionnaire={questionnaire}
-            answering={!!answering}
-            onDecide={decide}
-            onAnswer={(asked, reply) => void answer(asked, reply)}
-            onResolved={live.resolved}
-            onOpenProfile={
-              onOpenView
-                ? () => onOpenView(formatViewLink(NAVIGATION, "profile"))
-                : undefined
-            }
-          />
-          {conversationId !== null && (
-            <ReplyFacts
-              state={newest?.status ? runStateWords(t, newest.status) : null}
-              queued={
-                newest?.queued_messages
-                  ? queuedWords(t, newest.queued_messages)
+            <ColumnNotice
+              failure={view.sendFailure}
+              fit={view.sendFit}
+              notice={notice}
+              noticeFault={catalogFailed !== null && catalogState === null}
+              logRef={catalogFailed?.logRef}
+              engines={engineHeld ? engineNotices : undefined}
+              onRetry={
+                catalogAsked
+                  ? agentCatalog.retry
+                  : status?.state === "refused" &&
+                      !unsupported &&
+                      session?.retry
+                    ? () => {
+                        void session
+                          .retry?.()
+                          .catch((error: unknown) =>
+                            change({ sendFailure: failureCode(error) }),
+                          );
+                      }
+                    : undefined
+              }
+              onSetUpProviders={
+                noProvider && !noModelHeld && !engineHeld && !laneOffered
+                  ? openSettings
+                  : undefined
+              }
+              onDownloadModels={noModelHeld ? openSettings : undefined}
+              onOpenModelSettings={openSettings}
+              onOpenProviderSettings={openSettings}
+            />
+            <LaneSwitchNotice
+              changeAsk={view.changeAsk?.facts ?? null}
+              carryFrom={
+                view.carryFrom !== null
+                  ? { title: carrySource?.title || null }
                   : null
               }
-              ranWith={facts.ranWith}
-              usage={facts.usage}
+              carried={
+                view.carried !== null &&
+                view.carried.conversationId === conversationId
+                  ? view.carried.carry
+                  : null
+              }
+              modelName={(model) =>
+                offer ? modelDisplayName(offer, fixedWay, model) : model
+              }
+              onConfirmChange={confirmChange}
+              onWithdrawChange={withdrawChange}
+              onBackToSource={() => {
+                if (view.carryFrom !== null) open(view.carryFrom);
+              }}
             />
-          )}
-          <ColumnNotice
-            failure={view.sendFailure}
-            fit={view.sendFit}
-            notice={notice}
-            noticeFault={catalogFailed !== null && catalogState === null}
-            logRef={catalogFailed?.logRef}
-            engines={engineHeld ? engineNotices : undefined}
-            onRetry={
-              catalogAsked
-                ? agentCatalog.retry
-                : status?.state === "refused" && !unsupported && session?.retry
-                  ? () => {
-                      void session
-                        .retry?.()
-                        .catch((error: unknown) =>
-                          change({ sendFailure: failureCode(error) }),
-                        );
+            {movementShown && (
+              <MovementNotice
+                shown={movementShown}
+                sharedWith={sharedWith}
+                onDismiss={() => setMovement(null)}
+              />
+            )}
+            <Composer
+              key={view.draft.key}
+              defaultDraft={view.draft.text}
+              locale={locale}
+              attachments={staging.staged}
+              suggestionSources={mentionSources}
+              onAddFiles={attach ? () => void attach() : undefined}
+              onRemoveAttachment={staging.remove}
+              onRemoveAllAttachments={() => staging.remove(null)}
+              onShowAllAttachments={() =>
+                setAttachmentsShown({ reader, conversation: conversationId })
+              }
+              providers={offer?.providers ?? NO_PROVIDERS}
+              models={offer?.models ?? NO_MODELS}
+              selection={selection ?? NO_SELECTION}
+              // Questions are answered by a message too, so Send stays.
+              running={!questionnaire && (live.working || view.sending)}
+              onSend={send}
+              onStop={stop}
+              skills={skills}
+              onSkillCommand={
+                reviewSkill || verifySkill ? setSkillShown : undefined
+              }
+              fixedWayId={fixedWay ?? undefined}
+              onSelectionChange={
+                offer
+                  ? (chosen) => {
+                      remember(chosen);
+                      // Another lane than the conversation's continues in a
+                      // new conversation that carries this one's newest turns.
+                      if (
+                        fixedWay !== null &&
+                        conversationId !== null &&
+                        chosen.wayId !== fixedWay
+                      ) {
+                        pendingPrompt.current = null;
+                        change({
+                          panel: "none",
+                          conversationId: null,
+                          carryFrom: conversationId,
+                          chosen,
+                          pending: null,
+                          sending: false,
+                          interactionId: null,
+                          changeAsk: null,
+                          sendFailure: null,
+                        });
+                        return;
+                      }
+                      change({ chosen, changeAsk: null });
                     }
                   : undefined
-            }
-            onSetUpProviders={
-              noProvider && !noModelHeld && !engineHeld && !laneOffered
-                ? openSettings
-                : undefined
-            }
-            onDownloadModels={noModelHeld ? openSettings : undefined}
-            onOpenModelSettings={openSettings}
-            onOpenProviderSettings={openSettings}
-          />
-          <LaneSwitchNotice
-            changeAsk={view.changeAsk?.facts ?? null}
-            carryFrom={
-              view.carryFrom !== null
-                ? { title: carrySource?.title || null }
-                : null
-            }
-            carried={
-              view.carried !== null &&
-              view.carried.conversationId === conversationId
-                ? view.carried.carry
-                : null
-            }
-            modelName={(model) =>
-              catalog.kind === "ready"
-                ? modelDisplayName(catalog.value, fixedWay, model)
-                : model
-            }
-            onConfirmChange={confirmChange}
-            onWithdrawChange={withdrawChange}
-            onBackToSource={() => {
-              if (view.carryFrom !== null) open(view.carryFrom);
-            }}
-          />
-          {movementShown && (
-            <MovementNotice
-              shown={movementShown}
-              sharedWith={sharedWith}
-              onDismiss={() => setMovement(null)}
+              }
+              pickerRequests={pickerRequests}
+              onPickerClosed={() => setPickerRequests(0)}
+              onPickerOpened={onPickerOpened}
+              onDownloadModels={openSettings}
+              onRetryCatalog={agentCatalog.refresh}
+              onSignIn={openSettings}
+              listsFailure={lists.failure}
+              onRetryLists={lists.retry}
             />
-          )}
-          <Composer
-            key={view.draft.key}
-            defaultDraft={view.draft.text}
+          </div>
+        )}
+        {skillShown && (
+          <SkillDialog
+            command={skillShown}
             locale={locale}
-            attachments={staging.staged}
-            suggestionSources={mentionSources}
-            onAddFiles={attach ? () => void attach() : undefined}
-            onRemoveAttachment={staging.remove}
-            onRemoveAllAttachments={() => staging.remove(null)}
-            onShowAllAttachments={() =>
-              setAttachmentsShown({ reader, conversation: conversationId })
-            }
-            providers={offer?.providers ?? NO_PROVIDERS}
-            models={offer?.models ?? NO_MODELS}
-            selection={selection ?? NO_SELECTION}
-            // Questions are answered by a message too, so Send stays.
-            running={!questionnaire && (live.working || view.sending)}
-            onSend={send}
-            onStop={stop}
-            skills={skills}
-            onSkillCommand={
-              reviewSkill || verifySkill ? setSkillShown : undefined
-            }
-            fixedWayId={fixedWay ?? undefined}
-            onSelectionChange={
-              offer
-                ? (chosen) => {
-                    remember(chosen);
-                    // Another lane than the conversation's continues in a
-                    // new conversation that carries this one's newest turns.
-                    if (
-                      fixedWay !== null &&
-                      conversationId !== null &&
-                      chosen.wayId !== fixedWay
-                    ) {
-                      pendingPrompt.current = null;
-                      change({
-                        panel: "none",
-                        conversationId: null,
-                        carryFrom: conversationId,
-                        chosen,
-                        pending: null,
-                        sending: false,
-                        interactionId: null,
-                        changeAsk: null,
-                        sendFailure: null,
-                      });
-                      return;
-                    }
-                    change({ chosen, changeAsk: null });
-                  }
-                : undefined
-            }
-            pickerRequests={pickerRequests}
-            onPickerClosed={() => setPickerRequests(0)}
-            onPickerOpened={onPickerOpened}
-            onDownloadModels={openSettings}
-            onRetryCatalog={agentCatalog.refresh}
-            onSignIn={openSettings}
-            listsFailure={lists.failure}
-            onRetryLists={lists.retry}
-          />
-        </div>
-      )}
-      {skillShown && (
-        <SkillDialog
-          command={skillShown}
-          locale={locale}
-          review={reviewSkill}
-          verify={verifySkill}
-          onClose={() => setSkillShown(null)}
-        />
-      )}
-      {shown &&
-        attachmentsShown !== null &&
-        attachmentsShown.reader === reader &&
-        attachmentsShown.conversation === conversationId && (
-          <StagedAttachmentsDialog
-            attachments={staging.staged}
-            locale={locale}
-            onRemove={staging.remove}
-            onRemoveAll={() => staging.remove(null)}
-            onAddFiles={attach ? () => void attach() : undefined}
-            onClose={() => setAttachmentsShown(null)}
-            onAfterClose={() =>
-              dropping.target.current
-                ?.querySelector<HTMLElement>("textarea")
-                ?.focus()
-            }
+            review={reviewSkill}
+            verify={verifySkill}
+            onClose={() => setSkillShown(null)}
           />
         )}
-      <DropOverlay
-        visible={dropping.drag !== null}
-        armed={dropping.drag?.armed}
-        fileCount={dropping.drag?.count}
-        acceptedTypes={
-          attachmentPolicy.kind === "ready"
-            ? acceptedExtensions(attachmentPolicy.value).map((extension) =>
-                extension.toUpperCase(),
-              )
-            : undefined
-        }
-        locale={locale}
-      />
-    </div>
+        {shown &&
+          attachmentsShown !== null &&
+          attachmentsShown.reader === reader &&
+          attachmentsShown.conversation === conversationId && (
+            <StagedAttachmentsDialog
+              attachments={staging.staged}
+              locale={locale}
+              onRemove={staging.remove}
+              onRemoveAll={() => staging.remove(null)}
+              onAddFiles={attach ? () => void attach() : undefined}
+              onClose={() => setAttachmentsShown(null)}
+              onAfterClose={() =>
+                dropping.target.current
+                  ?.querySelector<HTMLElement>("textarea")
+                  ?.focus()
+              }
+            />
+          )}
+        <DropOverlay
+          visible={dropping.drag !== null}
+          armed={dropping.drag?.armed}
+          fileCount={dropping.drag?.count}
+          acceptedTypes={
+            attachmentPolicy.kind === "ready"
+              ? acceptedExtensions(attachmentPolicy.value).map((extension) =>
+                  extension.toUpperCase(),
+                )
+              : undefined
+          }
+          locale={locale}
+        />
+      </div>
+    </AgentOfferContext.Provider>
   );
 }

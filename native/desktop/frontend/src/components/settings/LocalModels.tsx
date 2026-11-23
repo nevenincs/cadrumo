@@ -12,12 +12,14 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import {
-  addedTo,
-  engineRefusalWords,
   laneModelList,
-  listRefusalWords,
   type CatalogLane,
   type LaneModel,
+} from "../../shell/agentOffer";
+import {
+  addedTo,
+  engineRefusalWords,
+  listRefusalWords,
 } from "../../shell/localModelLanes";
 import type {
   LocalEngine,

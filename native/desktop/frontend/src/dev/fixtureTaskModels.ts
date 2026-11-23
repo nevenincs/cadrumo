@@ -1,6 +1,7 @@
 import type { TaskModelChoice } from "../shell/agentSession";
 import type { ServedProviderCatalog } from "../shell/agentCatalogContract";
 import type { TaskModelEntry } from "../shell/localModelsContract";
+import { laneIdOf } from "../shell/agentOffer";
 
 /**
  * The made-up service's setting per task kind, in the order set: only a kind
@@ -16,7 +17,7 @@ export function fixtureTaskModels(catalog: ServedProviderCatalog) {
       catalog.task_kinds.some((kind) => kind.id === taskKind) &&
       (!choice ||
         (catalog.providers ?? []).some(
-          (held) => `${held.provider_id}_${held.transport}` === choice.lane,
+          (held) => laneIdOf(held.provider_id, held.transport) === choice.lane,
         )),
     /** Stores `choice` for `taskKind`, or clears it; false when nothing
      * changed. */

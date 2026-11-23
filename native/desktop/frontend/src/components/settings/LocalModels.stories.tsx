@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fixtureAgent } from "@/dev/agentFixtureHost";
 import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
 import { ProvisioningStage } from "@/dev/ProvisioningStage";
-import { catalogLanes } from "../../shell/localModelLanes";
+import { catalogLanes } from "../../shell/agentOffer";
 import type { LocalModelHost } from "../../shell/localModels";
 import { LocalModels } from "./LocalModels";
 import { ProviderSettings } from "./ProviderSettings";

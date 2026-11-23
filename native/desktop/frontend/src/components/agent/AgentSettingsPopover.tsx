@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/popover";
 import { listOf } from "@/shared/lists";
 import { TextEditor } from "@/components/editors/TextEditor";
-import { heldModel, startingSelection } from "../../shell/agentCatalog";
+import { startingSelection } from "../../shell/agentCatalog";
+import { heldModel } from "../../shell/agentOffer";
 import { described, labelled } from "../../shell/compose";
 import { connectionWords } from "../../shell/providerConnection";
 import { useStrings } from "../../shell/strings";

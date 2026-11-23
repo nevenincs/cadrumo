@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
-import { catalogLanes } from "../../src/shell/localModelLanes";
+import { catalogLanes } from "../../src/shell/agentOffer";
 import {
   offeredModels,
   openModelPicker,
