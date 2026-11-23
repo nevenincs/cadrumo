@@ -38,14 +38,20 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
+from ...core.period import Period
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.invoice_legal_classification import (
+    InvoiceLegalClassificationCatalogue,
+    resolve_invoice_legal_classification_catalogue,
+)
 from ..calculations.registry.iva_category_catalogue import require_iva_category, resolve_iva_category_catalogue
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
+from ..calculations.registry.rectification_windows import resolve_rectification_period_windows
 from ..calculations.registry.schema_base import DateAxis
 from ..identifiers import canonical_decimal_string
 from ..iva.classification import TransactionKind, resolve_transaction_kind_catalogue
@@ -59,6 +65,8 @@ from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,
+    IssuerIncreaseElection,
+    IssuerMinoracionElection,
     IvaRate,
     PaymentStatus,
     RectificationCause,
@@ -92,15 +100,21 @@ from .figures import (
     total_sign_finding,
 )
 from .payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
+from .rectification_period import (
+    issuer_minoracion_regularisation_period_outside_window,
+    recipient_increase_period_outside_window,
+)
 from .rule_findings import (
     InvoiceRuleFinding,
     InvoiceRuleFindingCode,
+    RectificationElectionState,
     advance_payment_collection_finding,
     invoice_class_rule_findings,
     invoice_rule_refusal,
     lease_kind_finding,
     operation_date_role_finding,
     raise_first_rule_finding,
+    rectification_election_rule_findings,
     rectification_fact_rule_findings,
 )
 from .validation_pass import answer_once, invoice_validation_pass
@@ -505,6 +519,39 @@ class Invoice(BaseModel):
     rectification_cause: RectificationCause | None = None
     rectification_direction: RectificationDirection | None = None
     document_received_on: date | None = None
+    # The elections and the attestation the law leaves to the taxpayer, each
+    # operator supplied and none inferred. They live on the invoice and not on
+    # a Modelo work unit because each one belongs to ONE document: art. 89.Cinco
+    # hands the issuer of this rectificativa its choice, art. 114.Dos.1.º hands
+    # its recipient theirs, and RIVA art. 24 conditions this document's own
+    # remittance. The record that carries the method, the cause and the
+    # direction is therefore the record that carries the choice made on them,
+    # and this write boundary already validates all of them together.
+    #
+    # `issuer_increase_election` is art. 89.Cinco's increase choice, available
+    # only on an art. 80 ground or an error fundado de derecho.
+    # `issuer_minoracion_election` is its minoración choice, and
+    # `issuer_minoracion_regularisation_period` the period letter b)
+    # regularises in, inside the one-year window.
+    # `recipient_increase_period` is art. 114.Dos.1.º's elected period, from the
+    # reception period onwards and inside its own window.
+    # `art_80_tres_obligations_attested` is the operator's attestation of the
+    # RIVA art. 24 obligations, which the application cannot observe; it is
+    # tri-state because an absent attestation and a denied one are different
+    # answers, and both stop the modification for different reasons.
+    # `exercised_deduction_period` is the period the deduction was exercised
+    # in, which art. 114.Dos.2.º routes an art. 80.Tres minoración to and the
+    # catalogue cannot always supply from the original.
+    #
+    # All six stay optional for the reason the four facts above do: the person
+    # records the document as it reaches them, and the declaration refuses
+    # naming what is still absent.
+    issuer_increase_election: IssuerIncreaseElection | None = None
+    issuer_minoracion_election: IssuerMinoracionElection | None = None
+    issuer_minoracion_regularisation_period: Period | None = None
+    recipient_increase_period: Period | None = None
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: Period | None = None
     payment_id: str | None = None
     fx_rate: Decimal | None = None
     fx_rate_date: date | None = None
@@ -1075,6 +1122,115 @@ class Invoice(BaseModel):
             )
         )
         return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_rectification_election_coherence(self, info: ValidationInfo) -> Self:
+        """Refuse an election the law gives the other side or the other direction.
+
+        LIVA art. 89.Cinco hands the issuer two elections, art. 114.Dos.1.º
+        hands the recipient one, and each answers a question only one side and
+        one direction asks. An issuer's minoración route recorded on a received
+        invoice, or a recipient's elected period recorded against an aumento
+        the record calls a minoración, asserts a choice the law never offered.
+
+        It also refuses an elected period outside the window its own route
+        allows: art. 89.Cinco letter b) bounds the issuer's regularisation at
+        one year from the rectification, and art. 114.Dos.1.º bounds the
+        recipient's elected period at four years, or one where the ground sits
+        outside art. 80. Both durations are dated registry facts.
+
+        Scoped to write admission (:data:`INVOICE_WRITE_ADMISSION`) like the
+        rectification facts above and for the same reason: a record written
+        before a window moved stays openable by the edit that corrects it.
+        """
+        if not _admits_written_record(info) or not self._states_an_election():
+            return self
+        raise_first_rule_finding(
+            rectification_election_rule_findings(
+                issued=self.kind is InvoiceKind.ISSUED,
+                state=self._rectification_election_state(),
+            )
+        )
+        return self
+
+    def _states_an_election(self) -> bool:
+        """Whether the record carries any of the elections or the attestation."""
+        return any(
+            getattr(self, field_name) is not None
+            for field_name in (
+                "issuer_increase_election",
+                "issuer_minoracion_election",
+                "issuer_minoracion_regularisation_period",
+                "recipient_increase_period",
+                "art_80_tres_obligations_attested",
+                "exercised_deduction_period",
+            )
+        )
+
+    def _rectification_election_state(self) -> RectificationElectionState:
+        """Resolve the dated answers the election rules need, through fact 0141 and the window facts."""
+        catalogue = answer_once(
+            resolve_invoice_legal_classification_catalogue,
+            effective_date=self.issued_at,
+        )
+        minoracion = (
+            None if self.rectification_direction is None else self.rectification_direction == catalogue.minoracion_token
+        )
+        art_80_tres = (
+            None if self.rectification_cause is None else self.rectification_cause == catalogue.art_80_tres_cause_token
+        )
+        return RectificationElectionState(
+            stated_issuer_fields=self._stated_fields(
+                "issuer_increase_election",
+                "issuer_minoracion_election",
+                "issuer_minoracion_regularisation_period",
+            ),
+            stated_recipient_fields=self._stated_fields("recipient_increase_period", "exercised_deduction_period"),
+            stated_increase_fields=self._stated_fields("issuer_increase_election", "recipient_increase_period"),
+            stated_reduction_fields=self._stated_fields(
+                "issuer_minoracion_election",
+                "issuer_minoracion_regularisation_period",
+                "exercised_deduction_period",
+            ),
+            minoracion=minoracion,
+            art_80_tres=art_80_tres,
+            attestation_stated=self.art_80_tres_obligations_attested is not None,
+            minoracion_election_stated=self.issuer_minoracion_election is not None,
+            regularisation_period_stated=self.issuer_minoracion_regularisation_period is not None,
+            period_outside_window=self._elected_period_outside_window(catalogue),
+        )
+
+    def _stated_fields(self, *field_names: str) -> tuple[str, ...]:
+        """The named fields this record carries, in the order given."""
+        return tuple(field_name for field_name in field_names if getattr(self, field_name) is not None)
+
+    def _elected_period_outside_window(self, catalogue: InvoiceLegalClassificationCatalogue) -> str | None:
+        """The first elected period field whose own legal window excludes it, if any."""
+        windows = answer_once(resolve_rectification_period_windows, effective_date=self.issued_at)
+        regularisation = self.issuer_minoracion_regularisation_period
+        if regularisation is not None and issuer_minoracion_regularisation_period_outside_window(
+            issued_at=self.issued_at,
+            period=regularisation,
+            windows=windows,
+        ):
+            return "issuer_minoracion_regularisation_period"
+        elected = self.recipient_increase_period
+        if (
+            elected is not None
+            and self.rectification_cause is not None
+            and self.document_received_on is not None
+            and recipient_increase_period_outside_window(
+                cause=self.rectification_cause,
+                issued_at=self.issued_at,
+                document_received_on=self.document_received_on,
+                period=elected,
+                windows=windows,
+                catalogue=catalogue,
+            )
+        ):
+            return "recipient_increase_period"
+        return None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

@@ -16,9 +16,12 @@ from typing import Protocol
 from ...core.i18n.translatable import Translatable as tr
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...core.money.rounding import round_to_cents
-from ...core.period import Period
+from ...core.period import Period, PeriodKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.invoice_legal_classification import (
+    resolve_invoice_legal_classification_catalogue,
+)
 from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...domain.calculations.registry.iva_deduction_catalogue import resolve_iva_deduction_catalogue
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
@@ -27,7 +30,13 @@ from ...domain.invoices.enums import IvaRate, iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.invoices.rectification_modification import (
     DerivedRectificationModification,
+    RectificationModification,
     derive_rectification_modification,
+)
+from ...domain.invoices.rectification_period import (
+    DecidedRectificationPeriod,
+    RectificationPeriodRoute,
+    decide_rectification_period,
 )
 from ...domain.iva.components import registry_category_projection
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -47,6 +56,10 @@ from .errors import AggregationValidationError
 from .invoice_devengo import (
     invoice_devengo_in_period,
     resolve_invoice_devengo,
+)
+from .invoice_rectification_observations import (
+    RectificationDeclarationRefusal,
+    received_rectification_observations,
 )
 from .iva_ledger import IvaLedgerAggregation
 from .iva_ledger_classification import bien_inversion_threshold, validate_intracom_export_counterparty
@@ -568,6 +581,65 @@ def reverse_charge_underivable_diagnostics(
     )
 
 
+def excluded_rectification_diagnostics(
+    rectificativas: Sequence[ScreenedRectificativa],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Disclose each modification this period holds a document for and does not declare.
+
+    One modification reaches exactly one declaración-liquidación, so a
+    rectificativa whose period is another one contributing nothing here is the
+    correct outcome, not a gap. It is still said: the person sees a document in
+    their Libro whose figures are absent from the return, and without this they
+    would have no way to tell that from an omission.
+
+    Advisory, never blocking. It names the period the modification IS declared
+    in, where that period is one of these returns, and the legal route
+    otherwise, because the art. 120.3 LGT procedure and a declaración-
+    liquidación rectificativa are declarations this application does not
+    produce.
+    """
+    return tuple(
+        _excluded_rectification_diagnostic(screened, modification=modification, resolver_id=resolver_id)
+        for screened in rectificativas
+        if (modification := screened.derived.modification) is not None
+        and screened.decided.need is None
+        and screened.decided.refusal is None
+        and not screened.declared_in_period
+    )
+
+
+def _excluded_rectification_diagnostic(
+    screened: ScreenedRectificativa,
+    *,
+    modification: RectificationModification,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    """One disclosure: the figures, where they are declared, and on what route."""
+    placed = (
+        f"declared in {screened.decided.period!s}"
+        if screened.decided.period is not None
+        else "declared outside these autoliquidaciones"
+    )
+    route = screened.decided.route.value if screened.decided.route is not None else "unknown"
+    return CalculationSourceDiagnostic(
+        reason="invoice_rectificativa_declared_in_another_period",
+        source_kind="ledger_iva_aggregation",
+        resolver_id=resolver_id,
+        source_ref=f"invoice:{screened.invoice.invoice_id}",
+        message=(
+            f"invoice {screened.invoice.invoice_number!r} is a factura rectificativa whose modification of "
+            f"{modification.base} base and {modification.cuota} cuota is {placed} by the route {route}, so it "
+            "contributes nothing to this one"
+        ),
+        remedy=(
+            "No action is needed if that is the period and the route you chose; where it is not, correct the "
+            "invoice's cause, direction or recorded election and recalculate"
+        ),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _RecargoRateDivergence:
     """One invoice whose recorded recargo departs from the published rate.
@@ -701,17 +773,35 @@ def recargo_rate_mismatch_diagnostics(
 
 @dataclass(frozen=True, slots=True)
 class ScreenedRectificativa:
-    """One factura rectificativa the period holds, with the modification its record supports.
+    """One factura rectificativa this period holds or declares, and what became of its modification.
 
     ``derived`` carries either the signed per-rate modification RD 1619/2012
     art. 15.5 reads out of the document, or the refusal that stands in its way.
-    Either way the invoice is declared on no rate row: a derived modification
-    still needs the period LIVA art. 89.Cinco and art. 114.Dos place it in,
-    which this screen does not decide.
+    ``decided`` carries the one period LIVA art. 89.Cinco and art. 114.Dos
+    place that modification in, or the fact the record must state before either
+    can. The invoice is declared on no RATE row in any case: a modification
+    reaches casillas 40 and 41, or 14 and 15, and not the ordinary rate rows.
+
+    Attributes:
+        invoice: the rectificativa.
+        derived: its signed modification, or the refusal in the way.
+        decided: the period its side and cause place the modification in.
+        declared_in_period: whether that period is the one being calculated.
+            ``False`` is the ordinary out-of-period case, disclosed and not
+            blocked, because one modification reaches exactly one period.
+        declaration_refusal: why a received modification declared in this
+            period reached no casilla 40/41 observation, when it did not.
+        issued_declaration_unbound: an issued modification whose decided period
+            is this one. Casillas 14 and 15 carry no invoice-sourced binding
+            yet, so the period is blocked rather than declared short.
     """
 
     invoice: Invoice
     derived: DerivedRectificationModification
+    decided: DecidedRectificationPeriod
+    declared_in_period: bool = False
+    declaration_refusal: RectificationDeclarationRefusal | None = None
+    issued_declaration_unbound: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -751,13 +841,15 @@ class ScreenedInvoiceIva:
             is more than a cent from base times the art. 161 rate, is the
             tobacco rate, or has no published rate on the date. The period is
             blocked until the invoice is corrected.
-        rectificativas: facturas rectificativas the period holds, issued or
-            received, each with the signed modification its record supports or
-            the refusal that stands in its way. Their lines state magnitudes,
-            so no rate row declares them: the modification belongs in
-            casillas 14/15 or 40/41 with its sign, and the period stays blocked
-            either way, because the period the modification belongs to is not
-            decided here.
+        rectificativas: facturas rectificativas this period holds or declares,
+            issued or received, each with the signed modification its record
+            supports or the refusal in its way, and the one period its side
+            and cause place that modification in. Their lines state
+            magnitudes, so no rate row declares them: a received modification
+            declared in this period reaches casillas 40 and 41 with its sign
+            through ``observations``, one declared in another period
+            contributes nothing here and is disclosed, and an issued one
+            blocks until casillas 14 and 15 carry an invoice-sourced binding.
         used_goods_margin_unmodelled: issued invoices under the régimen
             especial de los bienes usados. LIVA art. 137 taxes the margin de
             beneficio, IVA included, not the invoiced price, and art. 138
@@ -793,6 +885,15 @@ class _ScreenedInvoiceIvaResult:
     #: The modification a rectificativa makes, or the refusal that stands in
     #: its way; ``None`` for every other invoice class.
     rectificativa: DerivedRectificationModification | None = None
+    #: Where that modification is declared, beside it.
+    rectificativa_period: DecidedRectificationPeriod | None = None
+    #: Whether the decided period is the one being screened.
+    rectificativa_declared_in_period: bool = False
+    #: Why a received modification declared in this period reached no casilla.
+    rectificativa_declaration_refusal: RectificationDeclarationRefusal | None = None
+    #: An issued modification whose decided period is this one, which casillas
+    #: 14 and 15 carry no invoice-sourced binding for yet.
+    rectificativa_issued_unbound: bool = False
     used_goods_margin_unmodelled: bool = False
 
 
@@ -833,15 +934,47 @@ def screened_invoice_iva_observations(
     invoice it replaces out of that same reading: RD 1619/2012 art. 15.5 states
     the post-rectification figures, and the original it replaces ordinarily
     accrued in an earlier period.
+
+    A rectificativa is selected on a second ground too. Its modification is
+    declared in the period LIVA art. 89.Cinco and art. 114.Dos place it in,
+    which is routinely not the period the document itself accrued in: a
+    document issued in one quarter and received in the next is declared in the
+    next. So every rectificativa the bucket holds whose decided period is this
+    one is screened here as well, and one whose decided period is another is
+    disclosed as excluded rather than declared twice.
     """
     _resolve_invoice_iva_registry_declarations(effective_date=period.end_date, operation=operation)
     catalogue = tuple(invoices)
     return _collect_screened_invoice_results(
-        (invoice for invoice in catalogue if invoice_iva_in_period(invoice, bucket_id=bucket_id, period=period)),
+        _invoices_screened_for_period(catalogue, bucket_id=bucket_id, period=period, operation=operation),
         catalogue=catalogue,
+        period=period,
         linked_movements=linked_movements,
         operation=operation,
     )
+
+
+def _invoices_screened_for_period(
+    catalogue: Sequence[Invoice],
+    *,
+    bucket_id: str,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> tuple[Invoice, ...]:
+    """The bucket's invoices this period screens: those that accrue in it, plus the modifications it declares."""
+    in_period = tuple(
+        invoice for invoice in catalogue if invoice_iva_in_period(invoice, bucket_id=bucket_id, period=period)
+    )
+    selected = {invoice.invoice_id for invoice in in_period}
+    declared = tuple(
+        invoice
+        for invoice in catalogue
+        if invoice.invoice_id not in selected
+        and invoice.bucket_id in (None, bucket_id)
+        and is_rectificativa(invoice)
+        and decided_rectificativa_period(invoice, cadence=period.kind, operation=operation).period == period
+    )
+    return (*in_period, *declared)
 
 
 @dataclass(slots=True)
@@ -856,8 +989,17 @@ class _FlaggedInvoices:
     used_goods_margin_unmodelled: list[Invoice] = field(default_factory=list)
 
     def record(self, invoice: Invoice, screened: _ScreenedInvoiceIvaResult) -> None:
-        if screened.rectificativa is not None:
-            self.rectificativas.append(ScreenedRectificativa(invoice=invoice, derived=screened.rectificativa))
+        if screened.rectificativa is not None and screened.rectificativa_period is not None:
+            self.rectificativas.append(
+                ScreenedRectificativa(
+                    invoice=invoice,
+                    derived=screened.rectificativa,
+                    decided=screened.rectificativa_period,
+                    declared_in_period=screened.rectificativa_declared_in_period,
+                    declaration_refusal=screened.rectificativa_declaration_refusal,
+                    issued_declaration_unbound=screened.rectificativa_issued_unbound,
+                )
+            )
         if screened.used_goods_margin_unmodelled:
             self.used_goods_margin_unmodelled.append(invoice)
         if screened.reverse_charge_underivable:
@@ -874,6 +1016,7 @@ def _collect_screened_invoice_results(
     invoices: Iterable[Invoice],
     *,
     catalogue: Sequence[Invoice] = (),
+    period: Period,
     linked_movements: Mapping[str, Transaction],
     operation: PinnedAuthorityOperation,
 ) -> ScreenedInvoiceIva:
@@ -896,6 +1039,7 @@ def _collect_screened_invoice_results(
             invoice,
             linked_movements=paying,
             catalogue=catalogue,
+            period=period,
             operation=operation,
         )
         flagged.record(invoice, screened)
@@ -905,7 +1049,11 @@ def _collect_screened_invoice_results(
         if screened.observations:
             observations.extend(screened.observations)
             invoice_ids.add(invoice.invoice_id)
-            compared_invoices.append(invoice)
+            if screened.rectificativa is None:
+                # A rectificativa's period comes from the period rule, not from
+                # a devengo proxy, so the proxy-attribution advisory the
+                # ``compared`` population feeds would misdescribe it.
+                compared_invoices.append(invoice)
         elif screened.category_counterparty_mismatch:
             category_counterparty_mismatches.append(invoice)
     return ScreenedInvoiceIva(
@@ -953,39 +1101,154 @@ def invoice_with_paying_movement_category(invoice: Invoice, linked_movements: Se
     return invoice.model_copy(update={"iva_category": category})
 
 
+def decided_rectificativa_period(
+    invoice: Invoice,
+    *,
+    cadence: PeriodKind,
+    operation: PinnedAuthorityOperation,
+) -> DecidedRectificationPeriod:
+    """Decide the one period ``invoice``'s modification is declared in, under the pinned authority.
+
+    The decision reads only the document's own facts and the dated
+    vocabularies, never the catalogue and never the period being calculated,
+    which is why a period can ask it about a rectificativa it does not hold.
+    """
+    return decide_rectification_period(
+        kind=invoice.kind,
+        cause=invoice.rectification_cause,
+        direction=invoice.rectification_direction,
+        issued_at=invoice.issued_at,
+        document_received_on=invoice.document_received_on,
+        issuer_increase_election=invoice.issuer_increase_election,
+        issuer_minoracion_election=invoice.issuer_minoracion_election,
+        issuer_minoracion_regularisation_period=invoice.issuer_minoracion_regularisation_period,
+        recipient_increase_period=invoice.recipient_increase_period,
+        art_80_tres_obligations_attested=invoice.art_80_tres_obligations_attested,
+        exercised_deduction_period=invoice.exercised_deduction_period,
+        cadence=cadence,
+        catalogue=resolve_invoice_legal_classification_catalogue(
+            effective_date=invoice.issued_at,
+            authority=operation,
+        ),
+    )
+
+
+def _screened_rectificativa_result(
+    invoice: Invoice,
+    *,
+    catalogue: Sequence[Invoice],
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> _ScreenedInvoiceIvaResult:
+    """Derive one rectificativa's modification, place it, and declare it where this period holds it."""
+    derived = derive_rectification_modification(
+        invoice,
+        originals=rectified_invoices(invoice, catalogue),
+        authority=operation,
+    )
+    decided = decided_rectificativa_period(invoice, cadence=period.kind, operation=operation)
+    declared_here = decided.period is not None and decided.period == period
+    observations: tuple[IvaLedgerObservation, ...] = ()
+    refusal: RectificationDeclarationRefusal | None = None
+    issued_unbound = False
+    if declared_here and derived.modification is not None:
+        if invoice.kind is InvoiceKind.ISSUED:
+            # Casillas 14, 15, 25 and 26 are operator input in every authored
+            # 303 edition: no binding reads an invoice-sourced modification
+            # yet. Declaring nothing silently would file the period short, so
+            # it blocks and names that.
+            issued_unbound = True
+        else:
+            observations, refusal = _received_rectification_declaration(
+                invoice,
+                modification=derived.modification,
+                catalogue=catalogue,
+                decided=decided,
+                period=period,
+                operation=operation,
+            )
+    return _ScreenedInvoiceIvaResult(
+        observations=observations,
+        reverse_charge_underivable=False,
+        recargo_rate_divergence=None,
+        recargo_split_unresolved=False,
+        recargo_not_declarable=False,
+        deduction_authority_missing=False,
+        category_counterparty_mismatch=False,
+        rectificativa=derived,
+        rectificativa_period=decided,
+        rectificativa_declared_in_period=declared_here,
+        rectificativa_declaration_refusal=refusal,
+        rectificativa_issued_unbound=issued_unbound,
+    )
+
+
+def _received_rectification_declaration(
+    invoice: Invoice,
+    *,
+    modification: RectificationModification,
+    catalogue: Sequence[Invoice],
+    decided: DecidedRectificationPeriod,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[IvaLedgerObservation, ...], RectificationDeclarationRefusal | None]:
+    """Project a received modification into casillas 40 and 41, or say why it reached none."""
+    originals = rectified_invoices(invoice, catalogue)
+    declaration = received_rectification_observations(
+        invoice,
+        modification=modification,
+        original=originals[0] if len(originals) == 1 else None,
+        period=period,
+        declared_on=_received_declaration_date(invoice, decided=decided, period=period),
+        operation=operation,
+    )
+    return declaration.observations, declaration.refusal
+
+
+def _received_declaration_date(
+    invoice: Invoice,
+    *,
+    decided: DecidedRectificationPeriod,
+    period: Period,
+) -> date:
+    """The date inside the decided period the modification is declared on.
+
+    The reception route's period IS the reception date's period, so that date
+    stands. An elected or exercised-deduction period names a period rather than
+    a day, and the observation only needs a date the period holds.
+    """
+    if decided.route is RectificationPeriodRoute.RECIPIENT_MINORACION_RECEPTION and invoice.document_received_on:
+        return invoice.document_received_on
+    return period.start_date
+
+
 def screened_invoice_iva_result(
     invoice: Invoice,
     *,
     linked_movements: Sequence[Transaction],
     catalogue: Sequence[Invoice] = (),
+    period: Period,
     operation: PinnedAuthorityOperation,
 ) -> _ScreenedInvoiceIvaResult:
     """Resolve one already-period-selected invoice into its IVA observations and findings.
 
     ``catalogue`` is the bucket's invoices, read only to resolve the original a
-    substitution rectificativa replaces.
+    substitution rectificativa replaces and the deduction family a received
+    modification inherits from it. ``period`` is the period being calculated,
+    read only to place a rectificativa's modification: no other invoice's
+    declaration depends on it, because the period selection already happened.
     """
     if is_rectificativa(invoice):
         # A rectificativa's lines are magnitudes with no direction, so a rate
         # row would add an abono to the tax it reduces. The Modelo 303 states
         # the modification with its sign in casillas 14/15 (LIVA art. 80) or
-        # 40/41, and the derivation below is what reads that signed figure out
-        # of the document. It still reaches no rate row, and the period it
-        # belongs to -- LIVA art. 89.Cinco and art. 114.Dos -- is not decided
-        # here, so the period stays blocked with the figures visible.
-        return _ScreenedInvoiceIvaResult(
-            observations=(),
-            reverse_charge_underivable=False,
-            recargo_rate_divergence=None,
-            recargo_split_unresolved=False,
-            recargo_not_declarable=False,
-            deduction_authority_missing=False,
-            category_counterparty_mismatch=False,
-            rectificativa=derive_rectification_modification(
-                invoice,
-                originals=rectified_invoices(invoice, catalogue),
-                authority=operation,
-            ),
+        # 40/41, so the derivation reads that signed figure out of the document
+        # and the period rule places it in exactly one period.
+        return _screened_rectificativa_result(
+            invoice,
+            catalogue=catalogue,
+            period=period,
+            operation=operation,
         )
     # The date the observation carries must be the date it was SELECTED on,
     # or the record would state one quarter while being declared in another.

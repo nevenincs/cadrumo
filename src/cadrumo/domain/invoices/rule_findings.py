@@ -30,6 +30,11 @@ class InvoiceRuleFindingCode(StrEnum):
     RECTIFICATION_FACT_NOT_ALLOWED = "rectification_fact_not_allowed"
     DOCUMENT_RECEIVED_ON_ONLY_ON_RECEIVED = "document_received_on_only_on_received"
     DOCUMENT_RECEIVED_BEFORE_ISSUED = "document_received_before_issued"
+    RECTIFICATION_ELECTION_SIDE_MISMATCH = "rectification_election_side_mismatch"
+    RECTIFICATION_ELECTION_DIRECTION_MISMATCH = "rectification_election_direction_mismatch"
+    RECTIFICATION_REGULARISATION_PERIOD_WITHOUT_ELECTION = "rectification_regularisation_period_without_election"
+    RECTIFICATION_ART_80_TRES_ATTESTATION_NOT_ALLOWED = "rectification_art_80_tres_attestation_not_allowed"
+    RECTIFICATION_ELECTED_PERIOD_OUTSIDE_WINDOW = "rectification_elected_period_outside_window"
     SIMPLIFICADA_NOT_FOR_INTRA_COMMUNITY = "simplificada_not_for_intra_community"
     COUNTERPARTY_TAX_ID_REQUIRED = "counterparty_tax_id_required"
     COUNTERPARTY_TAX_ID_REQUIRED_BY_CATEGORY = "counterparty_tax_id_required_by_category"
@@ -294,6 +299,128 @@ def _document_received_before_issued_finding(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class RectificationElectionState:
+    """What one rectificativa states about the elections, as plain answers.
+
+    Every field is an answer the caller already resolved, so this module stays
+    a leaf: the registry decides which token means a minoración, which cause is
+    art. 80.Tres and how long each window runs, and hands the outcomes here.
+    ``None`` on a direction or cause flag is "not stated yet", which leaves the
+    rules that need it unasked rather than refusing a half-recorded document.
+    """
+
+    #: The election fields the record carries, in declaration order, grouped by
+    #: the side and the direction whose question they answer, so a refusal
+    #: names the first offending field rather than the family. One field
+    #: appears in both a side group and a direction group.
+    stated_issuer_fields: tuple[str, ...] = ()
+    stated_recipient_fields: tuple[str, ...] = ()
+    stated_increase_fields: tuple[str, ...] = ()
+    stated_reduction_fields: tuple[str, ...] = ()
+    #: ``None`` while the record states no direction.
+    minoracion: bool | None = None
+    #: ``None`` while the record states no cause.
+    art_80_tres: bool | None = None
+    attestation_stated: bool = False
+    minoracion_election_stated: bool = False
+    regularisation_period_stated: bool = False
+    #: The first elected period field whose own legal window excludes it, when
+    #: any. The window durations are the registry's, resolved by the caller.
+    period_outside_window: str | None = None
+
+
+def rectification_election_rule_findings(
+    *,
+    issued: bool | None,
+    state: RectificationElectionState,
+) -> tuple[InvoiceRuleFinding, ...]:
+    """Answer the coherence of the recorded elections, in the order the rules are refused.
+
+    An election belongs to one side and one direction: LIVA art. 89.Cinco gives
+    the issuer its two, art. 114.Dos.1.º gives the recipient one, and each
+    answers a question the other direction does not ask. Recording one against
+    the wrong side or direction asserts a choice the law never offered, so it
+    is refused here rather than ignored at declaration.
+
+    ``issued`` is ``None`` while a draft has no kind yet, which leaves the side
+    rules unasked for the reason the reception-date rule above states.
+
+    Core types: :class:`RectificationElectionState`.
+    """
+    findings = (
+        _election_side_finding(issued=issued, state=state),
+        _election_direction_finding(state=state),
+        _regularisation_period_without_election_finding(state=state),
+        _art_80_tres_attestation_finding(state=state),
+        _elected_period_window_finding(state=state),
+    )
+    return tuple(finding for finding in findings if finding is not None)
+
+
+def _election_side_finding(*, issued: bool | None, state: RectificationElectionState) -> InvoiceRuleFinding | None:
+    if issued is None:
+        return None
+    wrong_side = state.stated_recipient_fields if issued else state.stated_issuer_fields
+    if not wrong_side:
+        return None
+    side = "an issued" if issued else "a received"
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.RECTIFICATION_ELECTION_SIDE_MISMATCH,
+        f"{wrong_side[0]} records a choice the law gives the other party, so it does not apply to {side} invoice",
+        (wrong_side[0], "kind"),
+        {"rectification_fact": wrong_side[0]},
+    )
+
+
+def _election_direction_finding(*, state: RectificationElectionState) -> InvoiceRuleFinding | None:
+    if state.minoracion is None:
+        return None
+    stated = state.stated_increase_fields if state.minoracion else state.stated_reduction_fields
+    if not stated:
+        return None
+    direction = "a minoración" if state.minoracion else "an aumento"
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.RECTIFICATION_ELECTION_DIRECTION_MISMATCH,
+        f"{stated[0]} records a choice the law gives the other direction, so it does not apply to {direction}",
+        (stated[0], "rectification_direction"),
+        {"rectification_fact": stated[0]},
+    )
+
+
+def _regularisation_period_without_election_finding(*, state: RectificationElectionState) -> InvoiceRuleFinding | None:
+    if not state.regularisation_period_stated or state.minoracion_election_stated:
+        return None
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.RECTIFICATION_REGULARISATION_PERIOD_WITHOUT_ELECTION,
+        "issuer_minoracion_regularisation_period is the period LIVA art. 89.Cinco letter b) regularises in, so it "
+        "needs that election recorded beside it",
+        ("issuer_minoracion_regularisation_period", "issuer_minoracion_election"),
+    )
+
+
+def _art_80_tres_attestation_finding(*, state: RectificationElectionState) -> InvoiceRuleFinding | None:
+    if not state.attestation_stated or state.art_80_tres is not False:
+        return None
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.RECTIFICATION_ART_80_TRES_ATTESTATION_NOT_ALLOWED,
+        "art_80_tres_obligations_attested attests the RIVA art. 24 obligations of a LIVA art. 80.Tres "
+        "rectification, so it only applies on that cause",
+        ("art_80_tres_obligations_attested", "rectification_cause"),
+    )
+
+
+def _elected_period_window_finding(*, state: RectificationElectionState) -> InvoiceRuleFinding | None:
+    if state.period_outside_window is None:
+        return None
+    return InvoiceRuleFinding(
+        InvoiceRuleFindingCode.RECTIFICATION_ELECTED_PERIOD_OUTSIDE_WINDOW,
+        f"{state.period_outside_window} falls outside the window the law allows the chosen route",
+        (state.period_outside_window,),
+        {"rectification_fact": state.period_outside_window},
+    )
+
+
 def lease_kind_finding(*, lease_stated: bool, issued: bool) -> InvoiceRuleFinding | None:
     """The lessor records a business-premises lease, so only an issued invoice carries one."""
     if lease_stated and not issued:
@@ -309,11 +436,13 @@ __all__ = [
     "INVOICE_RULE_FINDING_WORDS_ROOT",
     "InvoiceRuleFinding",
     "InvoiceRuleFindingCode",
+    "RectificationElectionState",
     "invoice_class_rule_findings",
     "invoice_rule_refusal",
     "lease_kind_finding",
     "operation_date_role_finding",
     "raise_first_rule_finding",
+    "rectification_election_rule_findings",
     "rectification_fact_rule_findings",
     "rule_finding_words_key",
 ]

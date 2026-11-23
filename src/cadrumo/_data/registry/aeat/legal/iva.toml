@@ -3158,6 +3158,40 @@ required_text = [
     # verbatim. Verified against live BOE: apartados Uno-Cinco on both sides,
     # Seis on neither.
     "deberá proceder a la rectificación de las cuotas inicialmente repercutidas en la declaración-liquidación",
+    # Apartado Cinco's two genuine elections, which the issuer-side period rule
+    # consumes: the art. 80 / error fundado de derecho increase that MAY be
+    # included in the period the rectification is effected in, and the
+    # minoración route b) with its one-year regularisation window. Both sit in
+    # apartado Cinco, above the amendment block.
+    "el sujeto pasivo podrá incluir la diferencia correspondiente en la declaración-liquidación del periodo en que se deba efectuar la rectificación",
+    "en las posteriores hasta el plazo de un año a contar desde el momento en que debió efectuarse la mencionada rectificación",
+]
+
+[legal."ley-37-1992:art-114"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a114"
+document_id = "BOE-A-1992-28740"
+article = "114"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a114"
+published_at = 1992-12-29
+effective_from = 2000-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-22
+reviewed_by = "agent-prepared-pending-operator"
+notes = "LIVA art. 114: rectificación de deducciones. Apartado Uno makes the recipient's minoración obligatory. Apartado Dos.1.º fixes the increase route: the period the justificante is received, or a later declaración-liquidación, within four years of the devengo or of the circumstances that modify the base; and, where the rectification rests on a cause outside art. 80, within one year of the justificante's issue. Apartado Dos.2.º makes a minoración a declaración-liquidación rectificativa in general, routes art. 80.Tres and a concurso reintegración where the buyer is also in concurso to the period the deduction was exercised in, and routes an error fundado de derecho and the remaining art. 80 causes to the reception period. effective_from is the Ley 55/1999 redaction of apartado Dos.1.º the consolidated text records as in force from 2000-01-01; the apartado Dos.2.º paragraphs carry the Ley 7/2012 redaction in force from 2012-10-31."
+required_text = [
+    "Artículo 114. Rectificación de deducciones.",
+    "La rectificación de las deducciones será obligatoria cuando implique una minoración del importe inicialmente deducido.",
+    # Apartado Dos.1.º: the four-year ceiling on the recipient's elected
+    # increase period, and the one-year ceiling that replaces it when the
+    # cause sits outside art. 80.
+    "o bien en las declaraciones-liquidaciones siguientes, siempre que no hubiesen transcurrido cuatro años desde el devengo de la operación",
+    "no podrá efectuarse la rectificación de la deducción de las mismas después de transcurrido un año desde la fecha de expedición del documento justificativo",
+    # Apartado Dos.2.º: the art. 80.Tres route to the period the deduction was
+    # exercised in, which is the last operative provision of the article.
+    "la rectificación deberá efectuarse en la declaración-liquidación correspondiente al periodo en que se ejerció el derecho a la deducción de las cuotas soportadas",
 ]
 
 [legal."ley-37-1992:art-154"]

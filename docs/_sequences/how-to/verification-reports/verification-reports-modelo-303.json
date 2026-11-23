@@ -376,7 +376,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca"
+          "value": "1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2"
         }
       ],
       "envelope": {
@@ -422,6 +422,7 @@
             "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-base": "0",
             "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-cuota": "0",
             "modelo-303-iva-autorepercutido-interior-deducible-cuota": "0",
+            "modelo-303-iva-autorepercutido-interior-devengado-base": "0",
             "modelo-303-iva-autorepercutido-interior-devengado-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-deducible-base": "0",
@@ -460,7 +461,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca",
+          "calculation_revision_id": "1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -478,7 +479,7 @@
             "11": "0.00",
             "111": "0",
             "112": "0",
-            "12": "0",
+            "12": "0.00",
             "120": "0",
             "122": "0",
             "123": "0",
@@ -590,6 +591,7 @@
             "iva.autorepercutido.interior.deducible.bienes-inversion": "0",
             "iva.autorepercutido.interior.deducible.bienes-inversion.base": "0",
             "iva.autorepercutido.interior.devengado": "0",
+            "iva.autorepercutido.interior.devengado.base": "0",
             "iva.autorepercutido.intracomunitaria": "0",
             "iva.autorepercutido.intracomunitaria.deducible": "0",
             "iva.autorepercutido.intracomunitaria.devengado": "0",
@@ -671,6 +673,7 @@
             "iva.autorepercutido.interior.deducible.bienes-inversion": "0",
             "iva.autorepercutido.interior.deducible.bienes-inversion.base": "0",
             "iva.autorepercutido.interior.devengado": "0",
+            "iva.autorepercutido.interior.devengado.base": "0",
             "iva.autorepercutido.intracomunitaria": "0",
             "iva.autorepercutido.intracomunitaria.deducible": "0",
             "iva.autorepercutido.intracomunitaria.devengado": "0",
@@ -715,7 +718,7 @@
             {"absent_by_design":false,"casilla_id":"11","formula_id":"modelo-303-dr303-11-projection","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"value","operand_casilla_refs":["iva.autorepercutido.intracomunitaria.devengado"],"operand_refs":["iva.autorepercutido.intracomunitaria.devengado"],"operand_values":["0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"111","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"112","formula_id":null,"legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"12","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"12","formula_id":"modelo-303-dr303-12-projection","legal_refs":["ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"value","operand_casilla_refs":["iva.autorepercutido.interior.devengado.base"],"operand_refs":["iva.autorepercutido.interior.devengado.base"],"operand_values":["0"],"source_refs":["aeat-dr-303-2024-early","aeat-modelo-303-procedure","boe-modelo-303-2008-form"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"120","formula_id":null,"legal_refs":["ley-37-1992:art-69","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"122","formula_id":null,"legal_refs":["ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"123","formula_id":null,"legal_refs":["ley-37-1992:art-88","ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -828,6 +831,7 @@
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.interior.deducible.bienes-inversion","formula_id":null,"legal_refs":["ley-37-1992:art-84","ley-37-1992:art-92","ley-37-1992:art-108","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.interior.deducible.bienes-inversion.base","formula_id":null,"legal_refs":["ley-37-1992:art-84","ley-37-1992:art-92","ley-37-1992:art-108","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.interior.devengado","formula_id":null,"legal_refs":["ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"iva.autorepercutido.interior.devengado.base","formula_id":null,"legal_refs":["ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.intracomunitaria","formula_id":null,"legal_refs":["ley-37-1992:art-69","ley-37-1992:art-70","ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.intracomunitaria.deducible","formula_id":null,"legal_refs":["ley-37-1992:art-13","ley-37-1992:art-15","ley-37-1992:art-69","ley-37-1992:art-70","ley-37-1992:art-84","ley-37-1992:art-92","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"iva.autorepercutido.intracomunitaria.devengado","formula_id":null,"legal_refs":["ley-37-1992:art-13","ley-37-1992:art-15","ley-37-1992:art-69","ley-37-1992:art-70","ley-37-1992:art-84","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -1027,7 +1031,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1088,7 +1092,7 @@
               "contributor_binding_source": "profile",
               "contributor_source_kind": "profile",
               "dependency_treatment": "",
-              "fingerprint": "sha256:e077fdb6737e590f5475389bae188aca954d8fa634d54d619e86d3f4a04fd1eb",
+              "fingerprint": "sha256:09e755549c76025b79a7acd4844b529886a8de9d61ea57a610d9facfe8cdd990",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "profile",
@@ -1124,13 +1128,13 @@
         "modelo",
         "work",
         "verify",
-        "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca"
+        "1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2"
       ],
       "captures": [
         {
           "json_path": "result.verification_report_id",
           "name": "verification_report_id",
-          "value": "181a518e124da2eb8daf68b4ce060e4c9adc5600c1f61eb7750ff9c0d2877ece"
+          "value": "f026eab6ab8498b1d46b98d4ec3af6be196f0aee7829699f1829f81169f0167e"
         }
       ],
       "envelope": {
@@ -1179,7 +1183,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca",
+          "calculation_revision_id": "1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1223,7 +1227,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "181a518e124da2eb8daf68b4ce060e4c9adc5600c1f61eb7750ff9c0d2877ece",
+          "verification_report_id": "f026eab6ab8498b1d46b98d4ec3af6be196f0aee7829699f1829f81169f0167e",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1245,7 +1249,7 @@
         "verification-report",
         "list",
         "--calculation-revision-id",
-        "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca"
+        "1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2"
       ],
       "captures": [],
       "envelope": {
@@ -1261,12 +1265,12 @@
           }
         ],
         "result": {
-          "calculation_revision_id_filter": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca",
+          "calculation_revision_id_filter": "1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2",
           "operation": "modelo.verification_report.list",
           "report_count": 1,
           "reports": [
             {
-              "calculation_revision_id": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca",
+              "calculation_revision_id": "1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2",
               "completeness_status": "complete",
               "findings": [
                 {
@@ -1309,7 +1313,7 @@
               },
               "resolved_casilla_ids": [],
               "run_at": "2026-04-01T09:00:00+00:00",
-              "verification_report_id": "181a518e124da2eb8daf68b4ce060e4c9adc5600c1f61eb7750ff9c0d2877ece",
+              "verification_report_id": "f026eab6ab8498b1d46b98d4ec3af6be196f0aee7829699f1829f81169f0167e",
               "verified_by": "docs-sequence-sandbox"
             }
           ]
@@ -1332,7 +1336,7 @@
         "modelo",
         "verification-report",
         "view",
-        "181a518e124da2eb8daf68b4ce060e4c9adc5600c1f61eb7750ff9c0d2877ece"
+        "f026eab6ab8498b1d46b98d4ec3af6be196f0aee7829699f1829f81169f0167e"
       ],
       "captures": [],
       "envelope": {
@@ -1348,7 +1352,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "5eb9ba88c71acd07f389fdca2f0075f51c708b01812fb0c9f8079569a76046ca",
+          "calculation_revision_id": "1b76fe98e5fd1ebcd2f55733d2748b8f7c0e44219d83905b3a3966ccc5f686c2",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1392,7 +1396,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "181a518e124da2eb8daf68b4ce060e4c9adc5600c1f61eb7750ff9c0d2877ece",
+          "verification_report_id": "f026eab6ab8498b1d46b98d4ec3af6be196f0aee7829699f1829f81169f0167e",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

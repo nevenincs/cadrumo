@@ -151,7 +151,9 @@ class LedgerPreflightIssueReason(StrEnum):
     INVOICE_RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
     INVOICE_RECARGO_NOT_DECLARABLE = "invoice_recargo_not_declarable"
     INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED = "invoice_rectificativa_modification_unmodelled"
-    INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED = "invoice_rectificativa_period_undecided"
+    INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT = "invoice_rectificativa_period_needs_fact"
+    INVOICE_RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE = "invoice_rectificativa_deduction_row_undeclarable"
+    INVOICE_RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND = "invoice_rectificativa_issued_modification_unbound"
     INVOICE_USED_GOODS_MARGIN_UNMODELLED = "invoice_used_goods_margin_unmodelled"
 
 
@@ -451,10 +453,20 @@ _INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
             "art. 15.5 reads its figures through the method it records, and a substitution also needs the one "
             "invoice it replaces{refusal}{missing}"
         ),
-        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED.value: (
-            "invoice {number} is a factura rectificativa whose modification is {derived}; which period it "
-            "belongs to comes from the side, the cause and the election LIVA art. 89.Cinco and art. 114.Dos "
-            "give, which is not decided yet, so it declares nothing here"
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT.value: (
+            "invoice {number} is a factura rectificativa whose modification is {derived}; the period it belongs "
+            "to comes from its side, its cause and the election LIVA art. 89.Cinco and art. 114.Dos give, and "
+            "the record does not state it yet{refusal}{missing}"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE.value: (
+            "invoice {number} is a received factura rectificativa this period declares, whose modification is "
+            "{derived}, and casillas 40 and 41 cannot hold it: the invoice it corrects resolves to no single "
+            "record of the catalogue, or a row carries a base with no deducible cuota"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND.value: (
+            "invoice {number} is an issued factura rectificativa this period declares, whose modification is "
+            "{derived}; casillas 14 and 15 are operator input in this Modelo 303 edition, so the modification "
+            "reaches no casilla from the invoice and the period would be filed short"
         ),
         LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED.value: (
             "issued invoice {number} is under the régimen especial de los bienes usados, whose taxable base is "
@@ -506,6 +518,30 @@ def _derived_modification_words(modification: RectificationModification | None) 
     return f"a base of {modification.base:f} and a cuota of {modification.cuota:f}{recargo} {modification.currency}"
 
 
+def _missing_facts_of(finding: InvoiceIvaFinding) -> tuple[str, ...]:
+    """The fields one invoice finding says the record does not state.
+
+    A rectificativa can be held for two different absences: the facts its side
+    needs before any modification is derived, and the election its side and
+    cause need before any period holds it. Both are invoice fields the person
+    opens, so both reach the served sentence through one channel.
+    """
+    if finding.missing_rectification_facts:
+        return tuple(fact.value for fact in finding.missing_rectification_facts)
+    if finding.rectification_period_need is not None:
+        return (finding.rectification_period_need.value,)
+    return ()
+
+
+def _rectification_refusal_of(finding: InvoiceIvaFinding) -> str | None:
+    """The stable refusal token one rectificativa finding carries, when any."""
+    if finding.rectification_refusal is not None:
+        return finding.rectification_refusal.value
+    if finding.rectification_period_refusal is not None:
+        return finding.rectification_period_refusal.value
+    return None
+
+
 def invoice_side_preflight_issues(
     invoice_side: PeriodInvoiceIvaSide,
     *,
@@ -523,10 +559,8 @@ def invoice_side_preflight_issues(
             LedgerPreflightIssueReason(finding.reason.value),
             invoice=by_id.get(finding.invoice_id) if finding.invoice_id is not None else None,
             transaction_id=finding.transaction_id,
-            missing_facts=tuple(fact.value for fact in finding.missing_rectification_facts),
-            rectification_refusal=None
-            if finding.rectification_refusal is None
-            else finding.rectification_refusal.value,
+            missing_facts=_missing_facts_of(finding),
+            rectification_refusal=_rectification_refusal_of(finding),
             modification=finding.rectification_modification,
         )
         for finding in findings

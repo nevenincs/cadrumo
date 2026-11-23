@@ -42,6 +42,12 @@ export type CatalogueInvoiceSnapshot = {
   rectification_cause: string | null;
   rectification_direction: string | null;
   document_received_on: string | null;
+  issuer_increase_election: string | null;
+  issuer_minoracion_election: string | null;
+  issuer_minoracion_regularisation_period: string | null;
+  recipient_increase_period: string | null;
+  art_80_tres_obligations_attested: boolean | null;
+  exercised_deduction_period: string | null;
   fx_rate: PublicDecimal | null;
   fx_rate_date: string | null;
   fx_rate_source: string | null;
@@ -174,6 +180,12 @@ export type InvoiceAddRequest = {
   rectification_cause?: string | null;
   rectification_direction?: string | null;
   document_received_on?: string | null;
+  issuer_increase_election?: string | null;
+  issuer_minoracion_election?: string | null;
+  issuer_minoracion_regularisation_period?: string | null;
+  recipient_increase_period?: string | null;
+  art_80_tres_obligations_attested?: boolean | null;
+  exercised_deduction_period?: string | null;
   recargo_amount?: PublicDecimal | null;
   business_premises_lease?: InvoiceAddBusinessPremisesLease | null;
   lines?: InvoiceAddLine[];
@@ -485,6 +497,11 @@ export type InvoiceRuleFindingCode =
   | "rectification_fact_not_allowed"
   | "document_received_on_only_on_received"
   | "document_received_before_issued"
+  | "rectification_election_side_mismatch"
+  | "rectification_election_direction_mismatch"
+  | "rectification_regularisation_period_without_election"
+  | "rectification_art_80_tres_attestation_not_allowed"
+  | "rectification_elected_period_outside_window"
   | "simplificada_not_for_intra_community"
   | "counterparty_tax_id_required"
   | "counterparty_tax_id_required_by_category"
@@ -558,6 +575,12 @@ export type InvoiceUpdateValues = {
   rectification_cause?: string | null;
   rectification_direction?: string | null;
   document_received_on?: string | null;
+  issuer_increase_election?: string | null;
+  issuer_minoracion_election?: string | null;
+  issuer_minoracion_regularisation_period?: string | null;
+  recipient_increase_period?: string | null;
+  art_80_tres_obligations_attested?: boolean | null;
+  exercised_deduction_period?: string | null;
   payment_id?: string | null;
   declared_fx_rate?: PublicDecimal | null;
 };
@@ -924,7 +947,9 @@ export type LedgerPreflightIssueReason =
   | "invoice_recargo_split_unresolved"
   | "invoice_recargo_not_declarable"
   | "invoice_rectificativa_modification_unmodelled"
-  | "invoice_rectificativa_period_undecided"
+  | "invoice_rectificativa_period_needs_fact"
+  | "invoice_rectificativa_deduction_row_undeclarable"
+  | "invoice_rectificativa_issued_modification_unbound"
   | "invoice_used_goods_margin_unmodelled";
 
 /**

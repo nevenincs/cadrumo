@@ -66,6 +66,7 @@ from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_invoice_iva import (
     ScreenedInvoiceIva,
     category_counterparty_mismatch_diagnostics,
+    excluded_rectification_diagnostics,
     invoice_screen_of,
     out_of_window_summary_diagnostics,
     recargo_rate_mismatch_diagnostics,
@@ -507,6 +508,10 @@ class LedgerIvaAggregationSourceResolver:
             )
             + recargo_rate_mismatch_diagnostics(
                 invoice_screen.recargo_rate_divergences,
+                resolver_id=self.resolver_id,
+            )
+            + excluded_rectification_diagnostics(
+                invoice_screen.rectificativas,
                 resolver_id=self.resolver_id,
             )
             + invoice_iva_finding_diagnostics(

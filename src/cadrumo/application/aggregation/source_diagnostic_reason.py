@@ -239,6 +239,13 @@ CalculationSourceDiagnosticReason = Literal[
     # rate's art. 161 share or blocks the period. Kept because stored revisions
     # calculated before that carry it and must still load and explain it.
     "invoice_recargo_not_attributable_to_a_tier",
+    # A factura rectificativa the period holds a document for whose
+    # modification LIVA art. 89.Cinco or art. 114.Dos places in ANOTHER
+    # declaración-liquidación, or by a route these returns do not produce. One
+    # modification reaches exactly one period, so contributing nothing here is
+    # the correct outcome; it is said so the filer can tell it from an
+    # omission.
+    "invoice_rectificativa_declared_in_another_period",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",

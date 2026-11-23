@@ -41,11 +41,19 @@ from ....domain.calculations.registry.invoice_legal_classification import (
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceLine
-from ....domain.invoices.rectification_modification import RectificationModificationRefusal
+from ....domain.invoices.rectification_modification import (
+    RectificationModification,
+    RectificationModificationRefusal,
+)
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.models import TransactionCatalogue
 from ...ledger.preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason
-from ..invoice_iva_source import InvoiceIvaFinding, InvoiceIvaFindingReason, period_invoice_iva_side
+from ..invoice_iva_source import (
+    InvoiceIvaFinding,
+    InvoiceIvaFindingReason,
+    PeriodInvoiceIvaSide,
+    period_invoice_iva_side,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -114,11 +122,11 @@ def _rectificativa(*, method: str, base: Decimal, cuota: Decimal, **overrides: A
     )
 
 
-def _finding(invoices: Sequence[Invoice]) -> tuple[InvoiceIvaFinding, tuple[object, ...]]:
-    """The one finding the period's invoice side raises, and the observations beside it."""
+def _period_side(invoices: Sequence[Invoice]) -> PeriodInvoiceIvaSide:
+    """The second quarter's invoice side, through the real screen and period side."""
     window = TransactionCatalogue.from_transactions(())
     with bundled_indexed_authority().operation() as operation:
-        side = period_invoice_iva_side(
+        return period_invoice_iva_side(
             invoices,
             bucket_id=_BUCKET_ID,
             period=Period.from_year_and_code(_YEAR, "2T"),
@@ -126,8 +134,31 @@ def _finding(invoices: Sequence[Invoice]) -> tuple[InvoiceIvaFinding, tuple[obje
             repository=HeldTransactionCatalogue(window),
             operation=operation,
         )
+
+
+def _finding(invoices: Sequence[Invoice]) -> tuple[InvoiceIvaFinding, tuple[object, ...]]:
+    """The one finding the period's invoice side raises, and the observations beside it."""
+    side = _period_side(invoices)
     (finding,) = side.source.findings
     return finding, side.source.observations
+
+
+def _derived_modification(invoices: Sequence[Invoice]) -> RectificationModification:
+    """The signed modification the screen read out of the one rectificativa it holds.
+
+    These documents state the cause the Modelo 303 instructions call "cualquier
+    otra modificación", so LIVA art. 114.Dos.2.º's first paragraph routes them
+    to a declaración-liquidación rectificativa and this period declares
+    nothing. The derivation is what this module is about, so it is read off the
+    screen rather than through a finding the period rule does not raise.
+    """
+    side = _period_side(invoices)
+    assert side.source.findings == ()
+    assert side.source.observations == ()
+    (screened,) = side.source.screen.rectificativas
+    modification = screened.derived.modification
+    assert modification is not None
+    return modification
 
 
 def _methods() -> tuple[str, str]:
@@ -140,13 +171,8 @@ def test_a_complete_difference_rectificativa_is_held_with_its_signed_figures() -
     diferencia, _ = _methods()
     rectificativa = _rectificativa(method=diferencia, base=Decimal("100.00"), cuota=Decimal("21.00"))
 
-    finding, observations = _finding((rectificativa,))
+    modification = _derived_modification((rectificativa,))
 
-    assert observations == ()
-    assert finding.reason is InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_UNDECIDED
-    assert finding.invoice_id == rectificativa.invoice_id
-    modification = finding.rectification_modification
-    assert modification is not None
     assert (modification.base, modification.cuota) == (Decimal("-100.00"), Decimal("-21.00"))
 
 
@@ -165,12 +191,8 @@ def test_a_complete_substitution_is_held_with_the_difference_from_the_invoice_it
     )
     substitute = _rectificativa(method=sustitucion, base=Decimal("800.00"), cuota=Decimal("168.00"))
 
-    finding, observations = _finding((original, substitute))
+    modification = _derived_modification((original, substitute))
 
-    assert observations == ()
-    assert finding.reason is InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_UNDECIDED
-    modification = finding.rectification_modification
-    assert modification is not None
     assert (modification.base, modification.cuota) == (Decimal("-200.00"), Decimal("-42.00"))
     assert modification.original_invoice_id == original.invoice_id
 
@@ -208,9 +230,12 @@ def test_a_substitution_whose_original_answers_to_two_invoices_is_held_naming_th
     assert finding.rectification_refusal is RectificationModificationRefusal.ORIGINAL_AMBIGUOUS
 
 
-def test_the_ledger_reports_the_undecided_period_calculation_holds_on() -> None:
+def test_the_ledger_reports_every_rectificativa_hold_calculation_raises() -> None:
     """The ledger says a period is ready only when calculation would find the same reason."""
-    assert (
-        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED.value
-        == InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_UNDECIDED.value
-    )
+    for reason in (
+        InvoiceIvaFindingReason.RECTIFICATIVA_MODIFICATION_UNMODELLED,
+        InvoiceIvaFindingReason.RECTIFICATIVA_PERIOD_NEEDS_FACT,
+        InvoiceIvaFindingReason.RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE,
+        InvoiceIvaFindingReason.RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND,
+    ):
+        assert LedgerPreflightIssueReason(reason.value).value == reason.value

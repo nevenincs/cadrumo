@@ -134,6 +134,17 @@ class RectificationFact(StrEnum):
     RECTIFICATION_CAUSE = "rectification_cause"
     RECTIFICATION_DIRECTION = "rectification_direction"
     DOCUMENT_RECEIVED_ON = "document_received_on"
+    #: The elections and attestations LIVA art. 89.Cinco, art. 114.Dos and
+    #: art. 80.Tres leave to the taxpayer. They are not part of the facts every
+    #: rectificativa states: which of them a document needs follows from its
+    #: side, cause and direction, and
+    #: :mod:`cadrumo.domain.invoices.rectification_period` is what asks for one.
+    ISSUER_INCREASE_ELECTION = "issuer_increase_election"
+    ISSUER_MINORACION_ELECTION = "issuer_minoracion_election"
+    ISSUER_MINORACION_REGULARISATION_PERIOD = "issuer_minoracion_regularisation_period"
+    RECIPIENT_INCREASE_PERIOD = "recipient_increase_period"
+    ART_80_TRES_OBLIGATIONS_ATTESTED = "art_80_tres_obligations_attested"
+    EXERCISED_DEDUCTION_PERIOD = "exercised_deduction_period"
 
 
 class RectificationMethod(StrictRegistryToken):
@@ -168,6 +179,32 @@ class RectificationCause(StrictRegistryToken):
     other modification" the Modelo 303 instructions for casillas 14 and 15
     name. The cause, not the class or the amount, is what places the
     modification in a period, so it is operator supplied and never inferred.
+    """
+
+    __slots__ = ()
+
+
+class IssuerIncreaseElection(StrictRegistryToken):
+    """Which route LIVA art. 89.Cinco's increase election takes.
+
+    The article gives the issuer a genuine choice, and only where the
+    rectification rests on an art. 80 ground or on an error fundado de derecho:
+    include the difference in the declaración-liquidación of the period the
+    rectification is effected in, or file a declaración-liquidación
+    rectificativa with recargo and interest. An application may record that
+    choice and may never make it.
+    """
+
+    __slots__ = ()
+
+
+class IssuerMinoracionElection(StrictRegistryToken):
+    """Which route LIVA art. 89.Cinco's minoración election takes.
+
+    Letter a) is the art. 120.3 LGT self-assessment rectification procedure,
+    which this application's declaraciones-liquidaciones do not carry. Letter
+    b) regularises in a declaración-liquidación within one year and obliges
+    reimbursement of the recipient, so it also records the period chosen.
     """
 
     __slots__ = ()
@@ -247,6 +284,24 @@ def require_rectification_cause(value: object, *, effective_date: date | None = 
     from ..calculations.registry.invoice_legal_classification import require_rectification_cause
 
     return require_rectification_cause(value, effective_date=effective_date)
+
+
+def require_issuer_increase_election(value: object, *, effective_date: date | None = None) -> IssuerIncreaseElection:
+    """Resolve a LIVA art. 89.Cinco increase election through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_issuer_increase_election
+
+    return require_issuer_increase_election(value, effective_date=effective_date)
+
+
+def require_issuer_minoracion_election(
+    value: object,
+    *,
+    effective_date: date | None = None,
+) -> IssuerMinoracionElection:
+    """Resolve a LIVA art. 89.Cinco minoración election through the dated facts authority."""
+    from ..calculations.registry.invoice_legal_classification import require_issuer_minoracion_election
+
+    return require_issuer_minoracion_election(value, effective_date=effective_date)
 
 
 def default_invoice_class(*, effective_date: date | None = None) -> InvoiceClass:
@@ -710,6 +765,8 @@ __all__ = [
     "InvoiceLegalMention",
     "InvoiceLegalMentionDeclaration",
     "InvoiceOperationDateRole",
+    "IssuerIncreaseElection",
+    "IssuerMinoracionElection",
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
@@ -729,6 +786,8 @@ __all__ = [
     "operation_performed_role",
     "require_invoice_class",
     "require_invoice_operation_date_role",
+    "require_issuer_increase_election",
+    "require_issuer_minoracion_election",
     "require_rectification_cause",
     "require_rectification_direction",
     "require_rectification_method",

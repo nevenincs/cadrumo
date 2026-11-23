@@ -78,6 +78,7 @@ def _pinned_operation() -> PinnedAuthorityOperation:
 
 _BASE = Decimal("2000.00")
 _DAY = date(_YEAR, 3, 15)
+_INVOICE_QUARTER = Period.from_year_and_code(_DAY.year, f"{(_DAY.month - 1) // 3 + 1}T")
 _DEFAULT_INVOICE_RATE = IvaRate.from_registry("EXEMPT")
 
 
@@ -267,7 +268,7 @@ def test_a_domestic_invoice_below_the_escaso_valor_threshold_is_its_own_current_
     """
     invoice = _rated_reverse_charge(_escaso_valor() - Decimal("0.01"))
 
-    screened = screened_invoice_iva_result(invoice, linked_movements=(), operation=operation)
+    screened = screened_invoice_iva_result(invoice, linked_movements=(), period=_INVOICE_QUARTER, operation=operation)
 
     assert screened.deduction_authority_missing is False
     (observation,) = screened.observations
@@ -290,7 +291,7 @@ def test_a_domestic_invoice_at_the_threshold_is_withheld_when_nothing_classifies
     """
     invoice = _rated_reverse_charge(_escaso_valor())
 
-    screened = screened_invoice_iva_result(invoice, linked_movements=(), operation=operation)
+    screened = screened_invoice_iva_result(invoice, linked_movements=(), period=_INVOICE_QUARTER, operation=operation)
 
     assert screened.deduction_authority_missing is True
     assert screened.observations == ()
@@ -311,7 +312,9 @@ def test_a_linked_movement_classification_is_copied_onto_the_projection_not_rein
         update={"linked_transaction_ids": (movement.transaction_id,)},
     )
 
-    screened = screened_invoice_iva_result(linked, linked_movements=(movement,), operation=operation)
+    screened = screened_invoice_iva_result(
+        linked, linked_movements=(movement,), period=_INVOICE_QUARTER, operation=operation
+    )
 
     assert screened.deduction_authority_missing is False
     (observation,) = screened.observations
@@ -330,14 +333,15 @@ def test_linked_movements_that_disagree_leave_the_invoice_withheld(
         update={"linked_transaction_ids": (agreeing.transaction_id, disagreeing.transaction_id)},
     )
 
-    screened = screened_invoice_iva_result(linked, linked_movements=(agreeing, disagreeing), operation=operation)
+    screened = screened_invoice_iva_result(
+        linked, linked_movements=(agreeing, disagreeing), period=_INVOICE_QUARTER, operation=operation
+    )
 
     assert screened.deduction_authority_missing is True
     assert screened.observations == ()
 
 
 _INVOICE_BUCKET_ID = "29292929-2929-4929-8929-292929292929"
-_INVOICE_QUARTER = Period.from_year_and_code(_DAY.year, f"{(_DAY.month - 1) // 3 + 1}T")
 
 
 def _unlinked_purchase(*, base: str, cuota: str, currency: str = "EUR", fx_rate: str | None = None) -> Invoice:
@@ -509,7 +513,10 @@ def test_a_cuota_bearing_intra_eu_invoice_keeps_its_declared_self_assessment(
     invoice = _received_intra_eu_service(linked_to=_movement_carrying(authority).transaction_id)
 
     screened = screened_invoice_iva_result(
-        invoice, linked_movements=(_movement_carrying(authority),), operation=_pinned_operation()
+        invoice,
+        linked_movements=(_movement_carrying(authority),),
+        period=_INVOICE_QUARTER,
+        operation=_pinned_operation(),
     )
 
     assert screened.deduction_authority_missing is False
@@ -531,7 +538,9 @@ def test_an_unlinked_intra_eu_invoice_is_withheld() -> None:
     finding instead of inventing an ``intra_eu_current`` family.
     """
     invoice = _received_intra_eu_service()
-    screened = screened_invoice_iva_result(invoice, linked_movements=(), operation=_pinned_operation())
+    screened = screened_invoice_iva_result(
+        invoice, linked_movements=(), period=_INVOICE_QUARTER, operation=_pinned_operation()
+    )
 
     assert screened.deduction_authority_missing is True
     assert screened.observations == ()

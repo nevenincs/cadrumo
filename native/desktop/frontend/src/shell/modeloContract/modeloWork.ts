@@ -100,6 +100,7 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "invoice_reverse_charge_cuota_not_derivable"
     | "invoice_recargo_departs_from_published_rate"
     | "invoice_recargo_not_attributable_to_a_tier"
+    | "invoice_rectificativa_declared_in_another_period"
     | "official_box_unpopulated"
     | "prior_payment_not_deducted"
     | "prior_payment_minoracion_not_captured"

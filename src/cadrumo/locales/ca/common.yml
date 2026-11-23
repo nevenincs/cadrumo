@@ -110,6 +110,10 @@ aggregation:
         de declarar-se al recàrrec general.
       rectification_consumed_more_than_once: Un apunt d'IVA ja corregit només es pot
         rectificar una vegada.
+      rectification_deduction_kind_ambiguous: El catàleg de deduccions no anomena
+        exactament un tipus de deducció per a la rectificació de deduccions (se n'han
+        trobat %{kind_count}). Corregeix el catàleg abans de declarar una factura
+        rectificativa.
       sectorized_apportionment_duplicate_sectors: El repartiment sectoritzat d'IVA
         declara el mateix sector més d'una vegada.
       sectorized_especial_missing_input_classification: La prorrata especial sectoritzada
@@ -4397,8 +4401,10 @@ desktop:
       invoice_deduction_family_unresolved: Deducció
       invoice_recargo_not_declarable: Recàrrec
       invoice_recargo_split_unresolved: Recàrrec
+      invoice_rectificativa_deduction_row_undeclarable: Deducció rectificada
+      invoice_rectificativa_issued_modification_unbound: Rectificativa emesa
       invoice_rectificativa_modification_unmodelled: Rectificativa
-      invoice_rectificativa_period_undecided: Període rectificativa
+      invoice_rectificativa_period_needs_fact: Període de la rectificativa
       invoice_used_goods_margin_unmodelled: Béns usats
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Classificació
@@ -4430,10 +4436,14 @@ desktop:
         base
       invoice_recargo_split_unresolved: El recàrrec no es reparteix entre els seus
         tipus d'IVA
+      invoice_rectificativa_deduction_row_undeclarable: La factura que rectifica no
+        és un únic registre, o una línia no té quota deduïble
+      invoice_rectificativa_issued_modification_unbound: Escriu tu la modificació
+        a les caselles del Model 303
       invoice_rectificativa_modification_unmodelled: Indica com expressa els seus
         imports i a quina factura substitueix
-      invoice_rectificativa_period_undecided: La rectificació ja està derivada; el
-        seu període depèn de la causa i de la teva elecció
+      invoice_rectificativa_period_needs_fact: La rectificació es coneix; el seu període
+        depèn de la causa i de la teva opció
       invoice_used_goods_margin_unmodelled: Indica la base del marge i la seva quota
         a les caselles d'IVA meritat del seu tipus
       linked_movement_contradicts_invoice: No coincideix amb la seva factura

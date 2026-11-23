@@ -35,12 +35,16 @@ from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,
+    IssuerIncreaseElection,
+    IssuerMinoracionElection,
     PaymentStatus,
     RectificationCause,
     RectificationDirection,
     RectificationMethod,
     require_invoice_class,
     require_invoice_operation_date_role,
+    require_issuer_increase_election,
+    require_issuer_minoracion_election,
     require_rectification_cause,
     require_rectification_direction,
     require_rectification_method,
@@ -147,6 +151,20 @@ _ENUM_FIELD_RULES: Final[tuple[_EnumFieldRule, ...]] = (
         absent_when_blank=True,
         normalise=str.strip,
     ),
+    _EnumFieldRule(
+        "issuer_increase_election",
+        IssuerIncreaseElection,
+        "issuer_increase_election must be an IssuerIncreaseElection",
+        absent_when_blank=True,
+        normalise=str.strip,
+    ),
+    _EnumFieldRule(
+        "issuer_minoracion_election",
+        IssuerMinoracionElection,
+        "issuer_minoracion_election must be an IssuerMinoracionElection",
+        absent_when_blank=True,
+        normalise=str.strip,
+    ),
 )
 
 _STRING_FIELD_RULES: Final[tuple[_StringFieldRule, ...]] = (
@@ -201,6 +219,10 @@ def _coerce_enum_value(rule: _EnumFieldRule, text: str, *, effective_date: date 
         return require_rectification_cause(text, effective_date=effective_date)
     if rule.enum is RectificationDirection:
         return require_rectification_direction(text, effective_date=effective_date)
+    if rule.enum is IssuerIncreaseElection:
+        return require_issuer_increase_election(text, effective_date=effective_date)
+    if rule.enum is IssuerMinoracionElection:
+        return require_issuer_minoracion_election(text, effective_date=effective_date)
     return require_invoice_operation_date_role(text, effective_date=effective_date)
 
 
@@ -212,6 +234,8 @@ _DATED_ENUMS: Final = (
     RectificationMethod,
     RectificationCause,
     RectificationDirection,
+    IssuerIncreaseElection,
+    IssuerMinoracionElection,
 )
 
 

@@ -492,6 +492,10 @@ class LedgerIssuePayload(OutputSchema):
     transaction_id: TransactionId
     reason: str
     detail: IssueDetail
+    missing_facts: list[str] = []
+    derived_modification_base: str | None = None
+    derived_modification_cuota: str | None = None
+    derived_modification_recargo: str | None = None
 
 
 class ModeloReadinessResult(OutputSchema):

@@ -54,6 +54,7 @@
             "business_pct": null,
             "category_id": null,
             "classification_confidence": null,
+            "classification_decided_by": "auto",
             "classification_reason": "",
             "classified_at": null,
             "classified_by": "auto",
@@ -66,6 +67,7 @@
             "deduction_fact_kind": null,
             "description": "Wrong import",
             "direction": "OUTGOING",
+            "figures_derived": false,
             "fx_rate": null,
             "gasto_capital_inmobiliario": null,
             "inmueble_ref": null,
@@ -202,7 +204,7 @@
           "code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
           "context": {
             "effect": "none",
-            "operation_id": "1b6541feb4d5f7aee11efd4cc090065d2232515859ce69158f950f7947b5399d",
+            "operation_id": "cb7ddb4125bacc28ad4097792911fd8d8d1393c70a2e22c91a3fd7334499626e",
             "reason": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             "refusal_code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             "terminal_condition": "refused"

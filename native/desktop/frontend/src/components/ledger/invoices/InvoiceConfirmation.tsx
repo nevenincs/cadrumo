@@ -36,6 +36,13 @@ const FIELD_LABELS: Record<InvoiceUpdateField, string> = {
   rectification_cause: "rectification_cause",
   rectification_direction: "rectification_direction",
   document_received_on: "document_received_on",
+  issuer_increase_election: "issuer_increase_election",
+  issuer_minoracion_election: "issuer_minoracion_election",
+  issuer_minoracion_regularisation_period:
+    "issuer_minoracion_regularisation_period",
+  recipient_increase_period: "recipient_increase_period",
+  art_80_tres_obligations_attested: "art_80_tres_obligations_attested",
+  exercised_deduction_period: "exercised_deduction_period",
   payment_id: "payment_id",
   declared_fx_rate: "fx_rate",
 };
@@ -121,6 +128,12 @@ export function Confirmation({
       case "rectification_cause":
       case "rectification_direction":
       case "document_received_on":
+      case "issuer_increase_election":
+      case "issuer_minoracion_election":
+      case "issuer_minoracion_regularisation_period":
+      case "recipient_increase_period":
+      case "art_80_tres_obligations_attested":
+      case "exercised_deduction_period":
         // The window's correction draft has no field for these yet, so it
         // never lists their change; the CLI and the operation carry them.
         return "";

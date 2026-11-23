@@ -207,6 +207,19 @@ class InvoiceAddRequest(BaseModel):
     #: When the recipient received the rectificativa (LIVA art. 114.Dos); a
     #: received-side fact the invoice refuses on an issued one.
     document_received_on: date | None = None
+    #: The elections and the attestation LIVA art. 89.Cinco, art. 114.Dos and
+    #: art. 80.Tres leave the taxpayer. Each is recorded, never made: the
+    #: declaration refuses naming the one it needs rather than choosing a
+    #: route. The elections travel as stable tokens and each elected period as
+    #: the canonical ``"YYYY <code>"`` display form of
+    #: :class:`~cadrumo.core.period.Period`, which the boundary parses; a
+    #: combined calendar string is refused there.
+    issuer_increase_election: str | None = Field(default=None, min_length=1, max_length=128)
+    issuer_minoracion_election: str | None = Field(default=None, min_length=1, max_length=128)
+    issuer_minoracion_regularisation_period: str | None = Field(default=None, min_length=1, max_length=32)
+    recipient_increase_period: str | None = Field(default=None, min_length=1, max_length=32)
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: str | None = Field(default=None, min_length=1, max_length=32)
     recargo_amount: PublicDecimal | None = None
     business_premises_lease: InvoiceAddBusinessPremisesLease | None = None
     lines: tuple[InvoiceAddLine, ...] = ()

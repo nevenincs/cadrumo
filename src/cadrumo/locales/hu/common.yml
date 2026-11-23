@@ -106,6 +106,10 @@ aggregation:
         pótlék közé.
       rectification_consumed_more_than_once: Egy már helyesbített IVA-tétel csak egyszer
         helyesbíthető.
+      rectification_deduction_kind_ambiguous: A levonási katalógus nem pontosan egy
+        levonástípust nevez meg a levonások helyesbítéséhez (%{kind_count} található).
+        Javítsd a katalógust, mielőtt helyesbítő számlát (factura rectificativa) vallanál
+        be.
       sectorized_apportionment_duplicate_sectors: A szektorizált áfa-megosztás ugyanazt
         a szektort többször deklarálja.
       sectorized_especial_missing_input_classification: A szektorizált különleges
@@ -4378,8 +4382,10 @@ desktop:
       invoice_deduction_family_unresolved: Levonás
       invoice_recargo_not_declarable: Pótlék
       invoice_recargo_split_unresolved: Pótlék
+      invoice_rectificativa_deduction_row_undeclarable: Helyesbített levonás
+      invoice_rectificativa_issued_modification_unbound: Kiállított helyesbítés
       invoice_rectificativa_modification_unmodelled: Helyesbítő
-      invoice_rectificativa_period_undecided: Helyesbítő időszak
+      invoice_rectificativa_period_needs_fact: Helyesbítés időszaka
       invoice_used_goods_margin_unmodelled: Használt cikkek
       linked_movement_contradicts_invoice: Számla
       missing_business_classification: Besorolás
@@ -4410,10 +4416,14 @@ desktop:
         illeti meg
       invoice_recargo_not_declarable: A pótlék nem a törvényes kulcs az adóalapján
       invoice_recargo_split_unresolved: A pótlék nem osztható fel az áfakulcsai között
+      invoice_rectificativa_deduction_row_undeclarable: A helyesbített számla nem
+        egyetlen tétel, vagy egy sornak nincs levonható adója
+      invoice_rectificativa_issued_modification_unbound: Írd be te a módosítást a
+        Modelo 303 rubrikáiba
       invoice_rectificativa_modification_unmodelled: Add meg, hogyan adja meg az összegeit,
         és melyik számlát váltja fel
-      invoice_rectificativa_period_undecided: A helyesbítés már levezetve; az időszaka
-        a jogcímtől és a te választásodtól függ
+      invoice_rectificativa_period_needs_fact: A helyesbítés ismert; az időszaka az
+        októl és a te választásodtól függ
       invoice_used_goods_margin_unmodelled: Add meg az árrés adóalapját és adóját
         a kulcsához tartozó fizetendő áfa mezőkben
       linked_movement_contradicts_invoice: Eltér a számlájától

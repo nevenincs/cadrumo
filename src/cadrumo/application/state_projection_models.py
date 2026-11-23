@@ -356,10 +356,22 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_MODIFICATION_UNMODELLED: (
             OperatorActionAxis.SUPPLY_MANUAL_INPUT
         ),
-        # Nothing is missing from the record and nothing contradicts: the
-        # modification is derived and waits on the period its side and cause
-        # place it in, which is a review, not a field to fill.
-        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_UNDECIDED: OperatorActionAxis.REVIEW_ADVISORY,
+        # The modification is derived and the period rule names the invoice
+        # field that places it: the election LIVA art. 89.Cinco or
+        # art. 114.Dos leaves the taxpayer, or the art. 80.Tres attestation.
+        # Each is a field the person fills in, not a divergence to resolve.
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_PERIOD_NEEDS_FACT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        # The invoice the modification corrects resolves to no single record,
+        # or a row has no deducible cuota: both are corrections to the records.
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_DEDUCTION_ROW_UNDECLARABLE: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+        ),
+        # Nothing is missing from the record: this Modelo 303 edition takes
+        # casillas 14 and 15 as operator input, so the remaining act is the
+        # person's own review of the return.
+        LedgerPreflightIssueReason.INVOICE_RECTIFICATIVA_ISSUED_MODIFICATION_UNBOUND: (
+            OperatorActionAxis.REVIEW_ADVISORY
+        ),
         LedgerPreflightIssueReason.INVOICE_USED_GOODS_MARGIN_UNMODELLED: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },
 )

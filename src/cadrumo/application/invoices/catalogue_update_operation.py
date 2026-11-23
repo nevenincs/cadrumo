@@ -15,6 +15,7 @@ from ...core.aggregation import IntracomOperationType
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
+from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
@@ -62,12 +63,28 @@ class InvoiceUpdateValues(BaseModel):
     rectification_cause: str | None = Field(default=None, min_length=1)
     rectification_direction: str | None = Field(default=None, min_length=1)
     document_received_on: date | None = None
+    #: The recorded elections and the art. 80.Tres attestation. Each elected
+    #: period crosses the wire as the canonical ``"YYYY <code>"`` display form
+    #: of :class:`~cadrumo.core.period.Period`, the way every other typed value
+    #: here travels in its wire-safe shape.
+    issuer_increase_election: str | None = Field(default=None, min_length=1)
+    issuer_minoracion_election: str | None = Field(default=None, min_length=1)
+    issuer_minoracion_regularisation_period: str | None = Field(default=None, min_length=1)
+    recipient_increase_period: str | None = Field(default=None, min_length=1)
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: str | None = Field(default=None, min_length=1)
     payment_id: str | None = None
     declared_fx_rate: PublicDecimal | None = None
 
 
 #: The correction fields that cross the wire as explicit decimals.
 _DECIMAL_FIELDS = ("retention_rate", "retention_amount", "declared_fx_rate")
+#: The correction fields that cross the wire as a period's display form.
+_PERIOD_FIELDS = (
+    "issuer_minoracion_regularisation_period",
+    "recipient_increase_period",
+    "exercised_deduction_period",
+)
 
 
 class InvoiceUpdatePatch(BaseModel):
@@ -93,6 +110,10 @@ class InvoiceUpdatePatch(BaseModel):
             value = values.get(name)
             if value is not None:
                 values[name] = PublicDecimal(decimal=str(value))
+        for name in _PERIOD_FIELDS:
+            period = getattr(patch, name)
+            if period is not None:
+                values[name] = str(period)
         return cls(values=InvoiceUpdateValues.model_validate(values), fields=frozenset(patch.model_fields_set))
 
     def to_patch(self) -> CatalogueInvoicePatch:
@@ -102,6 +123,10 @@ class InvoiceUpdatePatch(BaseModel):
             value = getattr(self.values, name)
             if name in self.fields and value is not None:
                 values[name] = Decimal(value.decimal)
+        for name in _PERIOD_FIELDS:
+            displayed = getattr(self.values, name)
+            if name in self.fields and displayed is not None:
+                values[name] = Period.from_string(displayed)
         return CatalogueInvoicePatch.model_validate(values)
 
 
