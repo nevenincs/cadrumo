@@ -260,7 +260,7 @@ def test_the_nif_pool_edges_admit_the_last_member_and_refuse_the_next_value(tmp_
 @pytest.mark.parametrize(
     ("value", "shape"),
     [
-        ("00000001R", "nif"),
+        ("00001000B", "nif"),
         ("X0000001A", "nie"),
         ("K0000001A", "prefixed_nif"),
         ("A0000001B", "cif"),

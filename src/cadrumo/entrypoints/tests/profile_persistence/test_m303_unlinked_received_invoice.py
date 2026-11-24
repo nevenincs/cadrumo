@@ -175,7 +175,7 @@ def _seed_quarter(
             bucket_id=_BUCKET,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Asesoría Ejemplo SLP",
-            counterparty_tax_id="B81000069",
+            counterparty_tax_id="B00010041",
             counterparty_country="ES",
             invoice_number="SLP-2026-QA1",
             issued_at=date(_YEAR, 2, 10),

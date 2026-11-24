@@ -97,7 +97,7 @@ MEJORA_FIRST, MEJORA_SECOND = _on(6, 5, 1), _on(4, 3, 15)
 USOS = f"vivienda_habitual:{USE_FROM}:{USE_TO};disposicion_propietario:{USE_LATER}:"
 VALORES = f"{IBI_FIRST}:80000.00:48000.00:{VIGOR};{IBI_SECOND}:82000.50:49000.00"
 MEJORAS = f"{MEJORA_FIRST}:1500.00;{MEJORA_SECOND}:320.25"
-INQUILINOS = f"{TENANT}:18_35:no;X1234567L:otra:si"
+INQUILINOS = f"{TENANT}:18_35:no;X0001000B:otra:si"
 
 
 @dataclass
@@ -348,7 +348,7 @@ def test_each_packed_field_is_served_as_parts_beside_its_unchanged_text(world: _
     tenants = [part for part in inquilinos.field.parts or () if isinstance(part, ProfileFieldInquilinoPart)]
     assert [(part.nif, part.franja_edad, part.extranjero) for part in tenants] == [
         (TENANT, "18_35", False),
-        ("X1234567L", "otra", True),
+        ("X0001000B", "otra", True),
     ]
     assert all(part.franja_edad_words for part in tenants)
     assert [choice.value for choice in inquilinos_spec.sub_fields[2].choices] == ["true", "false"]
@@ -462,7 +462,7 @@ def test_parts_stated_on_an_add_land_beside_the_text_of_the_other_fields(world: 
         parts=_parts(
             "inquilinos",
             ProfileRowInquilinoValues(nif=TENANT.lower(), franja_edad="18_35", extranjero=False),
-            ProfileRowInquilinoValues(nif="X1234567L", franja_edad="otra", extranjero=True),
+            ProfileRowInquilinoValues(nif="X0001000B", franja_edad="otra", extranjero=True),
         ),
     )
 

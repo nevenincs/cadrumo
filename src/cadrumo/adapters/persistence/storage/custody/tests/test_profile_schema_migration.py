@@ -402,7 +402,7 @@ def test_a_schema_10_record_carrying_a_modelo_200_page_002_path_is_refused(
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
 ) -> None:
     """Schema 10 declared no Modelo 200 page 002 section, so a schema-10 row carrying one was forged."""
-    value: object = False if path.startswith("m200_relaciones.") else "Y0000000Z"
+    value: object = False if path.startswith("m200_relaciones.") else "Y0001001A"
     stored = _publish_legacy(
         tmp_path, contexts, (*_UNTOUCHED_FACTS, UserProfileFact(path=path, value=value)), version=10
     )

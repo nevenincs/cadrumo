@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000810"
 _CLOCK = datetime(1980, 5, 21, 10, 0, tzinfo=UTC)
-_NIF = "00000001R"
+_NIF = "00001001N"
 _ACTIONS = {"verify": "modelo.work.verify", "file": "modelo.work.file", "export": "modelo.export"}
 _MINIMUM_FACTS = {
     "convivientes": "1",

@@ -836,7 +836,7 @@ def test_a_lease_that_does_not_take_the_reduction_is_served_as_not_reached(world
                 "zona_tensionada": "true",
                 "incumple_lau_17_6": "false",
                 "primer_arrendamiento_vivienda": "true",
-                "inquilinos": "12345678z:18_35:no;87654321x:otra:no",
+                "inquilinos": "12345678z:18_35:no;00001001n:otra:no",
             },
             RentalReductionRefusal.MIXED_TENANT_AGES,
             "inquilinos",

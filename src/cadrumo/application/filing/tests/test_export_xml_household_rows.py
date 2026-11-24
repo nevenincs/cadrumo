@@ -38,7 +38,7 @@ _CLOCK = datetime(1980, 5, 21, 10, 0, tzinfo=UTC)
 _CHILD = "DatosIdentificativos/Hijos/Hijo"
 _ASCENDANT = "DatosIdentificativos/Ascendientes/Ascendiente"
 _CHILD_NIF = "00000000T"
-_ASCENDANT_NIF = "00000001R"
+_ASCENDANT_NIF = "00001001N"
 
 
 def _household(year: int, *, ascendant_nif: str | None) -> tuple[UserProfileFact, ...]:

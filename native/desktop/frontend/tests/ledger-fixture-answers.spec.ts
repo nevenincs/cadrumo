@@ -134,7 +134,7 @@ test("a missing field and an unserved field both fail the check", () => {
   ).toEqual(["ledger.counterparty.extra: not served"]);
 });
 
-const TAX = "B12345674";
+const TAX = "B00010009";
 /** Requests that carry no year, edition or tax fact of their own. */
 const ASKS: [LedgerDefinitionId, JsonObject][] = [
   ["ledger.counterparty", { action: "view", tax_identifier: TAX }],

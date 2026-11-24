@@ -119,7 +119,7 @@ def _invoice(
             "invoice_number": number,
             "issued_at": day,
             "counterparty_name": f"Cliente {number}",
-            "counterparty_tax_id": "B81000010" if country == "ES" else "DE123456788",
+            "counterparty_tax_id": "B00010025" if country == "ES" else "DE123456788",
             "counterparty_country": country,
             "bucket_id": BUCKET,
             "base_total": base,

@@ -8,7 +8,7 @@
         "apoderado",
         "configure",
         "--represented-nif",
-        "11111111H",
+        "00001000B",
         "--scope",
         "IVA",
         "--scope",

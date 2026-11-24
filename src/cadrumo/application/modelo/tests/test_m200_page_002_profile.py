@@ -39,8 +39,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "5d0c7e1b-3a64-4f8e-b2a9-6c1d9e4f7a30"
 _AT = datetime.fromtimestamp(0, tz=UTC)
-_ADMINISTRADOR_NIF = "Y0000000Z"
-_SOCIO_NIF = "Y0000001S"
+_ADMINISTRADOR_NIF = "Y0001001A"
+_SOCIO_NIF = "Y0001002G"
 _ANSWERED_NONE = (
     "has_secretario_consejo",
     "has_participacion_directa",

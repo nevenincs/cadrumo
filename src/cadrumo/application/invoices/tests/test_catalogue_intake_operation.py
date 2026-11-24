@@ -790,7 +790,7 @@ def test_preview_with_canonical_headers_never_asks_the_model(
     path = tmp_path / "canonical.csv"
     path.write_bytes(
         b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,extra\n"
-        b"B00000281,Supplier,BOOK-1,2026-05-01,100.00,x\n"
+        b"B00010017,Supplier,BOOK-1,2026-05-01,100.00,x\n"
     )
 
     def must_not_ask(_headers):

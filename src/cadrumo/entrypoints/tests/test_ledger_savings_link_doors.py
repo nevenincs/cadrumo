@@ -65,7 +65,7 @@ _YEAR = filing_year_envelope().horizon
 _DEPOSIT = "0"
 _SECURITIES = "1"
 _POSITION = _DEPOSIT
-_PAYER = "B00000000"
+_PAYER = "B00010009"
 _REFUSED = (TransactionValidationError, ValidationError)
 _LINK_FIELDS = ("business_classification", "irpf_category", "posicion_ref", "concepto_capital_mobiliario")
 

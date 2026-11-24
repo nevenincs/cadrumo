@@ -319,7 +319,7 @@ def _retencion_texts(**overrides: str) -> dict[str, str]:
         "profile_id": str(_PROFILE_ID),
         "ejercicio": "2025",
         "income_class": "trabajo",
-        "payer_tax_id": "A58818501",
+        "payer_tax_id": "A00010025",
         "importe_integro_dinerario": "12000,50",
         "valoracion_especie": "0",
         "retencion": "1.234,56",

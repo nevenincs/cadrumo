@@ -39,7 +39,7 @@ _CUOTA_BEARING_MODELO = "130"
 
 def _attribution_entity_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="E00000000",
+        tax_id="E00010017",
         entity_type=entity_type_attribution_entity_token(),
         iva_regime=IVARegime("GENERAL"),
     )
