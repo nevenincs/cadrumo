@@ -184,7 +184,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "985fb5e83f136597e6b6f7a9a61e2e2a030a5c3281c0332d7045c4945ad53e25"
+          "value": "aa7b68d197f9cc8ae85ae89d8479df9e31ced5aed45a4ce1ca0ef1a1815a72c3"
         }
       ],
       "envelope": {
@@ -448,7 +448,7 @@
             "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": "0",
             "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": "0"
           },
-          "calculation_revision_id": "985fb5e83f136597e6b6f7a9a61e2e2a030a5c3281c0332d7045c4945ad53e25",
+          "calculation_revision_id": "aa7b68d197f9cc8ae85ae89d8479df9e31ced5aed45a4ce1ca0ef1a1815a72c3",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -5678,7 +5678,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 985fb5e83f136597e6b6f7a9a61e2e2a030a5c3281c0332d7045c4945ad53e25 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision aa7b68d197f9cc8ae85ae89d8479df9e31ced5aed45a4ce1ca0ef1a1815a72c3 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {"contributor_binding_source":"retencion_soportada","contributor_source_kind":"retencion_soportada","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"retencion_soportada","resolver_id":"retencion_soportada","source_ref":"retencion-soportada:2025:trabajo:03db3aff10f31f9bc6be483d4dae776ac1f39a4bc8b5139b29a5592c96bf7e47"},
             {"contributor_binding_source":"retencion_soportada","contributor_source_kind":"retencion_soportada","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"retencion_soportada","resolver_id":"retencion_soportada","source_ref":"profile:<profile-id>:taxpayer_type.irpf_income_categories:2025:capital_mobiliario"},
@@ -5762,7 +5762,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "stated_revision_id",
-          "value": "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829"
+          "value": "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c"
         }
       ],
       "envelope": {
@@ -5780,11 +5780,11 @@
         "result": {
           "applied": true,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829",
+          "calculation_revision_id": "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c",
           "filing_year": 2025,
           "findings": [],
           "modelo": "100",
-          "receipt_id": "af2c01282de4905c20fcee12416c5f704ea3af2c64fabfc9217ec6e93cb24fcc",
+          "receipt_id": "60c7a398720c19a719d8011bf81d9fe588aebb6152277d29bbee07a6351320a0",
           "statements": [
             {
               "action_words": "I have no employer contributions or protected-estate contributions to state",
@@ -5819,7 +5819,7 @@
         "modelo",
         "work",
         "verify",
-        "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829"
+        "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c"
       ],
       "captures": [],
       "envelope": {
@@ -5964,7 +5964,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "3e032bff280f942283c623547f638fd2669fa0b483476d923eb31a53f11be829",
+          "calculation_revision_id": "3f3531ad0322f090fc5448ba17c92ba981a0a1666121f3495909a5aeaecc428c",
           "completeness_status": "complete",
           "findings": [
             {
@@ -6044,7 +6044,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "42c6d5d4e4cd8ec6cdb8c46b92c0e4c47b5bac3701667d3e6aa7047f8d2d53cc",
+          "verification_report_id": "9612660e6bd1f825e2ce9c81c94c16aa1f1a399fb79ca34461f0a6280d91288a",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

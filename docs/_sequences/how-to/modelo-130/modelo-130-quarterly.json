@@ -405,7 +405,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "38982789fe5590f09ad6f940969a3352b8d88e1f508841529374b529d152a94c"
+          "value": "883d206b8522d04e43d4eca9ef0c88014f0afbb67098a5ac78a9d7899ed117e9"
         }
       ],
       "envelope": {
@@ -433,7 +433,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "38982789fe5590f09ad6f940969a3352b8d88e1f508841529374b529d152a94c",
+          "calculation_revision_id": "883d206b8522d04e43d4eca9ef0c88014f0afbb67098a5ac78a9d7899ed117e9",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -583,7 +583,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 38982789fe5590f09ad6f940969a3352b8d88e1f508841529374b529d152a94c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 883d206b8522d04e43d4eca9ef0c88014f0afbb67098a5ac78a9d7899ed117e9 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -669,7 +669,7 @@
         "modelo",
         "work",
         "verify",
-        "38982789fe5590f09ad6f940969a3352b8d88e1f508841529374b529d152a94c"
+        "883d206b8522d04e43d4eca9ef0c88014f0afbb67098a5ac78a9d7899ed117e9"
       ],
       "captures": [],
       "envelope": {
@@ -717,7 +717,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "38982789fe5590f09ad6f940969a3352b8d88e1f508841529374b529d152a94c",
+          "calculation_revision_id": "883d206b8522d04e43d4eca9ef0c88014f0afbb67098a5ac78a9d7899ed117e9",
           "completeness_status": "complete",
           "findings": [
             {
@@ -763,7 +763,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "834f92420e6498e27ec9297231b6cc21551045086bc0af68d760f00d2275d4e4",
+          "verification_report_id": "5771f85b60a559448260620c857ca508266cc868d1c19230c463582ddbcf2b75",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
