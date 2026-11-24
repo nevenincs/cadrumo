@@ -1166,6 +1166,8 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.providers.saved_unread",
         "desktop.providers.saving",
         "desktop.providers.sign_in_action",
+        "desktop.providers.sign_in_agent_still_running",
+        "desktop.providers.sign_in_agent_stopping",
         "desktop.providers.sign_in_busy",
         "desktop.providers.sign_in_cancel",
         "desktop.providers.sign_in_cancel_failed",

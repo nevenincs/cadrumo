@@ -201,11 +201,12 @@ export type ProviderSignInFixtureControls = {
     reason: ProviderSignInFixtureFailure,
     detail?: ProviderSignInFixtureDetail,
   ) => void;
-  /** The next start is refused: it rejects with `code` and `detail`, and no
-   * attempt is made. */
+  /** The next `times` starts (one unless given) are refused: each rejects
+   * with `code` and `detail`, and no attempt is made. */
   rejectNextStart: (
     code: string,
     detail?: ProviderSignInFixtureRefusal,
+    times?: number,
   ) => void;
   /** Which providers the service declares GUI sign-in for. */
   offerSignIn: (providers: readonly string[]) => void;
@@ -279,6 +280,7 @@ let completeDeferredStart: (() => void) | null = null;
 let rejectNextStart: {
   code: string;
   detail: ProviderSignInFixtureRefusal;
+  times: number;
 } | null = null;
 let fixtureSignInProviders: readonly string[] = FIXTURE_SIGN_IN_PROVIDERS;
 let pendingSignInReads = 0;
@@ -485,8 +487,8 @@ export function providerSettingsFixture({
       failNextDetail = detail;
       say(`providerSignInFailureQueued ${reason}`);
     },
-    rejectNextStart(code, detail = {}) {
-      rejectNextStart = { code, detail };
+    rejectNextStart(code, detail = {}, times = 1) {
+      rejectNextStart = { code, detail, times };
       say(`providerSignInRefusalQueued ${code}`);
     },
     offerSignIn(providers) {
@@ -671,7 +673,8 @@ export function providerSettingsFixture({
       if (!readable()) throw coded("not_signed_in");
       if (rejectNextStart) {
         const refusal = rejectNextStart;
-        rejectNextStart = null;
+        rejectNextStart =
+          refusal.times > 1 ? { ...refusal, times: refusal.times - 1 } : null;
         await wait();
         say(`providerSignInRefusalReturned ${refusal.code}`);
         throw coded(refusal.code, refusal.detail);

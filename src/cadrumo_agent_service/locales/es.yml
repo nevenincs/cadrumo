@@ -595,6 +595,10 @@ desktop:
     saved_unread: Guardado, pero no se ha podido leer su estado. Vuelve a intentarlo.
     saving: Guardando…
     sign_in_action: Iniciar sesión
+    sign_in_agent_still_running: El agente aún no se ha detenido, así que no se ha
+      podido iniciar sesión en {provider}. Vuelve a intentarlo dentro de un momento.
+    sign_in_agent_stopping: Cadrumo está deteniendo el agente para iniciar sesión
+      en {provider}. El inicio de sesión seguirá solo en cuanto se haya detenido.
     sign_in_busy: Otro inicio de sesión de {provider} aún está terminando. Espera
       un momento y vuelve a intentarlo.
     sign_in_cancel: Cancelar el inicio de sesión

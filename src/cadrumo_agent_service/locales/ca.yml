@@ -596,6 +596,10 @@ desktop:
     saved_unread: Desat, però no se n'ha pogut llegir l'estat. Torna-ho a provar.
     saving: S'està desant…
     sign_in_action: Inicia la sessió
+    sign_in_agent_still_running: L'agent encara no s'ha aturat, així que no s'ha pogut
+      iniciar la sessió a {provider}. Torna-ho a provar d'aquí a un moment.
+    sign_in_agent_stopping: Cadrumo està aturant l'agent per iniciar la sessió a {provider}.
+      L'inici de sessió continuarà sol quan s'hagi aturat.
     sign_in_busy: Un altre inici de sessió de {provider} encara s'està acabant. Espera
       un moment i torna-ho a provar.
     sign_in_cancel: Cancel·la l'inici de sessió

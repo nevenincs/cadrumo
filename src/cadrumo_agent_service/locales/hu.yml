@@ -592,6 +592,10 @@ desktop:
     saved_unread: Mentve, de az állapota nem olvasható. Próbáld újra.
     saving: Mentés…
     sign_in_action: Bejelentkezés
+    sign_in_agent_still_running: Az ügynök még nem állt le, ezért a(z) {provider}-bejelentkezés
+      nem indult el. Próbáld újra egy kicsit később.
+    sign_in_agent_stopping: A Cadrumo leállítja az ügynököt a(z) {provider}-bejelentkezéshez.
+      A bejelentkezés magától folytatódik, amint az ügynök leállt.
     sign_in_busy: Egy másik {provider}-bejelentkezés még folyamatban van. Várj egy
       kicsit, majd próbáld újra.
     sign_in_cancel: Bejelentkezés megszakítása

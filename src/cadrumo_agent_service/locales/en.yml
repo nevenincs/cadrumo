@@ -579,6 +579,10 @@ desktop:
     saved_unread: Saved, but its status couldn't be read. Try again.
     saving: Saving…
     sign_in_action: Sign in
+    sign_in_agent_still_running: The agent has not stopped yet, so {provider} sign-in
+      could not start. Try again in a moment.
+    sign_in_agent_stopping: Cadrumo is stopping the agent to sign in to {provider}.
+      Sign-in continues on its own once it has stopped.
     sign_in_busy: Another {provider} sign-in is still finishing. Wait a moment, then
       try again.
     sign_in_cancel: Cancel sign-in

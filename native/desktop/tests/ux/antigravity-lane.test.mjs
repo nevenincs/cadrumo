@@ -203,6 +203,14 @@ function pageDialog() {
     nextSteps: [...dialog.querySelectorAll('[role="alert"][data-next-step]')]
       .filter(shown)
       .map((el) => el.getAttribute("data-next-step")),
+    // The window's own progress while the agent is stopped for the sign-in.
+    stopping: [
+      ...dialog.querySelectorAll(
+        '[role="status"][data-slot="sign-in-agent-stopping"]',
+      ),
+    ]
+      .filter(shown)
+      .map((el) => el.getAttribute("data-cause")),
     buttons: [...dialog.querySelectorAll('[data-slot="dialog-footer"] button')]
       .filter(shown)
       .map((el) => text(el.textContent)),
@@ -570,14 +578,23 @@ test(
       "desktop.providers.sign_in_code_prompt",
     ].map((key) => norm(label(key)));
     // A terminal sign-in first retires the running agent: the attempt is
-    // answered busy for the running agent, and once the dialog has
-    // prepared the retry it offers the retry button, which a person presses.
+    // answered busy for the running agent, the dialog says so as progress and
+    // starts again on its own once the agent is gone. Only when its own
+    // retries pass their bound does it offer the retry button, which a person
+    // presses.
     const retryWords = label("desktop.providers.sign_in_retry");
     let retries = 0;
+    let sawStopping = false;
     const step = await waitFor(
       async () => {
         const now = await exec(pageDialog);
         if (!now.open) return null;
+        if (now.stopping.length > 0 && !sawStopping) {
+          sawStopping = true;
+          t.diagnostic(
+            `antigravity sign-in waits for the agent to stop: ${JSON.stringify(now.stopping)}`,
+          );
+        }
         if (
           now.alerts.length > 0 &&
           now.causes.length > 0 &&

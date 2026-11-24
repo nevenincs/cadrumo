@@ -28,6 +28,11 @@ def new_log_ref() -> str:
     return str(uuid4())
 
 
+_EXPECTED_STEP_CAUSES: frozenset[str] = frozenset({"agent_tree_running"})
+"""Causes that are a step of a sign-in on its way rather than a fault: the tree is being retired for a terminal login
+and the window tries again on its own once it is gone, so the refusal is logged at info."""
+
+
 def refuse(
     code: ServiceRefusalCode | ProviderSettingsRefusalCode,
     *,
@@ -36,13 +41,16 @@ def refuse(
     error: BaseException | None = None,
     base: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Log a refusal at warning and serve it with its closed cause and log reference.
+    """Log a refusal and serve it with its closed cause and log reference.
+
+    A refusal is logged at warning, except one whose cause is an expected step of a sign-in on its way, at info.
 
     ``base`` is an answer that already names the refusal and keeps its shape. Only
     the exception's class name is logged: its message can carry provider output.
     """
     log_ref = new_log_ref()
-    _LOGGER.warning(
+    _LOGGER.log(
+        logging.INFO if cause in _EXPECTED_STEP_CAUSES else logging.WARNING,
         "provider sign-in refused provider=%s code=%s cause=%s error_class=%s log_ref=%s",
         provider or "none",
         code,

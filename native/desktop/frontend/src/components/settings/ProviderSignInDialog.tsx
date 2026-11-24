@@ -54,6 +54,13 @@ const OBSERVE_MS = 1_000;
  * attempt is given up and the failure is said, rather than waited out until
  * the attempt's lifetime ends. */
 const STATUS_MISSES = 5;
+/** How far apart, and for how long in all, a start refused while the agent
+ * is being stopped for a terminal sign-in is tried again on its own: the
+ * service retires the agent and refuses until it is gone, so the window asks
+ * again with the freshly read revision, and after the bound it offers the
+ * person's own retry. */
+const AGENT_STOP_RETRY_MS = 3_000;
+const AGENT_STOP_WAIT_MS = 60_000;
 const TRANSIENT_STATUS_FAILURES = new Set([
   "read_failed",
   "timed_out",
@@ -165,6 +172,14 @@ function rejectionOf(
  * this bounded attempt after transient bridge/runtime errors. */
 function canRetryStatus(error: unknown): boolean {
   return TRANSIENT_STATUS_FAILURES.has(failureCode(error));
+}
+
+/** A start the service refused because it is stopping the agent for this
+ * terminal sign-in: an expected step, not a fault. */
+function agentStopping(failure: Failure | null): boolean {
+  return (
+    failure?.code === "busy" && failure.detail.cause === "agent_tree_running"
+  );
 }
 
 function snapshotFailureCode(
@@ -322,11 +337,15 @@ function snapshotOf(
 
 function failureWords(
   t: Translate,
-  code: ProviderSignInFailureCode,
+  failure: Failure,
   providerName: string,
   method: ProviderSignInMethod | null,
 ): string {
-  switch (code) {
+  if (agentStopping(failure))
+    return t("desktop.providers.sign_in_agent_still_running", {
+      provider: providerName,
+    });
+  switch (failure.code) {
     case "not_signed_in":
     case "signed_out":
     case "profile_required":
@@ -464,6 +483,10 @@ export function ProviderSignInDialog({
   const [retryState, setRetryState] = useState<
     "idle" | "checking" | "ready" | "unavailable"
   >("idle");
+  /** The window is trying a start again on its own while the agent stops. */
+  const [awaitingStop, setAwaitingStop] = useState(false);
+  /** When the first refusal of this run of retries came, for its bound. */
+  const stopWaitSince = useRef<number | null>(null);
   const currentAttempt = useRef<string | null>(null);
   const generation = useRef(0);
   const deadline = useRef(0);
@@ -703,9 +726,13 @@ export function ProviderSignInDialog({
   const start = async (
     nextMethod: ProviderSignInMethod,
     nextRevision = revision,
+    /** The window's own retry while the agent stops: what is shown stays as
+     * it is until the service answers. */
+    afterStop = false,
   ) => {
     if (starting || currentAttempt.current) return;
     const mine = ++generation.current;
+    if (!afterStop) stopWaitSince.current = null;
     openedAttempt.current = null;
     clearedAttempt.current = null;
     submittedAttempt.current = null;
@@ -714,7 +741,10 @@ export function ProviderSignInDialog({
     setSubmitting(false);
     setMethod(nextMethod);
     setStarting(true);
-    setFailure(null);
+    if (!afterStop) {
+      setFailure(null);
+      setAwaitingStop(false);
+    }
     setSnapshot(null);
     setRetryRevision(null);
     setRetryState("idle");
@@ -741,13 +771,24 @@ export function ProviderSignInDialog({
         return;
       }
       setStarting(false);
+      setAwaitingStop(false);
+      stopWaitSince.current = null;
       accept(next, mine);
     } catch (error) {
       if (mine !== generation.current) return;
       currentAttempt.current = null;
       setSnapshot(null);
       setStarting(false);
-      setFailure(rejectionOf(error));
+      const refused = rejectionOf(error);
+      setFailure(refused);
+      if (agentStopping(refused)) {
+        const now = Date.now();
+        stopWaitSince.current ??= now;
+        setAwaitingStop(now - stopWaitSince.current < AGENT_STOP_WAIT_MS);
+      } else {
+        stopWaitSince.current = null;
+        setAwaitingStop(false);
+      }
       deadline.current = 0;
       refreshAfterTerminal(true, mine);
     }
@@ -773,6 +814,25 @@ export function ProviderSignInDialog({
   useEffect(() => {
     if (snapshot?.event === "succeeded") close.current(false);
   }, [snapshot?.event]);
+
+  // While the service stops the agent for this sign-in, the start is asked
+  // again with the revision just read, a few seconds apart, until it is let
+  // through or the bound set when the first refusal came is passed.
+  useEffect(() => {
+    if (
+      !open ||
+      !awaitingStop ||
+      retryState !== "ready" ||
+      !retryRevision ||
+      method === null
+    )
+      return;
+    const timer = setTimeout(
+      () => void startCurrent.current(method, retryRevision, true),
+      AGENT_STOP_RETRY_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [awaitingStop, method, open, retryRevision, retryState]);
 
   const cancel = async () => {
     setCode("");
@@ -934,6 +994,13 @@ export function ProviderSignInDialog({
     terminalFailureReason && snapshot
       ? { code: snapshotFailureCode(snapshot), detail: detailOf(snapshot) }
       : failure;
+  // The agent is being stopped and the window tries again on its own: said
+  // as progress, not as a failure, unless a fresh revision cannot be read.
+  const stopping =
+    awaitingStop &&
+    retryState !== "unavailable" &&
+    shownFailure !== null &&
+    agentStopping(shownFailure);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -958,7 +1025,7 @@ export function ProviderSignInDialog({
               terminalSuccess || active || starting ? "polite" : undefined
             }
           >
-            {terminalSuccess
+            {terminalSuccess || stopping
               ? ""
               : starting
                 ? t("desktop.providers.sign_in_starting")
@@ -1015,7 +1082,25 @@ export function ProviderSignInDialog({
             {t("desktop.providers.sign_in_cancelled")}
           </p>
         )}
-        {shownFailure && (
+        {shownFailure && stopping && (
+          <p
+            role="status"
+            aria-live="polite"
+            data-slot="sign-in-agent-stopping"
+            data-reason={shownFailure.code}
+            data-cause={shownFailure.detail.cause}
+            data-next-step={shownFailure.detail.next_step}
+            data-status-cause={shownFailure.detail.status_cause}
+            data-log-ref={shownFailure.detail.log_ref}
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+          >
+            <Spinner className="size-4" />
+            {t("desktop.providers.sign_in_agent_stopping", {
+              provider: provider.name,
+            })}
+          </p>
+        )}
+        {shownFailure && !stopping && (
           <p
             role="alert"
             data-reason={shownFailure.code}
@@ -1025,10 +1110,10 @@ export function ProviderSignInDialog({
             data-log-ref={shownFailure.detail.log_ref}
             className="text-sm text-destructive"
           >
-            {failureWords(t, shownFailure.code, provider.name, method)}
+            {failureWords(t, shownFailure, provider.name, method)}
           </p>
         )}
-        {shownFailure && (
+        {shownFailure && !stopping && (
           <SignInAdvice
             causes={[
               shownFailure.detail.cause,
@@ -1050,7 +1135,7 @@ export function ProviderSignInDialog({
             </code>
           </p>
         )}
-        {retryState === "checking" && (
+        {retryState === "checking" && !stopping && (
           <p role="status" className="text-sm text-muted-foreground">
             {t("desktop.providers.sign_in_retry_checking")}
           </p>
@@ -1064,6 +1149,7 @@ export function ProviderSignInDialog({
         <DialogFooter>
           {retryRevision &&
             retryState === "ready" &&
+            !stopping &&
             !active &&
             method !== null &&
             methods.includes(method) && (
