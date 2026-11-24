@@ -47,7 +47,7 @@ from ...core.profile_session import ProfileRecordUnavailability, ProfileSessionR
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import active_profile_pointer_repair_verdict, no_action_precondition_verdict
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
-from ..user_profile.completeness import conditional_profile_missing_required, missing_required_field_paths
+from ..user_profile.completeness import profile_completeness_gaps
 from ..user_profile.custody_crypto_contracts import ProfileCustodyRecordIntegrityError
 from ..user_profile.keys_validation import validate_profile_values
 from ..user_profile.profile_keys import profile_keys
@@ -653,10 +653,7 @@ def assess_profile_record_health(
     # the key catalogue's gated-question notion instead is what made `status`
     # and `view` report different missing-field counts for one record.
     validation = validate_profile_values(values, operation=operation)
-    missing_required = (
-        *missing_required_field_paths(operation.profile_schema(), values),
-        *conditional_profile_missing_required(values),
-    )
+    missing_required = profile_completeness_gaps(operation.profile_schema(), values).paths
     status: ProfileHealthStatusValue = (
         ProfileHealthStatus.READY if not missing_required else ProfileHealthStatus.INCOMPLETE
     )

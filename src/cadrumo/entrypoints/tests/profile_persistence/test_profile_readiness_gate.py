@@ -13,8 +13,6 @@ from cadrumo.adapters.persistence.profile.calculation_observations import IvaWal
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    load_test_profile_record,
-    replace_test_profile_record,
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -102,16 +100,10 @@ def _seed_profile_record(record: UserProfileRecord) -> None:
         seed_test_profile_record(record)
 
 
-def _replace_profile_record(record: UserProfileRecord) -> UserProfileRecord:
-    """Replace one fixture record under the same pinned validation authority."""
-    with bundled_indexed_authority().operation():
-        return replace_test_profile_record(record)
-
-
 def _store_incomplete_profile(bucket_id: str) -> None:
     _seed_profile_record(
         create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=ProfileSetupState.INCOMPLETE,
             profile_id=bucket_id,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_NOW,
@@ -124,7 +116,7 @@ def _store_incomplete_profile(bucket_id: str) -> None:
 def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
     _seed_profile_record(
         create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=ProfileSetupState.INCOMPLETE,
             profile_id=bucket_id,
             facts=(),
             created_at=_NOW,
@@ -198,6 +190,7 @@ def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
                 UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
                 UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="DE"),
+                UserProfileFact(path="censo.large_company", value=False),
             ),
             created_at=_NOW,
             updated_at=_NOW,
@@ -237,6 +230,7 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
                 UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="GB"),
                 UserProfileFact(path="taxpayer_type.representante_fiscal_nif", value="12345678Z"),
                 UserProfileFact(path="taxpayer_type.representante_fiscal_nombre", value="Gestoria Madrid SL"),
+                UserProfileFact(path="censo.large_company", value=False),
             ),
             created_at=_NOW,
             updated_at=_NOW,
@@ -1042,7 +1036,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _seed_profile_record(
             create_user_profile_record(
-                setup_state=ProfileSetupState.COMPLETE,
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=_OPERATOR_PROFILE_ID,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
@@ -1062,8 +1056,6 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             period_code="1T",
             revision_id=_M303_2025_REVISION,
         )
-        record = load_test_profile_record(_OPERATOR_PROFILE_ID)
-        _replace_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,

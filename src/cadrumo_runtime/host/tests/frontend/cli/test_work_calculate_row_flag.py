@@ -195,6 +195,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--no-iva-cash-accounting-regime-enrolled",
                 "--no-iva-voluntary-sii-enrolled",
                 "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+                "--no-enrollment-large-company",
                 # A first-quarter Modelo 349 is the quarterly cadence, which holds while the
                 # intra-community operations stay at or under 50.000 EUR (RIVA art. 81.1).
                 "--does-intracomunitario",
@@ -350,6 +351,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--no-iva-cash-accounting-regime-enrolled",
                 "--no-iva-voluntary-sii-enrolled",
                 "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+                "--no-enrollment-large-company",
                 "--quiet",
             ],
         )

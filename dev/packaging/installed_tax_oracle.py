@@ -238,6 +238,9 @@ def profile_create_arguments() -> tuple[str, ...]:
         "--no-iva-cash-accounting-regime-enrolled",
         "--no-iva-voluntary-sii-enrolled",
         "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        # The claimed block also owes the large-company condition, which
+        # decides whether its Modelo 303 is filed monthly or quarterly.
+        "--no-enrollment-large-company",
         "--tax-residence-jurisdiction-scope",
         "common_regime",
         "--tax-residence-ccaa",

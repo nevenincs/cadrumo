@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ...domain.calculations.registry.applicability import taxpayer_model_required_facts
@@ -324,6 +325,36 @@ def missing_required_field_paths(
     return tuple(missing)
 
 
+@dataclass(frozen=True, slots=True)
+class ProfileCompletenessGaps:
+    """The paths a profile still owes before setup can be complete, by the rule that owes them."""
+
+    schema_required: tuple[str, ...]
+    """Schema-required paths left unanswered, row-aware."""
+    conditional: tuple[str, ...]
+    """Conditionally required paths left unanswered that the schema did not already name."""
+
+    @property
+    def paths(self) -> tuple[str, ...]:
+        """Every owed path, schema-required first."""
+        return (*self.schema_required, *self.conditional)
+
+
+def profile_completeness_gaps(
+    schema: ProfileSchemaDefinition,
+    values: Mapping[str, str],
+) -> ProfileCompletenessGaps:
+    """Report every path a value mapping leaves unanswered before setup can be complete.
+
+    This is the one answer to "what does completing setup still need": a
+    surface that read only the schema half reported a profile owing only a
+    conditional fact as missing nothing.
+    """
+    schema_required = missing_required_field_paths(schema, values)
+    conditional = tuple(path for path in conditional_profile_missing_required(values) if path not in schema_required)
+    return ProfileCompletenessGaps(schema_required=schema_required, conditional=conditional)
+
+
 def _missing_in_section(
     section: ProfileSectionDefinition,
     *,
@@ -415,6 +446,7 @@ __all__ = [
     "IVA_REGIME_PATH",
     "REPRESENTANTE_FISCAL_NIF_PATH",
     "REPRESENTANTE_FISCAL_NOMBRE_PATH",
+    "ProfileCompletenessGaps",
     "atribucion_socio_forbidden_country_paths",
     "atribucion_socio_missing_country_paths",
     "conditional_profile_missing_required",
@@ -423,6 +455,7 @@ __all__ = [
     "missing_required_field_paths",
     "modelo_iva_block_missing_paths",
     "pinned_registry_scope",
+    "profile_completeness_gaps",
     "profile_section_rows",
     "profile_value_is_present",
     "schema_requirement_applies",

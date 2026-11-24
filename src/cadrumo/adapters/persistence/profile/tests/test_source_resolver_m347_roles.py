@@ -693,7 +693,7 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
     seed_test_profile_record(
         create_user_profile_record(
             context=profile_creation_context_for_test(),
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=ProfileSetupState.INCOMPLETE,
             profile_id=secure_profile.bucket_id,
             facts=public_administration_profile_facts(),
         ),

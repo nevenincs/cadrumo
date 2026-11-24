@@ -43,11 +43,16 @@ from .source_resolver_test_support import secure_profile as secure_profile
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def _seed_profile(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
+def _seed_profile(
+    bucket_id: str,
+    facts: tuple[UserProfileFact, ...],
+    *,
+    setup_state: ProfileSetupState = ProfileSetupState.COMPLETE,
+) -> None:
     seed_test_profile_record(
         create_user_profile_record(
             context=profile_creation_context_for_test(),
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=setup_state,
             profile_id=bucket_id,
             facts=facts,
         ),
@@ -113,7 +118,10 @@ def test_m347_clave_e_below_the_floor_is_declared_from_2014_and_disclosed_until_
     euros", so 2024 carries the advisory and 2025, whose design agrees with
     the regulation, does not.
     """
-    _seed_profile(secure_profile.bucket_id, public_administration_profile_facts())
+    # The public-administration filer states only what its Modelo 347 reads, so its setup stays open.
+    _seed_profile(
+        secure_profile.bucket_id, public_administration_profile_facts(), setup_state=ProfileSetupState.INCOMPLETE
+    )
     resolutions = {}
     for filing_year in (2024, 2025):
         subvencion = source_resolver_invoice(
@@ -142,7 +150,10 @@ def test_m347_nil_total_in_a_bucket_without_floor_is_declared_and_disclosed(
     secure_profile: TestRuntimeProfile,
 ) -> None:
     """A bucket related whatever its amount admits a nil total; whether it belongs is not settled."""
-    _seed_profile(secure_profile.bucket_id, public_administration_profile_facts())
+    # The public-administration filer states only what its Modelo 347 reads, so its setup stays open.
+    _seed_profile(
+        secure_profile.bucket_id, public_administration_profile_facts(), setup_state=ProfileSetupState.INCOMPLETE
+    )
     context = _m347_context(secure_profile.bucket_id, filing_year=2026)
     nil_subvencion = source_resolver_invoice(
         bucket_id=None,

@@ -5,15 +5,17 @@ import { expect, test } from "@playwright/test";
 // provider-status read at all; one already with the host when the window
 // learns of the end is refused for an end the log notes once, at INFO, like
 // every refusal for an ended session. A provider-status refusal the window did
-// not see coming stays an error and is not asked again: an earlier admitted
-// catalog read does not prove the runtime session was still valid. The real
-// Tauri adapter runs against a recording invoke boundary.
+// not see coming is never asked again by itself: `not_signed_in` there says
+// the admitted service has not yet taken up the session, a setup state noted at
+// INFO, while a fault stays an error, since an earlier admitted catalog read
+// does not prove the read could succeed. The real Tauri adapter runs against a
+// recording invoke boundary.
 
 type Report = { level: string; command: string | null; code: string | null };
 
 async function run(
   page: import("@playwright/test").Page,
-  scenario: "refused" | "ended-first" | "ended-in-flight",
+  scenario: "refused" | "faulted" | "ended-first" | "ended-in-flight",
 ) {
   await page.goto("/scenarios.html?scenario=signed-out&bar=off");
   await page.waitForFunction(() => Boolean(window.__scenarioModules));
@@ -55,6 +57,13 @@ async function run(
           }
           if (command === "provider_settings_status") {
             if (scenario === "ended-in-flight") await statusAnswer;
+            if (scenario === "faulted")
+              throw {
+                code: "read_failed",
+                operation: "cli",
+                message: "The command output could not be read.",
+                reason: "provider_settings_task_failed",
+              };
             throw { code: "not_signed_in" };
           }
           return null;
@@ -142,20 +151,36 @@ async function run(
   }, scenario);
 }
 
-test("a provider-status refusal the window did not observe coming stays an error and is not asked again", async ({
+test("a provider-status not_signed_in the window did not observe coming is a setup state noted at INFO and is not asked again", async ({
   page,
 }) => {
   const result = await run(page, "refused");
   expect(result.settingsReads).toBe(1);
   expect(result.reports).toMatchObject([
     {
-      level: "ERROR",
+      level: "INFO",
       command: "provider_settings_status",
       code: "not_signed_in",
     },
   ]);
+  expect(result.errors).toBe(0);
+  // The lanes of a session that is not taken up are not shown.
+  expect(result.status).toBe("failed");
+});
+
+test("a provider-status fault the window did not observe coming stays an error and is not asked again", async ({
+  page,
+}) => {
+  const result = await run(page, "faulted");
+  expect(result.settingsReads).toBe(1);
+  expect(result.reports).toMatchObject([
+    {
+      level: "ERROR",
+      command: "provider_settings_status",
+      code: "read_failed",
+    },
+  ]);
   expect(result.errors).toBe(1);
-  // The lanes of a session that is gone are not shown.
   expect(result.status).toBe("failed");
 });
 

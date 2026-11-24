@@ -184,8 +184,10 @@ def test_the_result_chain_computes_each_years_design_arithmetic(filing_year: int
     }
     declared = {casilla.id for casilla in snapshot.revision.casillas}
     manual = {
-        "15": "100",
-        "26": "50",
+        # 15 and 26 are computed from the invoice carrier plus the person's own
+        # contribution, so the amounts enter on the contribution casillas.
+        "iva.modificacion-bases-cuotas.operador": "100",
+        "iva.modificacion-recargo.operador": "50",
         "58": "0",
         "76": "0",
         "77": "25",

@@ -54,7 +54,7 @@ def _store_profile(**facts: str) -> None:
     seed_test_profile_record(
         create_user_profile_record(
             profile_id=_BUCKET_ID,
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=ProfileSetupState.INCOMPLETE,
             facts=tuple(
                 UserProfileFact(path=path, value=Decimal(value) if path.startswith("vivienda_office.") else value)
                 for path, value in facts.items()

@@ -66,6 +66,7 @@ COMPLETE_NATURAL_PERSON_FLAGS = (
     "--no-iva-cash-accounting-regime-enrolled",
     "--no-iva-voluntary-sii-enrolled",
     "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+    "--no-enrollment-large-company",
 )
 
 

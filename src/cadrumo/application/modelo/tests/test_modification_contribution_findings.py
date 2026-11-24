@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -24,15 +25,18 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ....domain.modelos.verification_report import ModeloVerificationFindingSeverity
+from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..verification_modification_contributions import modification_contribution_findings
+
+if TYPE_CHECKING:
+    from ....core.casilla_id import CasillaId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _YEAR = filing_year_envelope().horizon
 _PERIOD = Period.from_year_and_code(_YEAR, "2T")
+_QUARTERS = ("1T", "2T", "3T", "4T")
 _BASE = Decimal("-100.00")
 _CUOTA = Decimal("-21.00")
 _RECARGO = Decimal("-5.20")
@@ -46,8 +50,22 @@ def _authority_operation() -> Iterator[None]:
         yield
 
 
-def _revision() -> ModeloRevision:
-    return published_snapshot("303", filing_year=_YEAR, period=_PERIOD.registry_token).revision
+def _verify(
+    casilla_values: dict[CasillaId, Decimal],
+    input_values: dict[CasillaId, str],
+    *,
+    period: Period = _PERIOD,
+) -> list[ModeloVerificationFinding]:
+    """Run the gate on the published revision and published form the period selects."""
+    revision = published_snapshot("303", filing_year=period.filing_year, period=period.registry_token).revision
+    with bundled_indexed_authority().operation() as operation:
+        layout = operation.form_layout("303", revision.id)
+    return modification_contribution_findings(
+        revision=revision,
+        form_layout=layout,
+        casilla_values=casilla_values,
+        input_values_by_casilla_id=input_values,
+    )
 
 
 def _findings(
@@ -55,11 +73,7 @@ def _findings(
     casilla_values: dict[str, Decimal],
     input_values: dict[str, str],
 ) -> dict[str, ModeloVerificationFindingSeverity]:
-    found = modification_contribution_findings(
-        revision=_revision(),
-        casilla_values=casilla_values,
-        input_values_by_casilla_id=input_values,
-    )
+    found = _verify(casilla_values, input_values)
     return {finding.message_locale_key: finding.severity for finding in found}
 
 
@@ -75,11 +89,7 @@ def test_a_period_whose_boxes_hold_only_the_invoice_sourced_half_is_not_refused(
 
 def test_a_typed_contribution_beside_an_invoice_sourced_one_blocks_naming_both_figures() -> None:
     """The record carries no scope for the typed figure, so the box may be stating one document twice."""
-    found = modification_contribution_findings(
-        revision=_revision(),
-        casilla_values={"iva.modificacion-bases-cuotas": _CUOTA},
-        input_values_by_casilla_id={"iva.modificacion-bases-cuotas.operador": _TYPED},
-    )
+    found = _verify({"iva.modificacion-bases-cuotas": _CUOTA}, {"iva.modificacion-bases-cuotas.operador": _TYPED})
 
     (finding,) = found
     assert finding.message_locale_key == "application.modelo.findings.modification_typed_beside_invoice_sourced"
@@ -92,11 +102,7 @@ def test_a_typed_contribution_beside_an_invoice_sourced_one_blocks_naming_both_f
 
 def test_a_value_stored_against_the_now_computed_box_blocks_and_names_where_to_re_enter_it() -> None:
     """The stored figure is neither dropped nor read as the contribution, which is the ruling."""
-    found = modification_contribution_findings(
-        revision=_revision(),
-        casilla_values={},
-        input_values_by_casilla_id={"15": _TYPED},
-    )
+    found = _verify({}, {"15": _TYPED})
 
     (finding,) = found
     assert finding.message_locale_key == "application.modelo.findings.modification_value_stored_on_computed_box"
@@ -108,14 +114,7 @@ def test_a_value_stored_against_the_now_computed_box_blocks_and_names_where_to_r
 
 def test_a_recargo_modification_without_its_base_blocks_naming_casilla_25() -> None:
     """Casilla 26 reads the recargo the rectificativas moved; its base stays the person's."""
-    found = modification_contribution_findings(
-        revision=_revision(),
-        casilla_values={
-            "iva.modificacion-recargo": _RECARGO,
-            "iva.modificacion-bases-cuotas.base": _BASE,
-        },
-        input_values_by_casilla_id={},
-    )
+    found = _verify({"iva.modificacion-recargo": _RECARGO, "iva.modificacion-bases-cuotas.base": _BASE}, {})
 
     (finding,) = found
     assert finding.message_locale_key == "application.modelo.findings.modification_recargo_base_missing"
@@ -133,3 +132,40 @@ def test_the_recargo_base_the_person_states_closes_that_refusal() -> None:
     )
 
     assert found == {}
+
+
+@pytest.mark.parametrize("year", filing_year_envelope().years)
+@pytest.mark.parametrize("quarter", _QUARTERS)
+def test_every_supported_edition_names_the_same_boxes(year: int, quarter: str) -> None:
+    """Each edition's projection formulas and printed rows name the boxes the design prints, in every year."""
+    found = _verify(
+        {
+            "iva.modificacion-bases-cuotas.base": _BASE,
+            "iva.modificacion-bases-cuotas": _CUOTA,
+            "iva.modificacion-recargo": _RECARGO,
+        },
+        {
+            "14": _TYPED,
+            "iva.modificacion-bases-cuotas.operador": _TYPED,
+            "iva.modificacion-recargo.operador": _TYPED,
+        },
+        period=Period.from_year_and_code(year, quarter),
+    )
+
+    assert [
+        (finding.message_locale_key.rsplit(".", 1)[-1], finding.message_facts["casilla_id"]) for finding in found
+    ] == [
+        ("modification_value_stored_on_computed_box", "14"),
+        ("modification_typed_beside_invoice_sourced", "15"),
+        ("modification_typed_beside_invoice_sourced", "26"),
+        ("modification_recargo_base_missing", "25"),
+    ]
+    contributions = {
+        finding.message_facts["casilla_id"]: finding.message_facts.get("contribution_casilla_id") for finding in found
+    }
+    assert contributions == {
+        "14": "iva.modificacion-bases-cuotas.operador.base",
+        "15": "iva.modificacion-bases-cuotas.operador",
+        "26": "iva.modificacion-recargo.operador",
+        "25": None,
+    }

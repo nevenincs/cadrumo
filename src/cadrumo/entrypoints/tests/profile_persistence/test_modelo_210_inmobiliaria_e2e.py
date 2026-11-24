@@ -161,6 +161,7 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
             UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
             UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            UserProfileFact(path="censo.large_company", value=False),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

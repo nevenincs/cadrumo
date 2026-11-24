@@ -2,8 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 import {
   PROFILE_NAME,
+  PROFILE_REQUIRED_DETAILS,
   PROFILE_REQUIRED_MISSING,
   PROFILE_REQUIRED_MISSING_AFTER_CENSO,
+  PROFILE_REQUIRED_STATED,
   PROFILE_SECTION_TITLES,
   profileStated,
 } from "../support/profileFixture";
@@ -69,7 +71,7 @@ test("the summary is headed with the name the product serves, never as unnamed w
   await expect(heading).not.toHaveText(label("desktop.profile.unnamed"));
 });
 
-test("the summary names the taxpayer and filters to what is required and missing", async ({
+test("the summary names the taxpayer and its required-missing count opens every required detail, the missing ones marked", async ({
   page,
 }) => {
   const profile = await open(page);
@@ -91,10 +93,14 @@ test("the summary names the taxpayer and filters to what is required and missing
     .click();
   await expect(row(profile, "identity.tax_id")).toBeVisible();
   await expect(row(profile, "identity.name")).toHaveCount(0);
+  // The required view lists what the product reports missing and what it
+  // declares required and already holds, so the stated ones stay in reach.
+  for (const path of PROFILE_REQUIRED_STATED)
+    await expect(row(profile, path)).toBeVisible();
   await expect(
     profile.getByText(
       label("desktop.profile.view.results", {
-        count: PROFILE_REQUIRED_MISSING,
+        count: PROFILE_REQUIRED_DETAILS,
       }),
     ),
   ).toBeVisible();

@@ -537,6 +537,7 @@ def _append_source_evidence_findings(
     findings.extend(
         modification_contribution_findings(
             revision=snapshot.revision,
+            form_layout=operation.form_layout(snapshot.modelo.id, snapshot.revision.id),
             casilla_values=target.casilla_values,
             input_values_by_casilla_id=target.input_values_by_casilla_id,
         )

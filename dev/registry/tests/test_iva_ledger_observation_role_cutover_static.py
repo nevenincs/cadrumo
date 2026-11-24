@@ -30,6 +30,15 @@ _MONETARY_TREATMENTS = ["none", "taxpayer_regime", "supplier_regime"]
 # own criterio-de-caja supplies are box [653], which the volumen total [108]
 # adds beside [99], so this one settlement selector leaves taxpayer_regime out.
 _REGIMEN_GENERAL_ONLY_BINDING_IDS = frozenset({"modelo-390-volumen-regimen-general-base"})
+#: The issued-modification carriers read only rectification rows, with the
+#: same monetary treatments as a settlement row.
+_RECTIFICATION_MODIFICATION_BINDING_IDS = frozenset(
+    {
+        "modelo-303-iva-modificacion-bases-cuotas-base",
+        "modelo-303-iva-modificacion-bases-cuotas-cuota",
+        "modelo-303-iva-modificacion-recargo-cuota",
+    }
+)
 _REGIMEN_GENERAL_ONLY_TREATMENTS = ["none", "supplier_regime"]
 
 
@@ -104,6 +113,7 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
 
     informational = []
     regimen_general_only = set()
+    rectification_modification = set()
     for binding in bindings:
         binding_id = binding["id"]
         assert isinstance(binding_id, str)
@@ -114,6 +124,10 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
         if binding_id in _INFORMATIONAL_BINDING_IDS:
             informational.append(binding_id)
             assert selector["observation_roles"] == ["operation_informational"]
+        elif binding_id in _RECTIFICATION_MODIFICATION_BINDING_IDS:
+            rectification_modification.add(binding_id)
+            assert selector["observation_roles"] == ["rectification_modification"]
+            assert selector["cash_accounting_treatments"] == _MONETARY_TREATMENTS
         else:
             assert selector["observation_roles"] == ["settlement"]
             expected_treatments = (
@@ -130,3 +144,4 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
     # every named id is really carried, and no other id claimed the role.
     assert set(informational) == _INFORMATIONAL_BINDING_IDS
     assert regimen_general_only == _REGIMEN_GENERAL_ONLY_BINDING_IDS
+    assert rectification_modification == _RECTIFICATION_MODIFICATION_BINDING_IDS

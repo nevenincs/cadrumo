@@ -131,7 +131,7 @@ def test_llm_vision_off_refuses_both_image_read_modes(
     seed_test_profile_record(
         create_user_profile_record(
             context=leased_profile_create_context(),
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=ProfileSetupState.INCOMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),

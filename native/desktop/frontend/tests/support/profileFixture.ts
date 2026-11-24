@@ -27,6 +27,28 @@ export const PROFILE_NAME = profile.name;
 /** How many required details the served profile reports missing. */
 export const PROFILE_REQUIRED_MISSING = profile.missing_required.length;
 
+/** The details the served profile declares required and states, which the
+ * product does not report missing. A repeatable section's details count only
+ * within an entry. */
+export const PROFILE_REQUIRED_STATED = profile.sections
+  .flatMap((section) =>
+    section.repeatable
+      ? section.fields.filter((field) => field.row_index !== null)
+      : section.fields,
+  )
+  .filter(
+    (field) =>
+      field.required &&
+      field.value !== null &&
+      field.value !== "" &&
+      !profile.missing_required.includes(field.path),
+  )
+  .map((field) => field.path);
+
+/** How many required details the served profile has, stated or missing. */
+export const PROFILE_REQUIRED_DETAILS =
+  PROFILE_REQUIRED_MISSING + PROFILE_REQUIRED_STATED.length;
+
 /** How many are still missing once the Censo setup has stated the tax ID. */
 export const PROFILE_REQUIRED_MISSING_AFTER_CENSO =
   profile.missing_required.filter((path) => path !== "identity.tax_id").length;

@@ -121,7 +121,7 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
             create_user_profile_record(
-                setup_state=ProfileSetupState.COMPLETE,
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=_BUCKET,
                 facts=tuple(facts),
                 created_at=_T0,
@@ -154,7 +154,7 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
             create_user_profile_record(
-                setup_state=ProfileSetupState.COMPLETE,
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=_BUCKET,
                 facts=(
                     *facts,
@@ -232,7 +232,7 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
             create_user_profile_record(
-                setup_state=ProfileSetupState.COMPLETE,
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=_BUCKET,
                 facts=(*facts, UserProfileFact(path="tax_residence.ccaa", value="madrid")),
                 created_at=_T0,

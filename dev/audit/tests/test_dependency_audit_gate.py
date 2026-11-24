@@ -160,3 +160,99 @@ def test_the_json_report_is_machine_readable(tmp_path: Path) -> None:
     assert body["gating"] is True
     assert body["exit_code"] == da.EXIT_FINDINGS
     assert body["findings"][0]["id"] == "GHSA-q2x7-8rv6-6q7h"
+
+
+_LOCAL_NAMES = (
+    "fixture-own-project",
+    "fixture-own-data",
+    "fixture-own-crate",
+    "fixture-git-crate",
+    "fixture-npm-workspace",
+    "fixture-npm-file",
+    "fixture-npm-legacy-file",
+)
+_REGISTRY_NAMES = ("jinja2", "serde", "left-pad", "is-number")
+
+
+def _write_lockfiles(root: Path) -> None:
+    """Lay out one lockfile per ecosystem mixing registry and local packages."""
+    (root / "uv.lock").write_text(
+        "version = 1\n"
+        '[[package]]\nname = "jinja2"\nversion = "3.1.4"\nsource = { registry = "https://pypi.org/simple" }\n'
+        '[[package]]\nname = "fixture-own-project"\nversion = "0.1.0"\nsource = { editable = "." }\n'
+        '[[package]]\nname = "fixture-own-data"\nversion = "0.1.0"\nsource = { directory = "data" }\n',
+        encoding="utf-8",
+    )
+    crate = root / "native"
+    crate.mkdir()
+    (crate / "Cargo.lock").write_text(
+        "version = 3\n"
+        '[[package]]\nname = "serde"\nversion = "1.0.210"\n'
+        'source = "registry+https://github.com/rust-lang/crates.io-index"\n'
+        '[[package]]\nname = "fixture-own-crate"\nversion = "0.1.0"\n'
+        '[[package]]\nname = "fixture-git-crate"\nversion = "0.2.0"\nsource = "git+https://example.invalid/crate#abc"\n',
+        encoding="utf-8",
+    )
+    web = root / "web"
+    web.mkdir()
+    (web / "package-lock.json").write_text(
+        json.dumps(
+            {
+                "lockfileVersion": 3,
+                "packages": {
+                    "": {"name": "root"},
+                    "node_modules/left-pad": {
+                        "version": "1.3.0",
+                        "resolved": "https://registry.npmjs.org/left-pad/-/left-pad-1.3.0.tgz",
+                    },
+                    "packages/fixture-npm-workspace": {"name": "fixture-npm-workspace", "version": "0.1.0"},
+                    "node_modules/fixture-npm-workspace": {"resolved": "packages/fixture-npm-workspace", "link": True},
+                    "node_modules/fixture-npm-file": {
+                        "version": "0.1.0",
+                        "resolved": "file:../vendor/fixture-npm-file",
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    legacy = root / "legacy"
+    legacy.mkdir()
+    (legacy / "package-lock.json").write_text(
+        json.dumps(
+            {
+                "lockfileVersion": 1,
+                "dependencies": {
+                    "is-number": {"version": "7.0.0"},
+                    "fixture-npm-legacy-file": {"version": "file:../vendor/legacy"},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_only_registry_packages_leave_the_machine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The advisory query names public packages only, never the repository's own.
+
+    The lockfiles are read by the real readers and the payload is captured at
+    the HTTPS seam, so a reader that forwards a local, path, file or git package
+    fails here before any name reaches the advisory service.
+    """
+    _write_lockfiles(tmp_path)
+    sent: list[str] = []
+
+    def capture(url: str, payload: dict[str, object]) -> dict[str, object]:
+        sent.append(json.dumps(payload))
+        return {"results": []}
+
+    monkeypatch.setattr(da, "_post_json", capture)
+    coordinates = [c for c in da.collect_coordinates(tmp_path) if c.source != da.BINARIES_PATH.name]
+
+    assert da.query_osv(coordinates) == {}
+    body = "\n".join(sent)
+    assert {c.name for c in coordinates} == set(_REGISTRY_NAMES)
+    for name in _REGISTRY_NAMES:
+        assert f'"{name}"' in body
+    for name in _LOCAL_NAMES:
+        assert name not in body

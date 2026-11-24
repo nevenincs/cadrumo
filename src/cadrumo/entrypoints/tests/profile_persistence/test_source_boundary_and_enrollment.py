@@ -110,6 +110,7 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
     UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
     UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
+    UserProfileFact(path="censo.large_company", value="false"),
     UserProfileFact(path="taxpayer_type.entity_type", value="attribution_entity"),
     UserProfileFact(path="attribution_entity_socios.0.nif", value="22222222B"),
     UserProfileFact(path="attribution_entity_socios.0.name", value="Member Two"),
