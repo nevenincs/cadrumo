@@ -8,7 +8,6 @@ can use the modelo fixture-value module directly.
 
 from __future__ import annotations
 
-import contextlib
 from base64 import b64encode
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
@@ -36,7 +35,6 @@ from .....domain.calculations.registry.authority_artifact import ProfileSchemaCo
 from .....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from .....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from .....domain.calculations.registry.tests.published_authority import published_profile_schema
-from .....domain.user_profile.errors import ProfileSchemaValidationError
 from .....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -353,13 +351,14 @@ def replace_test_profile_record(
         if record.setup_state is ProfileSetupState.COMPLETE:
             applied = repository.load(identity)
             if applied.setup_state is not ProfileSetupState.COMPLETE:
-                with contextlib.suppress(ProfileSchemaValidationError):
-                    repository.complete_setup(
-                        identity,
-                        expected_revision=applied.record_revision,
-                        expected_content_digest=applied.content_digest,
-                        now=replacement.updated_at,
-                    )
+                # A fixture asking for COMPLETE gets it only by passing the
+                # production completion door; one that cannot complete fails here.
+                repository.complete_setup(
+                    identity,
+                    expected_revision=applied.record_revision,
+                    expected_content_digest=applied.content_digest,
+                    now=replacement.updated_at,
+                )
         return repository.load(identity)
 
 

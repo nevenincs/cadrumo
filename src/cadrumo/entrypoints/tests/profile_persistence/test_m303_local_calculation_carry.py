@@ -74,7 +74,8 @@ def _store_profile(filing_year: int, *, without: tuple[str, ...] = (), activity_
     stamped = datetime(filing_year, 1, 2, 9, 0, tzinfo=UTC)
     seed_test_profile_record(
         create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
+            # A profile leaving out an owed answer cannot be declared complete.
+            setup_state=ProfileSetupState.INCOMPLETE if without else ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
             facts=persona_facts_beneath(
                 (

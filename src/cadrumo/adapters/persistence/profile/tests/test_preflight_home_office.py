@@ -56,7 +56,7 @@ def _declare_home_office_m2(bucket_id: str, *, operation: PinnedAuthorityOperati
     seed_test_profile_record(
         create_user_profile_record(
             context=operation.profile_create_context(),
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=ProfileSetupState.INCOMPLETE,
             profile_id=bucket_id,
             facts=facts,
         ),

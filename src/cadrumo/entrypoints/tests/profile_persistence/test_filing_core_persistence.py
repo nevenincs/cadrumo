@@ -119,7 +119,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) 
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
             seed_test_profile_record(
                 create_user_profile_record(
-                    setup_state=ProfileSetupState.COMPLETE,
+                    setup_state=ProfileSetupState.INCOMPLETE,
                     profile_id=profile.bucket_id,
                     facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
                     created_at=_PROFILE_SEEDED_AT,

@@ -420,7 +420,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
         clock = datetime(2026, 1, 1, tzinfo=UTC)
         seed_test_profile_record(
             create_user_profile_record(
-                setup_state=ProfileSetupState.COMPLETE,
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=BUCKET_ID,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),

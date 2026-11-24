@@ -91,7 +91,13 @@ def test_status_and_view_count_the_same_missing_required_fields() -> None:
     """
     view_result = profile_view_document()["result"]
     assert isinstance(view_result, dict)
-    missing_in_view = [issue for issue in view_result["issues"] if issue["code"] == "required_field_missing"]
+    # Schema-required and conditionally required gaps alike: ``status`` counts
+    # both, from the same completeness answer the view's validation reads.
+    missing_in_view = [
+        issue
+        for issue in view_result["issues"]
+        if issue["code"] in {"required_field_missing", "conditional_required_field_missing"}
+    ]
 
     status = profile_cli("status")
     evidence = json.loads(status.stdout)["result"]["precondition_action"]["evidence"]

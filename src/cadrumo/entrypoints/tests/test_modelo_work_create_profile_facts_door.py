@@ -61,7 +61,7 @@ def test_a_missing_profile_facts_refusal_speaks_in_words_and_names_the_profile_q
         seed_test_profile_record(
             create_user_profile_record(
                 context=operation.profile_create_context(),
-                setup_state=ProfileSetupState.COMPLETE,
+                setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=str(profile_id),
                 facts=tuple(UserProfileFact(path=path, value=value) for path, value in _DECLARED_FACTS.items()),
                 created_at=_CLOCK,
