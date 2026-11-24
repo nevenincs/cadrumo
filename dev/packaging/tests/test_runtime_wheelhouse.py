@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import tempfile
 import threading
 import zipfile
@@ -349,10 +348,10 @@ def test_a_cohort_build_environment_refetches_a_corrupted_entry_of_the_passed_th
         wheel = _locked_wheel(payload, index.url)
         (cache / wheel.sha256).write_bytes(b"universal wheel bytez")
 
-        with build_storage(Path(work) / "cohort-work"):
+        with build_storage(Path(work) / "cohort-work") as selected:
             build_cache = wheel_cache_dir()
             assert build_cache == cache
-            wheel_dir = Path(os.environ["TEMP"]) / "wheels"
+            wheel_dir = selected / "wheels"
             (wheel_dir / "3.13").mkdir(parents=True)
             assert acquire_all([_plan("3.13", wheel)], wheel_dir, build_cache) == 0
             assert (wheel_dir / "3.13" / wheel.filename).read_bytes() == payload
