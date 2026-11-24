@@ -594,6 +594,7 @@ test(
           t.diagnostic(
             `antigravity sign-in waits for the agent to stop: ${JSON.stringify(now.stopping)}`,
           );
+          await shot("antigravity-03a-agent-stopping");
         }
         if (
           now.alerts.length > 0 &&
@@ -638,9 +639,15 @@ test(
     }
     await shot("antigravity-03-sign-in");
     const began = Date.now();
+    const codePrompt = norm(label("desktop.providers.sign_in_code_prompt"));
+    let codeShown = false;
     const outcome = await waitFor(
       async () => {
         const now = await exec(pageDialog);
+        if (now.open && now.description === codePrompt && !codeShown) {
+          codeShown = true;
+          await shot("antigravity-03b-code-prompt");
+        }
         if (now.open && now.alerts.length > 0) return { ok: false };
         if (now.open) return null;
         const read = await exec(pageLanes, PROVIDER, signInWords());
