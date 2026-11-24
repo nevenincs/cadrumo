@@ -594,6 +594,7 @@ test(
           t.diagnostic(
             `antigravity sign-in waits for the agent to stop: ${JSON.stringify(now.stopping)}`,
           );
+          await shot("antigravity-03a-agent-stopping");
         }
         if (
           now.alerts.length > 0 &&
