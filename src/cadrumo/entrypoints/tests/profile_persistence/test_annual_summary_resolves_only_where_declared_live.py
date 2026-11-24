@@ -87,7 +87,8 @@ def _seed_profile(*extra_facts: UserProfileFact, persona_without: Collection[str
     )
     seed_test_profile_record(
         create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
+            # A profile leaving out an owed answer cannot be declared complete.
+            setup_state=ProfileSetupState.COMPLETE if persona_without is None else ProfileSetupState.INCOMPLETE,
             profile_id=_BUCKET_ID,
             facts=stated if persona_without is None else persona_facts_beneath(stated, without=persona_without),
             created_at=_T0,

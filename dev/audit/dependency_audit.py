@@ -171,21 +171,38 @@ def _iter_lockfiles(root: Path) -> list[Path]:
     return found
 
 
-def _read_uv_lock(path: Path) -> list[Coordinate]:
-    """Return every ``(name, version)`` pinned by a ``uv.lock``."""
+def _read_uv_lock(path: Path, root: Path) -> list[Coordinate]:
+    """Return every registry ``(name, version)`` pinned by a ``uv.lock``.
+
+    Only a package resolved from a package index is a public coordinate. The
+    project itself and its editable, virtual, path, directory, git and URL
+    members are local, so their names never leave the machine.
+    """
     data = parse_toml(path.read_text(encoding="utf-8"))
-    rel = path.relative_to(REPO_ROOT).as_posix()
+    rel = path.relative_to(root).as_posix()
     return [
         Coordinate("PyPI", pkg["name"], pkg["version"], rel)
         for pkg in data.get("package", ())
-        if pkg.get("name") and pkg.get("version")
+        if pkg.get("name") and pkg.get("version") and "registry" in (pkg.get("source") or {})
     ]
 
 
-def _read_package_lock(path: Path) -> list[Coordinate]:
-    """Return every version pinned by an npm ``package-lock.json``."""
+def _is_npm_registry_entry(key: str, entry: dict[str, Any]) -> bool:
+    """Return whether a lockfile v2/v3 entry is an installed registry package.
+
+    Workspace members sit outside ``node_modules/``, a linked package is a local
+    folder, and a ``file:`` or git ``resolved`` is not published anywhere.
+    """
+    if "node_modules/" not in key or entry.get("link"):
+        return False
+    resolved = entry.get("resolved")
+    return resolved is None or (isinstance(resolved, str) and resolved.startswith("https://"))
+
+
+def _read_package_lock(path: Path, root: Path) -> list[Coordinate]:
+    """Return every registry version pinned by an npm ``package-lock.json``."""
     data = json.loads(path.read_text(encoding="utf-8"))
-    rel = path.relative_to(REPO_ROOT).as_posix()
+    rel = path.relative_to(root).as_posix()
     out: list[Coordinate] = []
     packages = data.get("packages")
     if isinstance(packages, dict):
@@ -194,21 +211,25 @@ def _read_package_lock(path: Path) -> list[Coordinate]:
                 continue  # "" is the root project itself.
             name = entry.get("name") or key.rsplit("node_modules/", 1)[-1]
             version = entry.get("version")
-            if name and version and not entry.get("link"):
+            if name and version and _is_npm_registry_entry(key, entry):
                 out.append(Coordinate("npm", name, version, rel))
     else:  # lockfileVersion 1
         _read_legacy_npm_dependencies(data.get("dependencies") or {}, rel, out)
     return out
 
 
-def _read_cargo_lock(path: Path) -> list[Coordinate]:
-    """Return every crate version pinned by a ``Cargo.lock``."""
+def _read_cargo_lock(path: Path, root: Path) -> list[Coordinate]:
+    """Return every crates.io version pinned by a ``Cargo.lock``.
+
+    A workspace crate has no source and a git dependency names a repository,
+    so only a registry-sourced crate is a public coordinate.
+    """
     data = parse_toml(path.read_text(encoding="utf-8"))
-    rel = path.relative_to(REPO_ROOT).as_posix()
+    rel = path.relative_to(root).as_posix()
     return [
         Coordinate("crates.io", pkg["name"], pkg["version"], rel)
         for pkg in data.get("package", ())
-        if pkg.get("name") and pkg.get("version") and pkg.get("source")
+        if pkg.get("name") and pkg.get("version") and str(pkg.get("source") or "").startswith(("registry+", "sparse+"))
     ]
 
 
@@ -247,7 +268,7 @@ def collect_coordinates(root: Path = REPO_ROOT) -> list[Coordinate]:
     seen: set[Coordinate] = set()
     for lockfile in _iter_lockfiles(root):
         try:
-            for coord in readers[lockfile.name](lockfile):
+            for coord in readers[lockfile.name](lockfile, root):
                 seen.add(coord)
         except AuditError:
             raise
@@ -714,7 +735,8 @@ def _covering_suppression(
 def _read_legacy_npm_dependencies(deps: dict[str, Any], rel: str, out: list[Coordinate]) -> None:
     """Read each pinned legacy npm dependency before recursing into its children."""
     for name, entry in deps.items():
-        if isinstance(entry, dict) and entry.get("version"):
+        # A legacy local, file: or git dependency records its specifier as the version.
+        if isinstance(entry, dict) and entry.get("version") and ":" not in str(entry["version"]):
             out.append(Coordinate("npm", name, entry["version"], rel))
             nested = entry.get("dependencies")
             if isinstance(nested, dict):

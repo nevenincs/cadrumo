@@ -35,6 +35,8 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
+from ...domain.calculations.registry.schema_form_layouts import FormGridBlock
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -47,21 +49,21 @@ if TYPE_CHECKING:
 
     from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.schema import ModeloRevision
+    from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 
 __all__ = ["modification_contribution_findings"]
 
-#: Each modification box, the carrier the facturas rectificativas feed and the
-#: casilla the person's own contribution goes in. Read from the registry by id
-#: rather than restated as a rule: a box absent from the selected edition
+#: The carriers the facturas rectificativas feed, one per modification box. The
+#: box each one prints in and the casilla the person's own contribution goes in
+#: are read from the edition's projection formula, the one formula that adds the
+#: carrier to that contribution, so a box absent from the selected edition
 #: simply yields no finding.
-_MODIFICATION_BOXES: Final[tuple[tuple[str, str, str], ...]] = (
-    ("14", "iva.modificacion-bases-cuotas.base", "iva.modificacion-bases-cuotas.operador.base"),
-    ("15", "iva.modificacion-bases-cuotas", "iva.modificacion-bases-cuotas.operador"),
-    ("26", "iva.modificacion-recargo", "iva.modificacion-recargo.operador"),
+_MODIFICATION_CARRIERS: Final[tuple[str, ...]] = (
+    "iva.modificacion-bases-cuotas.base",
+    "iva.modificacion-bases-cuotas",
+    "iva.modificacion-recargo",
 )
 
-#: The recargo modification's base box, which stays the operator's.
-_RECARGO_BASE_BOX: Final = "25"
 _RECARGO_CARRIER: Final = "iva.modificacion-recargo"
 _MODIFICATION_BASE_CARRIER: Final = "iva.modificacion-bases-cuotas.base"
 
@@ -69,28 +71,72 @@ _MODIFICATION_BASE_CARRIER: Final = "iva.modificacion-bases-cuotas.base"
 def modification_contribution_findings(
     *,
     revision: ModeloRevision,
+    form_layout: FormLayoutDefinition | None,
     casilla_values: Mapping[CasillaId, Decimal],
     input_values_by_casilla_id: Mapping[CasillaId, str],
 ) -> list[ModeloVerificationFinding]:
     """Refuse a modification box whose two contributions the record cannot keep apart.
 
+    ``form_layout`` is the edition's published form, whose official row pairs
+    the recargo modification's cuota box with its base box.
+
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    declared = {str(casilla.id) for casilla in revision.casillas}
+    boxes = _modification_boxes(revision)
     findings: list[ModeloVerificationFinding] = []
-    for box, carrier, contribution in _MODIFICATION_BOXES:
-        if carrier not in declared:
+    for carrier in _MODIFICATION_CARRIERS:
+        if carrier not in boxes:
             continue
+        box, contribution = boxes[carrier]
         invoice_sourced = _amount(casilla_values, carrier)
-        findings.extend(_stored_on_computed_box(box, contribution, input_values_by_casilla_id, declared))
+        findings.extend(_stored_on_computed_box(box, contribution, input_values_by_casilla_id))
         if invoice_sourced == ZERO:
             continue
         typed = _typed(input_values_by_casilla_id, contribution)
         if typed != ZERO:
             findings.append(_both_contributions_finding(box, contribution, invoice_sourced, typed))
-    findings.extend(_recargo_base_findings(declared, casilla_values, input_values_by_casilla_id))
+    recargo = boxes.get(_RECARGO_CARRIER)
+    if recargo is not None and form_layout is not None:
+        findings.extend(
+            _recargo_base_findings(_row_base_box(form_layout, recargo[0]), casilla_values, input_values_by_casilla_id)
+        )
     return findings
+
+
+def _modification_boxes(revision: ModeloRevision) -> dict[str, tuple[str, str]]:
+    """Map each declared carrier to its box and the person's contribution casilla.
+
+    The box is the target of the edition's one formula that reads the carrier,
+    and the contribution is that formula's other operand. A carrier read by no
+    such formula, or by more than one, names no box here.
+    """
+    found: dict[str, list[tuple[str, str]]] = {}
+    for formula in revision.formulas:
+        operands = tuple(dict.fromkeys(str(ref) for ref in expression_casilla_refs(formula.expression)))
+        if len(operands) != 2:
+            continue
+        for carrier in _MODIFICATION_CARRIERS:
+            if carrier in operands:
+                (contribution,) = (operand for operand in operands if operand != carrier)
+                found.setdefault(carrier, []).append((str(formula.target_casilla_id), contribution))
+    return {carrier: pairs[0] for carrier, pairs in found.items() if len(pairs) == 1}
+
+
+def _row_base_box(form_layout: FormLayoutDefinition, cuota_box: str) -> str | None:
+    """The other box the official printed row of ``cuota_box`` holds, or ``None`` when it holds none or several."""
+    for page in form_layout.pages:
+        for section in page.sections:
+            for block in section.blocks:
+                if not isinstance(block, FormGridBlock):
+                    continue
+                for row in block.rows:
+                    boxes = tuple(str(cell.casilla_id) for cell in row.cells if cell.casilla_id is not None)
+                    if cuota_box not in boxes:
+                        continue
+                    others = tuple(box for box in boxes if box != cuota_box)
+                    return others[0] if len(others) == 1 else None
+    return None
 
 
 def _amount(values: Mapping[CasillaId, Decimal], casilla_id: str) -> Decimal:
@@ -121,11 +167,10 @@ def _stored_on_computed_box(
     box: str,
     contribution: str,
     input_values_by_casilla_id: Mapping[CasillaId, str],
-    declared: set[str],
 ) -> list[ModeloVerificationFinding]:
     """Refuse an operator value stored against a box the edition now computes."""
     stored = _typed(input_values_by_casilla_id, box)
-    if stored == ZERO or contribution not in declared:
+    if stored == ZERO:
         return []
     return [
         ModeloVerificationFinding(
@@ -160,15 +205,15 @@ def _both_contributions_finding(
 
 
 def _recargo_base_findings(
-    declared: set[str],
+    base_box: str | None,
     casilla_values: Mapping[CasillaId, Decimal],
     input_values_by_casilla_id: Mapping[CasillaId, str],
 ) -> list[ModeloVerificationFinding]:
     """Refuse a recargo modification whose base box the return leaves blank."""
-    if _RECARGO_CARRIER not in declared or _RECARGO_BASE_BOX not in declared:
+    if base_box is None:
         return []
     recargo = _amount(casilla_values, _RECARGO_CARRIER)
-    if recargo == ZERO or _typed(input_values_by_casilla_id, _RECARGO_BASE_BOX) != ZERO:
+    if recargo == ZERO or _typed(input_values_by_casilla_id, base_box) != ZERO:
         return []
     return [
         ModeloVerificationFinding(
@@ -176,7 +221,7 @@ def _recargo_base_findings(
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             message_locale_key="application.modelo.findings.modification_recargo_base_missing",
             message_facts={
-                "casilla_id": _RECARGO_BASE_BOX,
+                "casilla_id": base_box,
                 "recargo_value": recargo,
                 # The period's whole modification base, which is the base of the
                 # recargo-bearing rows when they are the period's only

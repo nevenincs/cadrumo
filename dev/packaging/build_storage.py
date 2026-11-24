@@ -26,12 +26,62 @@ _DERIVED_CACHE_VARIABLES = (
 )
 _TEMPORARY_VARIABLES = ("TEMP", "TMP", "TMPDIR")
 _RUNTIME_WHEEL_CACHE_VARIABLE = "CADRUMO_RUNTIME_WHEEL_CACHE_DIR"
+#: The cache root an enclosing build admitted, exported so a nested build of a
+#: copied checkout can accept the cache its parent already passed through.
+_ADMITTED_WHEEL_CACHE_ROOT_VARIABLE = "CADRUMO_RUNTIME_WHEEL_CACHE_ADMITTED_ROOT"
 #: Checkout members that hold machine-managed state rather than source.
 _MACHINE_MANAGED_CHECKOUT_ROOTS = frozenset({".cache", "var"})
 
 
 class WheelCacheLocationError(ValueError):
     """The runtime wheel cache a build would share resolves outside the machine-managed cache roots."""
+
+
+def _require_outside_source(location: Path, checkouts: tuple[Path, ...], *, subject: str) -> None:
+    for checkout in checkouts:
+        if location.is_relative_to(checkout):
+            relative = location.relative_to(checkout).parts
+            if not relative or relative[0] not in _MACHINE_MANAGED_CHECKOUT_ROOTS:
+                raise WheelCacheLocationError(f"{subject} resolves inside a source tree: {location}")
+
+
+def _inherited_cache_root(checkouts: tuple[Path, ...]) -> Path | None:
+    """Return the cache root an enclosing build admitted, after re-checking its containment.
+
+    The exported root must already be its own canonical form, so a relative
+    value, a ``..`` segment or a link anywhere along it is refused rather than
+    followed; a filesystem anchor would admit every location and is refused too.
+    """
+    exported = os.environ.get(_ADMITTED_WHEEL_CACHE_ROOT_VARIABLE, "").strip()
+    if not exported:
+        return None
+    root = Path(exported)
+    canonical = root.resolve()
+    if not root.is_absolute() or canonical != root:
+        raise WheelCacheLocationError(f"inherited wheel cache root is not a canonical path: {root}")
+    if canonical == Path(canonical.anchor):
+        raise WheelCacheLocationError(f"inherited wheel cache root is a filesystem root: {root}")
+    _require_outside_source(canonical, checkouts, subject="inherited wheel cache root")
+    return canonical
+
+
+def _admit_wheel_cache(repo_root: Path) -> tuple[Path, Path]:
+    """Return the admitted wheel cache and the machine-managed root that admitted it."""
+    cache = wheel_cache_dir().resolve()
+    checkouts = tuple(dict.fromkeys((repo_root.resolve(strict=True), REPO_ROOT.resolve(strict=True))))
+    _require_outside_source(cache, checkouts, subject="runtime wheel cache")
+    inherited = _inherited_cache_root(checkouts)
+    allowed = (
+        dev_cache_root().resolve(),
+        *(checkout / ".cache" for checkout in checkouts),
+        *((inherited,) if inherited is not None else ()),
+    )
+    for root in allowed:
+        if cache.is_relative_to(root):
+            return cache, root
+    raise WheelCacheLocationError(
+        f"runtime wheel cache must stay below {' or '.join(str(root) for root in allowed)}: {cache}"
+    )
 
 
 def admitted_wheel_cache(repo_root: Path) -> Path:
@@ -41,25 +91,16 @@ def admitted_wheel_cache(repo_root: Path) -> Path:
     passed through: every entry is named for its lock SHA-256 and re-hashed
     before it is served, so sharing it cannot change a build's bytes, and an
     isolated one made every cohort build fetch every wheel from the index. It
-    must still be machine-managed state: below the development cache root or a
-    checkout's ``.cache``, and never inside a checkout's source tree.
+    must still be machine-managed state: below the development cache root, a
+    checkout's ``.cache``, or the root an enclosing build admitted, and never
+    inside a checkout's source tree. The enclosing build's root matters because
+    it moves the development cache root before a nested build of a copied
+    checkout resolves this again.
 
     Raises:
         WheelCacheLocationError: When the cache resolves anywhere else.
     """
-    cache = wheel_cache_dir().resolve()
-    checkouts = tuple(dict.fromkeys((repo_root.resolve(strict=True), REPO_ROOT.resolve(strict=True))))
-    for checkout in checkouts:
-        if cache.is_relative_to(checkout):
-            relative = cache.relative_to(checkout).parts
-            if not relative or relative[0] not in _MACHINE_MANAGED_CHECKOUT_ROOTS:
-                raise WheelCacheLocationError(f"runtime wheel cache resolves inside a source tree: {cache}")
-    allowed = (dev_cache_root().resolve(), *(checkout / ".cache" for checkout in checkouts))
-    if not any(cache.is_relative_to(root) for root in allowed):
-        raise WheelCacheLocationError(
-            f"runtime wheel cache must stay below {' or '.join(str(root) for root in allowed)}: {cache}"
-        )
-    return cache
+    return _admit_wheel_cache(repo_root)[0]
 
 
 def _path_variables(work: Path) -> dict[str, Path]:
@@ -98,7 +139,7 @@ def build_environment(work: Path, *, repo_root: Path = REPO_ROOT) -> Generator[d
     """Yield independent build controls without changing the caller's environment."""
     selected = _admit_work(work, repo_root)
     # Resolved from the caller's environment, before the cache root moves below.
-    wheel_cache = admitted_wheel_cache(repo_root)
+    wheel_cache, wheel_cache_root = _admit_wheel_cache(repo_root)
     temporary_base = prepare_temp_root()
     with tempfile.TemporaryDirectory(prefix=f"cadrumo-build-{selected.name}-", dir=temporary_base) as temporary:
         paths = _path_variables(Path(temporary))
@@ -110,6 +151,7 @@ def build_environment(work: Path, *, repo_root: Path = REPO_ROOT) -> Generator[d
         yield {
             **{name: str(path) for name, path in paths.items()},
             _RUNTIME_WHEEL_CACHE_VARIABLE: str(wheel_cache),
+            _ADMITTED_WHEEL_CACHE_ROOT_VARIABLE: str(wheel_cache_root),
             "PYTHONDONTWRITEBYTECODE": "1",
         }
 

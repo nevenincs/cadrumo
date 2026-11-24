@@ -34,6 +34,7 @@ _DERIVED_CACHE_VARIABLES = (
     "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
 )
 _WHEEL_CACHE_VARIABLE = "CADRUMO_RUNTIME_WHEEL_CACHE_DIR"
+_ADMITTED_ROOT_VARIABLE = "CADRUMO_RUNTIME_WHEEL_CACHE_ADMITTED_ROOT"
 _PRESERVED_TOOL_VARIABLES = (
     "UV_CACHE_DIR",
     "UV_TOOL_DIR",
@@ -172,6 +173,82 @@ def test_the_shared_wheel_cache_is_admitted_only_below_a_machine_managed_cache_r
     monkeypatch.setenv(_WHEEL_CACHE_VARIABLE, str(outside))
     with pytest.raises(WheelCacheLocationError, match="must stay below"):
         admitted_wheel_cache(REPO_ROOT)
+
+
+def _enter_child_environment(monkeypatch: pytest.MonkeyPatch, controls: dict[str, str]) -> None:
+    """Give this process the environment a nested build child inherits from ``controls``."""
+    for name, value in controls.items():
+        monkeypatch.setenv(name, value)
+
+
+def test_a_nested_build_of_a_copied_checkout_admits_the_cache_its_parent_admitted(
+    build_owned_work_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The parent moves the development cache root, so only its exported admission reaches the child."""
+    parent_cache_root = (
+        REPO_ROOT / "var" / "storage" / "development" / f"nested-{build_owned_work_root.name}"
+    ).resolve()
+    monkeypatch.setenv("CADRUMO_DEV_CACHE_ROOT", str(parent_cache_root))
+    monkeypatch.delenv(_WHEEL_CACHE_VARIABLE, raising=False)
+    monkeypatch.delenv(_ADMITTED_ROOT_VARIABLE, raising=False)
+    snapshot = build_owned_work_root / "snapshot"
+    snapshot.mkdir()
+
+    with build_environment(build_owned_work_root / "outer-work") as outer:
+        cache = parent_cache_root / "runtime-wheel-cache"
+        assert outer[_WHEEL_CACHE_VARIABLE] == str(cache)
+        assert outer[_ADMITTED_ROOT_VARIABLE] == str(parent_cache_root)
+        _enter_child_environment(monkeypatch, outer)
+
+        assert admitted_wheel_cache(snapshot) == cache
+        with build_environment(snapshot / "build" / "nested-work", repo_root=snapshot) as nested:
+            assert nested[_WHEEL_CACHE_VARIABLE] == str(cache)
+            assert nested[_ADMITTED_ROOT_VARIABLE] == str(parent_cache_root)
+
+        # Without the parent's admission the moved cache root no longer covers it.
+        monkeypatch.delenv(_ADMITTED_ROOT_VARIABLE)
+        with pytest.raises(WheelCacheLocationError, match="must stay below"):
+            admitted_wheel_cache(snapshot)
+
+
+@pytest.mark.parametrize(
+    ("exported", "message"),
+    [
+        (REPO_ROOT / "var" / "storage" / ".." / "storage" / "development", "not a canonical path"),
+        (Path("var") / "storage" / "development", "not a canonical path"),
+        (Path(REPO_ROOT.resolve().anchor), "filesystem root"),
+        (REPO_ROOT.resolve() / "dev" / "packaging", "inside a source tree"),
+    ],
+)
+def test_an_inherited_cache_root_is_refused_when_it_escapes_containment(
+    build_owned_work_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    exported: Path,
+    message: str,
+) -> None:
+    """The exported root is re-checked, so the variable cannot admit an arbitrary location."""
+    snapshot = build_owned_work_root / "snapshot"
+    snapshot.mkdir()
+    monkeypatch.setenv(_WHEEL_CACHE_VARIABLE, str(REPO_ROOT / "var" / "storage" / "development" / "wheels"))
+    monkeypatch.setenv(_ADMITTED_ROOT_VARIABLE, str(exported))
+
+    with pytest.raises(WheelCacheLocationError, match=message):
+        admitted_wheel_cache(snapshot)
+
+
+def test_a_cache_outside_the_inherited_root_is_still_refused(
+    build_owned_work_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    snapshot = build_owned_work_root / "snapshot"
+    snapshot.mkdir()
+    monkeypatch.setenv("CADRUMO_DEV_CACHE_ROOT", str(build_owned_work_root / "isolated-cache"))
+    monkeypatch.setenv(_ADMITTED_ROOT_VARIABLE, str((REPO_ROOT / "var" / "storage" / "development").resolve()))
+    monkeypatch.setenv(_WHEEL_CACHE_VARIABLE, str(REPO_ROOT.resolve() / "var" / "other-wheels"))
+
+    with pytest.raises(WheelCacheLocationError, match="must stay below"):
+        admitted_wheel_cache(snapshot)
 
 
 def test_build_storage_refuses_a_linked_work_root_before_creating_state(build_owned_work_root: Path) -> None:

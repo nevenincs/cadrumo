@@ -35,8 +35,7 @@ from .commands import (
 from .completeness import (
     atribucion_socio_forbidden_country_paths,
     atribucion_socio_missing_country_paths,
-    conditional_profile_missing_required,
-    missing_required_field_paths,
+    profile_completeness_gaps,
 )
 from .projections import in_window_order
 
@@ -247,8 +246,7 @@ class ProfileValidationService:
         issues: list[ProfileValidationIssue] = []
         for fact in facts:
             issues.extend(self._validate_one_fact(fact))
-        issues.extend(self._required_field_issues(facts))
-        issues.extend(self._conditional_completeness_issues(facts))
+        issues.extend(self._completeness_issues(facts))
         issues.extend(self._atribucion_socio_country_issues(facts))
         issues.extend(self._plantilla_media_issues(facts))
         issues.extend(self._composed_legal_name_issues(facts))
@@ -480,7 +478,7 @@ class ProfileValidationService:
             ),
         )
 
-    def _required_field_issues(
+    def _completeness_issues(
         self,
         facts: tuple[UserProfileFact, ...],
     ) -> tuple[ProfileValidationIssue, ...]:
@@ -500,30 +498,31 @@ class ProfileValidationService:
         # pass. The shared row-aware helper is what makes "required" mean
         # per-row, and the overview reads the same one so the enforcing
         # surface and the displayed one cannot drift apart again.
+        # Schema-required and conditionally required gaps come from the one
+        # completeness answer the readiness gate also reads, so the door that
+        # refuses completing setup and the gate that refuses modelo work name
+        # the same facts.
         values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
-        return tuple(
-            ProfileValidationIssue(
-                severity=BaseSeverity.ERROR,
-                code=REQUIRED_FIELD_MISSING_CODE,
-                path=path,
-                message=f"required field {path} is missing",
-            )
-            for path in missing_required_field_paths(self._schema, values)
-        )
-
-    def _conditional_completeness_issues(
-        self,
-        facts: tuple[UserProfileFact, ...],
-    ) -> tuple[ProfileValidationIssue, ...]:
-        values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
-        return tuple(
-            ProfileValidationIssue(
-                severity=BaseSeverity.ERROR,
-                code=CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
-                path=path,
-                message=f"conditionally required field {path} is missing",
-            )
-            for path in conditional_profile_missing_required(values)
+        gaps = profile_completeness_gaps(self._schema, values)
+        return (
+            *(
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code=REQUIRED_FIELD_MISSING_CODE,
+                    path=path,
+                    message=f"required field {path} is missing",
+                )
+                for path in gaps.schema_required
+            ),
+            *(
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code=CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
+                    path=path,
+                    message=f"conditionally required field {path} is missing",
+                )
+                for path in gaps.conditional
+            ),
         )
 
     def _atribucion_socio_country_issues(

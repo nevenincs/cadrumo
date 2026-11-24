@@ -58,7 +58,7 @@ from ..operations.next_step import (
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import profile_required_facts_missing_verdict, profile_setup_incomplete_verdict
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
-from ..user_profile.completeness import missing_required_field_paths, modelo_iva_block_missing_paths
+from ..user_profile.completeness import modelo_iva_block_missing_paths, profile_completeness_gaps
 from ..user_profile.preflight import (
     ProfilePreflightService,
     build_profile_preflight_requirement,
@@ -778,7 +778,10 @@ def _require_profile_setup_complete(
     if record.setup_state is not ProfileSetupState.INCOMPLETE:
         return
     schema = profile_decode_context.schema
-    missing_paths = missing_required_field_paths(schema, record_to_path_values(record))
+    # Schema-required and conditional gaps alike: a setup owing only a
+    # conditional fact (the large-company answer a claimed IVA block owes)
+    # otherwise reached the generic refusal naming nothing to fill in.
+    missing_paths = profile_completeness_gaps(schema, record_to_path_values(record)).paths
     if missing_paths:
         grounding = grounding_index or {}
         requirements = tuple(

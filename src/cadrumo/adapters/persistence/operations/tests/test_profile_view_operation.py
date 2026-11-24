@@ -405,6 +405,7 @@ def test_status_page_ready_record_projects_only_declared_facts(tmp_path: Path) -
             ("iva.voluntary_sii_enrolled", "false"),
             ("iva.hydrocarbon_deposit_advance_payment_deduction_entitled", "false"),
             ("tax_residence.jurisdiction_scope", "common_regime"),
+            ("censo.large_company", "false"),
         )
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):

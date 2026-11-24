@@ -74,6 +74,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
             UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
             UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
+            UserProfileFact(path="censo.large_company", value="false"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),

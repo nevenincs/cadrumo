@@ -277,7 +277,7 @@ def seed_filer_profile(*, tax_id: str | None = "12345678Z") -> None:
     # is built under a real authority lease.
     with bundled_indexed_authority().operation() as operation:
         record = create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
+            setup_state=ProfileSetupState.INCOMPLETE,
             profile_id=BUCKET_ID,
             facts=tuple(facts),
             created_at=clock,

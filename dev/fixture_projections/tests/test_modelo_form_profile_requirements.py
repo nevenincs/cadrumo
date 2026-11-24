@@ -43,11 +43,17 @@ def producer() -> ModuleType:
 
 
 def _recorded_profile_requirements(producer: ModuleType, tmp_path: Path, *, unanswered: bool) -> list[str]:
-    """Record the persona's first-quarter Modelo 303 form, its schedule fact taken back first where asked."""
-    from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    """Record the persona's first-quarter Modelo 303 form, its schedule fact taken back first where asked.
+
+    The completion door now owes the schedule fact, so no operator door takes it
+    back from a completed profile. The unanswered case is the profile completed
+    before the fact was owed: the record is republished without it through the
+    record repository, beneath the doors that judge completeness.
+    """
+    from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
     from cadrumo.core.time.clock import frozen_clock
-    from cadrumo.domain.user_profile.values import UserProfileFact
-    from cadrumo.entrypoints.tests.persona_replay_requests import load_profile_record
+    from cadrumo.domain.buckets.event import BucketEventType
+    from cadrumo.domain.user_profile.values import ProfileSetupState
 
     directory = tmp_path / "envelopes"
     directory.mkdir(parents=True)
@@ -59,12 +65,19 @@ def _recorded_profile_requirements(producer: ModuleType, tmp_path: Path, *, unan
         work = producer._declaration(persona, "303", producer.declarations_year(), "1T")
         if unanswered:
             world = persona.world
-            apply_profile_fact_changes(
-                profile_id=str(world.profile_id),
-                changes=(UserProfileFact(path=_SCHEDULE_FACT, value=None),),
-                door=ProfileFactWriteDoor.MANAGER_FIELD,
-                expected_record=load_profile_record(world),
-                profile_decode_context=world.operation.profile_decode_context(),
+            repository = ProfileRecordRepository.for_current_session(
+                world.profile_id, profile_decode_context=world.operation.profile_decode_context()
+            )
+            current = repository.load(world.profile_id)
+            assert current.setup_state is ProfileSetupState.COMPLETE
+            assert any(fact.path == _SCHEDULE_FACT for fact in current.facts), "the persona answers the schedule"
+            repository.apply_fact_changes(
+                world.profile_id,
+                facts=tuple(fact for fact in current.facts if fact.path != _SCHEDULE_FACT),
+                expected_revision=current.record_revision,
+                expected_content_digest=current.content_digest,
+                event_type=BucketEventType.PROFILE_VALUES_UPDATED,
+                event_payload={},
             )
         producer._write_form(directory, work, "modelo-303-1T")
     form = json.loads((directory / "modelo-303-1T-en.json").read_text("utf-8"))
