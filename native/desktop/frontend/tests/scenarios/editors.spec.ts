@@ -462,9 +462,9 @@ for (const family of [
     name: "a tax id",
     field: { kind: "taxId" },
     value: "B12345678",
-    text: "x1234567l",
-    held: "X1234567L",
-    shown: "X1234567L",
+    text: "x0001000b",
+    held: "X0001000B",
+    shown: "X0001000B",
   },
 ] as const) {
   test(`${family.name} filled over a held value replaces it`, async ({

@@ -20,6 +20,7 @@ from .....application.user_profile.profile_record_repository import close_active
 from .....core.config import Settings, load_settings, override_settings
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.errors.hierarchy import CadrumoError
+from .....core.logging import detach_diagnostic_files
 from .....core.storage_environment import STORAGE_ROOT
 from .....tests.env_scope import scoped_env_var
 from ..bucket.directory_layout import BucketPaths
@@ -439,6 +440,10 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     resolve a working credential. It no longer selects a process-wide key
     store: the shared-master backends are deleted, and the key a bucket
     opens under is its own, minted per profile by the custody package.
+
+    A diagnostic log file the process bound inside the root is detached as the
+    root ends, so nothing writes into the tree or holds it open afterwards: a
+    caller may seal, digest or rename it at once.
     """
 
     tmp_path.mkdir(parents=True, exist_ok=True)
@@ -467,6 +472,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
         finally:
             reap_profile_session_keys(storage_root)
             dispose_engine(settings)
+            detach_diagnostic_files(storage_root)
 
 
 def default_test_profile_label(bucket_id: str) -> str:

@@ -87,7 +87,7 @@ def test_without_an_activity_axis_the_categories_stay_undeclared() -> None:
 def test_a_legal_entity_gets_no_irpf_category() -> None:
     profile = taxpayer_profile_from_mapping(
         {"taxpayer_type.entity_type": "legal_entity", **_IVA_DECLARED, "irpf.activity_kind": "profesional"},
-        tax_id_default="B12345674",
+        tax_id_default="B00010017",
     )
 
     assert profile.irpf_income_categories == frozenset()

@@ -38,7 +38,7 @@ def _one_identity(**fields: object) -> dict[str, object]:
     """A natural person with a stated name, unless the fields state a razón social instead."""
     name = {} if "razon_social" in fields else _NATURAL_NAME
     return _identity_document(
-        {"role": "a.titular", "persona": "a", "kind": "nif", "value": "00000006Y", **name, **fields}
+        {"role": "a.titular", "persona": "a", "kind": "nif", "value": "00001001N", **name, **fields}
     )
 
 
@@ -49,7 +49,7 @@ def test_a_natural_person_states_apellidos_and_nombre_and_an_entity_its_razon_so
     assert person.surnames == "Vidal Soler"
     assert person.field("nombre") == "Andrés"
     entity = parse_identity_catalogue(
-        _one_identity(kind="cif", value="B00000059", razon_social="Ediciones del Turia, S.L.")
+        _one_identity(kind="cif", value="B00010017", razon_social="Ediciones del Turia, S.L.")
     ).role("a.titular")
     assert entity.is_entity is True
     assert entity.field("razon_social") == "Ediciones del Turia, S.L."
@@ -62,7 +62,7 @@ def test_a_single_surname_is_stated_and_never_read_from_a_blank() -> None:
             "role": "a.titular",
             "persona": "a",
             "kind": "nie",
-            "value": "X0000001R",
+            "value": "X0001001N",
             "primer_apellido": "Holm",
             "nombre": "Mikkel",
             "no_second_surname": True,
@@ -128,7 +128,7 @@ def test_a_single_surname_is_stated_and_never_read_from_a_blank() -> None:
     ],
 )
 def test_a_malformed_identity_name_is_refused(fields: dict[str, object], message: str) -> None:
-    identity = {"role": "a.titular", "persona": "a", "value": "00000006Y", **fields}
+    identity = {"role": "a.titular", "persona": "a", "value": "00001001N", **fields}
     with pytest.raises(PersonaCatalogueError, match=message):
         parse_identity_catalogue(_identity_document(identity))
 
@@ -137,7 +137,7 @@ def test_an_identity_states_the_operators_rendering_for_a_narrower_field() -> No
     identity: dict[str, object] = {
         "role": "a.titular",
         "persona": "a",
-        "value": "00000006Y",
+        "value": "00001001N",
         "kind": "cif",
         "razon_social": "Ediciones del Turia, S.L.",
         "renderings": [{"width": 20, "text": "Ediciones del Turia"}],

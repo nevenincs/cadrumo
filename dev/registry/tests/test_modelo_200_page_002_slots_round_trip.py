@@ -61,6 +61,7 @@ from cadrumo.domain.user_profile.values import (
     UserProfileFactValue,
     create_user_profile_record,
 )
+from cadrumo.tests.persona_identities import identity_catalogue
 from dev.registry.compiler.loader import modelo_fact_scope
 from dev.registry.edition_export_scenarios import m200_export_scenario, m200_one_row_per_family
 from dev.registry.edition_round_trip import SYNTHETIC_TAX_ID
@@ -73,11 +74,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _M200 = "200"
 _ADMINISTRADORES = (
     Modelo200AdministradorRow(nif="B00010082", apellidos_nombre_razon_social="ADMINISTRADORA UNO"),
-    Modelo200AdministradorRow(nif="B00020081", apellidos_nombre_razon_social="ADMINISTRADOR DOS"),
+    Modelo200AdministradorRow(nif="B00010009", apellidos_nombre_razon_social="ADMINISTRADOR DOS"),
 )
 _SOCIOS = (
-    Modelo200ParticipacionSocioRow(nif="B00030080", apellidos_nombre_razon_social="SOCIA UNO"),
-    Modelo200ParticipacionSocioRow(nif="B00040089", apellidos_nombre_razon_social="SOCIO DOS"),
+    Modelo200ParticipacionSocioRow(nif="B00010017", apellidos_nombre_razon_social="SOCIA UNO"),
+    Modelo200ParticipacionSocioRow(nif="B00010025", apellidos_nombre_razon_social="SOCIO DOS"),
 )
 
 
@@ -297,7 +298,7 @@ def test_more_administradores_than_the_page_has_slots_refuse(
 # The sociedad limitada persona's synthetic page 002 relations: its sole administradora, a
 # resident natural person identified by a NIE, is also its sole socia, holding the whole
 # share capital, and its representante legal under the deed of incorporation.
-_PERSONA_NIE = "Y0000000Z"
+_PERSONA_NIE = identity_catalogue().role("sociedad.administrador").value
 _PERSONA_NAME = "FERREIRA COSTA ANA"
 # The notaria the persona fixture states; the design prints "Notaría/otros" in 12 characters.
 _PERSONA_NOTARIA = "NOTARIA DE VALLADOLID, PROTOCOLO 101"

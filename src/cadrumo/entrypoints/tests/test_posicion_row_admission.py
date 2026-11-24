@@ -37,7 +37,7 @@ from ...domain.user_profile.errors import ProfileSchemaValidationError, UserProf
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 YEAR = filing_year_envelope().horizon
-PAYER = "B00000000"
+PAYER = "B00010009"
 PAYER_WITHOUT_CONTROL = "B00000001"
 FOREIGN_STATE = "DE"
 UNCATALOGUED_STATE = "QQ"

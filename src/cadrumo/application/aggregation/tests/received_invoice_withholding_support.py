@@ -25,10 +25,10 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..retenciones import RetencionObservation
 
-NATURAL_PERSON_PROFESSIONAL_NIF = "51234567C"
+NATURAL_PERSON_PROFESSIONAL_NIF = "00001001N"
 """A DNI-form NIF with a valid control letter: an IRPF taxpayer."""
 
-PROFESSIONAL_COMPANY_NIF = "B81000069"
+PROFESSIONAL_COMPANY_NIF = "B00010017"
 """A sociedad limitada's NIF: an Impuesto sobre Sociedades taxpayer."""
 
 

@@ -112,7 +112,7 @@ def _withheld_domestic_sale(operation: PinnedAuthorityOperation) -> Invoice:
     return _issued(
         "2025-001",
         on=date(_YEAR, 1, 15),
-        nif="B81000010",
+        nif="B00010025",
         name="Alfa SL",
         country="ES",
         base="2000.00",

@@ -79,7 +79,7 @@ from .renta_inmueble_support import TENANT_NIF, expense, inmueble, lease, monthl
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SECOND_TENANT = "12345678Z"
-_THIRD_TENANT = "87654321X"
+_THIRD_TENANT = "00001002J"
 _BUILDING_RATE = Decimal("0.03")
 _REDUCTION_RATE = Decimal("0.60")
 _PENDING_ON_ONE = Decimal("300.00")

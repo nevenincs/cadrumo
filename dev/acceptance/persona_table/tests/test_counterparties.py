@@ -26,12 +26,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 type Row = Mapping[str, object]
 
 _B347: Row = {
-    "modelo-347-contraparte-row-nif": "B00000026",
+    "modelo-347-contraparte-row-nif": "B00010009",
     "modelo-347-contraparte-row-clave": "A",
     "modelo-347-contraparte-row-importe": Decimal("10684.30"),
 }
 _C347: Row = {
-    "modelo-347-contraparte-row-nif": "H00000018",
+    "modelo-347-contraparte-row-nif": "H00010009",
     "modelo-347-contraparte-row-clave": "B",
     "modelo-347-contraparte-row-importe": Decimal("6765.00"),
 }
@@ -88,9 +88,9 @@ def _identities() -> IdentityCatalogue:
 
     return IdentityCatalogue(
         identities=(
-            identity("p.proveedor", "cif", "B00000026"),
-            identity("p.comunidad", "cif", "H00000018"),
-            identity("p.pequeno", "nif", "00000011B"),
+            identity("p.proveedor", "cif", "B00010009"),
+            identity("p.comunidad", "cif", "H00010009"),
+            identity("p.pequeno", "nif", "00001000B"),
             identity("p.cliente-de", "nif_iva", "DE000000001", "DE"),
         ),
         refusals=(),
@@ -116,7 +116,7 @@ def _stated(modelo: str, role: str, **concepts: str) -> ExpectedValue:
 def test_the_reader_gives_each_type_2_record_by_registry_binding() -> None:
     layout, payload = _fichero("347", "0A", [_B347, _C347])
     rows = read_records(layout, payload, DESIGNS["347"])
-    assert [row["modelo-347-contraparte-row-nif"] for row in rows] == ["B00000026", "H00000018"]
+    assert [row["modelo-347-contraparte-row-nif"] for row in rows] == ["B00010009", "H00010009"]
     assert rows[0]["modelo-347-contraparte-row-importe"] == Decimal("10684.30")
 
 
@@ -168,7 +168,7 @@ def test_a_349_operator_is_matched_by_country_and_nif_iva_and_its_base_by_value(
 
 def test_a_180_perceptor_amount_is_compared_as_a_number_whatever_its_stated_scale() -> None:
     row = {
-        "modelo-180-perceptor-row-nif": "00000011B",
+        "modelo-180-perceptor-row-nif": "00001000B",
         "modelo-180-perceptor-row-base": Decimal("7200.00"),
         "modelo-180-perceptor-row-retenciones": Decimal("1368.00"),
     }

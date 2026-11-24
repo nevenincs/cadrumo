@@ -61,7 +61,7 @@ BUCKET = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 _YEAR = 2025
 _Q1 = Period.from_year_and_code(_YEAR, "1T")
 _NATURAL_PERSON_NIF = "12345678Z"
-_COMPANY_NIF = "B81000010"
+_COMPANY_NIF = "B00010025"
 
 
 def _quarter(*, gestoria_nif: str) -> tuple[InvoiceCatalogue, TransactionCatalogue]:

@@ -32,7 +32,7 @@ from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 REFERENCIA_CATASTRAL = "9872023VH5797S0001WX"
-TENANT_NIF = "X1234567L"
+TENANT_NIF = "X0001001N"
 
 
 def inmueble(clave: int = 0, *, ejercicio: int, **fields: object) -> InmuebleRecord:

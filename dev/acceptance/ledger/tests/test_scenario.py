@@ -41,8 +41,11 @@ def test_structured_import_fixture_retains_row_provenance_and_replay_contract() 
     assert imported.fixture_id in scenario.fresh_process_invoice_fixture_ids
     assert imported.filename == "ledger-received.csv"
     assert row.source_row == 2
-    assert imported.row_values(row) == {
-        "counterparty_nif": "B12345674",
+    values = imported.row_values(row)
+    counterparty_nif = values.pop("counterparty_nif")
+    assert counterparty_nif == imported.row_values(imported.rows[1])["counterparty_nif"]
+    assert len(counterparty_nif) == 9
+    assert values == {
         "counterparty_name": "Synthetic supplier SL",
         "invoice_number": f"LEDGER-REC-{_YEAR}-001",
         "invoice_date": f"{_YEAR}-03-20",

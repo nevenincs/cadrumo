@@ -22,7 +22,7 @@ test("a library's prop warning keeps its shape and loses every value", () => {
 
 test("private values never survive a template or a module", () => {
   const encoded = JSON.stringify([
-    redactTemplate('Cannot read X1234567L for Juan García 1.234,56 "secret"'),
+    redactTemplate('Cannot read X0001000B for Juan García 1.234,56 "secret"'),
     redactTemplate("TypeError: juan@example.com IBAN ES9121000418450200051332"),
     redactTemplate("Failed `private-canary"),
     moduleName("C:\\Users\\Juan\\a.js"),
@@ -30,7 +30,7 @@ test("private values never survive a template or a module", () => {
     moduleName("https://example.com/private-canary/"),
   ]);
   for (const secret of [
-    "X1234567L",
+    "X0001000B",
     "Juan",
     "Garc",
     "1.234",
@@ -123,7 +123,7 @@ test("only an automated window reads Tauri's echo of a WebDriver result as no fa
 });
 
 test("a rejected value says its kind, and a host failure its closed code", () => {
-  expect(rejectionSummary({ code: "unknown", reason: "X1234567L" })).toEqual({
+  expect(rejectionSummary({ code: "unknown", reason: "X0001000B" })).toEqual({
     template: "host failure unknown",
   });
   expect(rejectionSummary(undefined)).toEqual({

@@ -221,7 +221,7 @@ def _seed_sociedad_profile(filing_year: int, incn_prior: Decimal) -> None:
         profile_id=_BUCKET_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="B00023002"),
+                UserProfileFact(path="identity.tax_id", value="B00010009"),
                 UserProfileFact(path="identity.legal_name", value="Microempresa Escala Sintetica SL"),
                 UserProfileFact(path="activities.description", value="comercio al por menor"),
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn_prior),

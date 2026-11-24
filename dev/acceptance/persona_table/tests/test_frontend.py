@@ -258,7 +258,7 @@ def test_a_redacted_figure_equals_any_non_empty_table_value_for_its_casilla() ->
     row = _row(figures=(*_FIGURES, ("0091", "12345678Z")))
     shown = _result(figures={**dict(_FIGURES), "0091": "sha256:0123abcd"})
     assert (parity(row, "cli", shown).outcome, parity(row, "cli", shown).causes) == ("matched", ())
-    other = _row(figures=(*_FIGURES, ("0091", "87654321X")))
+    other = _row(figures=(*_FIGURES, ("0091", "00001001N")))
     assert parity(other, "cli", shown).outcome == "matched"
     assert figure_causes("cli", {"0001": "ES12"}, {"0001": "sha256:00000000"}) == []
 

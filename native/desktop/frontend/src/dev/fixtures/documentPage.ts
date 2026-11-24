@@ -76,9 +76,9 @@ const lineFacts = (
 
 const PARTIES = [
   text("supplier_name", "Proveedora Ficticia SL"),
-  text("supplier_tax_id", "B00000000"),
+  text("supplier_tax_id", "B00010009"),
   text("customer_name", "Cliente Inventado SA"),
-  text("customer_tax_id", "A00000000"),
+  text("customer_tax_id", "A00010009"),
   text("invoice_series", "F"),
   text("invoice_number", "2026-0001"),
   date("invoice_date", "2026-10-15"),

@@ -42,7 +42,7 @@ _KEPT = (
     UserProfileFact(path="identity.tax_id", value="X0001500M"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="auth.provider", value="clave_movil"),
-    UserProfileFact(path="auth.numero_soporte", value="E00000000"),
+    UserProfileFact(path="auth.numero_soporte", value="E00010017"),
 )
 #: A stale copy that differs from the tax identifier, the case that misled the operator.
 _STALE_COPY = UserProfileFact(path=RETIRED_CLAVE_IDENTITY_PATH, value="12345678Z")

@@ -240,7 +240,7 @@ def test_a_modelo_code_coerced_from_another_type_is_terminal() -> None:
 def test_member_shares_that_do_not_total_one_hundred_are_the_operators_decision() -> None:
     rows = [
         Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("60"), importe=Decimal("0"), clave="D"),
-        Modelo184MemberRow(nif="44444444A", porcentaje=Decimal("30"), importe=Decimal("0"), clave="D"),
+        Modelo184MemberRow(nif="00001001N", porcentaje=Decimal("30"), importe=Decimal("0"), clave="D"),
     ]
 
     with pytest.raises(Modelo184ShareSumError) as refused:

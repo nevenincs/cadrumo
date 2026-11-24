@@ -448,7 +448,7 @@ def test_an_ascendant_without_its_income_names_the_fact_and_the_row_edit_in_ever
         UserProfileFact(path="renta_family.ascendientes_count", value="1"),
         UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
         UserProfileFact(path="renta_family.ascendiente.0.apellidos_nombre", value="Navarro Gil Carmen"),
-        UserProfileFact(path="renta_family.ascendiente.0.nif", value="00000001R"),
+        UserProfileFact(path="renta_family.ascendiente.0.nif", value="00001001N"),
         UserProfileFact(path="renta_family.ascendiente.0.convivientes", value="1"),
         UserProfileFact(path="renta_family.ascendiente.0.convivencia_mitad_periodo", value="true"),
     )

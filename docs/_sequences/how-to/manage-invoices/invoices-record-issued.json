@@ -12,7 +12,7 @@
         "--kind",
         "issued",
         "--counterparty-nif",
-        "B12345674",
+        "B00010009",
         "--country-code",
         "ES",
         "--counterparty-name",
@@ -30,7 +30,7 @@
         {
           "json_path": "result.invoice_id",
           "name": "invoice_id",
-          "value": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211"
+          "value": "2b6237542aa294492059353aa5dd85f6d66cf47004a9333de946a5b26250764d"
         }
       ],
       "envelope": {
@@ -51,7 +51,7 @@
           "bucket_id": "<bucket-id>",
           "counterparty_country": "ES",
           "counterparty_name": "Cliente SL",
-          "counterparty_tax_id": "sha256:133cad41",
+          "counterparty_tax_id": "sha256:7c580838",
           "currency": "EUR",
           "fx_rate": null,
           "fx_rate_date": null,
@@ -59,7 +59,7 @@
           "grand_total": "1210.00",
           "grand_total_eur": "1210.00",
           "invoice_class": "ORDINARIA",
-          "invoice_id": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211",
+          "invoice_id": "2b6237542aa294492059353aa5dd85f6d66cf47004a9333de946a5b26250764d",
           "invoice_number": "FAC-2026-001",
           "issued_at": "2026-02-15",
           "iva_category": null,
@@ -112,7 +112,7 @@
         "ledger",
         "invoice",
         "view",
-        "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211"
+        "2b6237542aa294492059353aa5dd85f6d66cf47004a9333de946a5b26250764d"
       ],
       "captures": [],
       "envelope": {
@@ -133,7 +133,7 @@
           "bucket_id": "<bucket-id>",
           "counterparty_country": "ES",
           "counterparty_name": "Cliente SL",
-          "counterparty_tax_id": "sha256:133cad41",
+          "counterparty_tax_id": "sha256:7c580838",
           "currency": "EUR",
           "fx_rate": null,
           "fx_rate_date": null,
@@ -141,7 +141,7 @@
           "grand_total": "1210.00",
           "grand_total_eur": "1210.00",
           "invoice_class": "ORDINARIA",
-          "invoice_id": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211",
+          "invoice_id": "2b6237542aa294492059353aa5dd85f6d66cf47004a9333de946a5b26250764d",
           "invoice_number": "FAC-2026-001",
           "issued_at": "2026-02-15",
           "iva_category": null,
