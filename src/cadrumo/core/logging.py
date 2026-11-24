@@ -975,6 +975,32 @@ def flush_logging(*, timeout: float = 2.0) -> bool:
     return complete
 
 
+def detach_diagnostic_files(directory: Path) -> None:
+    """Deliver every pending record, then detach and close each diagnostic log file inside ``directory``.
+
+    The diagnostic file is bound once per process, beneath whatever storage
+    root the settings name when the first warning arrives. A caller that ends a
+    temporary root calls this as it ends it, so the log file inside stops being
+    written and no handle stays open on it; records after that reach the
+    remaining sinks only.
+
+    Raises:
+        OSError: When the pending records cannot be delivered, since the files may still be written.
+    """
+    if not flush_logging(timeout=30.0):
+        raise OSError(f"the diagnostic records were not delivered before {directory} was released")
+    inside = Path(os.path.normcase(directory))
+    root = logging.getLogger()
+    for handler in tuple(root.handlers):
+        if not isinstance(handler, AsyncDiagnosticHandler):
+            continue
+        sink = handler.sink
+        if isinstance(sink, logging.FileHandler) and Path(os.path.normcase(sink.baseFilename)).is_relative_to(inside):
+            root.removeHandler(handler)
+            handler.close()
+            sink.close()
+
+
 def diagnostic_delivery_status() -> dict[str, DispatchStatus]:
     """Read delivery health without acquiring any formatter, handler or file lock."""
     return {
