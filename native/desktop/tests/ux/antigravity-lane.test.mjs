@@ -197,6 +197,9 @@ function pageDialog() {
     alerts: [...dialog.querySelectorAll('[role="alert"]')]
       .filter(shown)
       .map((el) => text(el.textContent)),
+    nextSteps: [...dialog.querySelectorAll('[role="alert"][data-next-step]')]
+      .filter(shown)
+      .map((el) => el.getAttribute("data-next-step")),
     buttons: [...dialog.querySelectorAll('[data-slot="dialog-footer"] button')]
       .filter(shown)
       .map((el) => text(el.textContent)),
@@ -563,10 +566,34 @@ test(
       "desktop.providers.sign_in_waiting_device",
       "desktop.providers.sign_in_code_prompt",
     ].map((key) => norm(label(key)));
+    // A terminal sign-in first retires the running agent: the attempt is
+    // answered busy with the next step "retry", and once the dialog has
+    // prepared the retry it offers the retry button, which a person presses.
+    const retryWords = label("desktop.providers.sign_in_retry");
+    let retries = 0;
     const step = await waitFor(
       async () => {
         const now = await exec(pageDialog);
         if (!now.open) return null;
+        if (
+          now.alerts.length > 0 &&
+          now.nextSteps.length > 0 &&
+          now.nextSteps.every((next) => next === "retry") &&
+          retries < 3
+        ) {
+          if (now.buttons.includes(norm(retryWords))) {
+            retries += 1;
+            t.diagnostic(
+              `antigravity sign-in retry ${retries}: ${JSON.stringify(now.alerts)}`,
+            );
+            await press(
+              '[data-slot="dialog-footer"]',
+              "button",
+              norm(retryWords),
+            );
+          }
+          return null;
+        }
         if (now.alerts.length > 0) return { failed: true, now };
         return waiting.includes(now.description)
           ? { failed: false, now }
