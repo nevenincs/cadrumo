@@ -197,6 +197,9 @@ function pageDialog() {
     alerts: [...dialog.querySelectorAll('[role="alert"]')]
       .filter(shown)
       .map((el) => text(el.textContent)),
+    causes: [...dialog.querySelectorAll('[role="alert"][data-cause]')]
+      .filter(shown)
+      .map((el) => el.getAttribute("data-cause")),
     nextSteps: [...dialog.querySelectorAll('[role="alert"][data-next-step]')]
       .filter(shown)
       .map((el) => el.getAttribute("data-next-step")),
@@ -567,7 +570,7 @@ test(
       "desktop.providers.sign_in_code_prompt",
     ].map((key) => norm(label(key)));
     // A terminal sign-in first retires the running agent: the attempt is
-    // answered busy with the next step "retry", and once the dialog has
+    // answered busy for the running agent, and once the dialog has
     // prepared the retry it offers the retry button, which a person presses.
     const retryWords = label("desktop.providers.sign_in_retry");
     let retries = 0;
@@ -577,8 +580,8 @@ test(
         if (!now.open) return null;
         if (
           now.alerts.length > 0 &&
-          now.nextSteps.length > 0 &&
-          now.nextSteps.every((next) => next === "retry") &&
+          now.causes.length > 0 &&
+          now.causes.every((cause) => cause === "agent_tree_running") &&
           retries < 3
         ) {
           if (now.buttons.includes(norm(retryWords))) {
