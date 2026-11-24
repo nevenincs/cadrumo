@@ -668,6 +668,11 @@ desktop:
     sign_in_code_label: Engedélyezési kód
     sign_in_code_prompt: Add meg a szolgáltató oldalán látható engedélyezési kódot.
     sign_in_code_submit: Kód elküldése
+    sign_in_code_time_limited: 'Írd be a kódot, amint megvan: a(z) {provider} csak
+      rövid ideig vár rá. Ha lejár az idő, kezdheted újra.'
+    sign_in_code_unfinished: A(z) {provider}-bejelentkezés befejezés nélkül ért véget,
+      miközben a kódra várt; lehet, hogy lejárt a beírására szánt idő. Kezdd újra,
+      hogy új kódot kapj.
     sign_in_done: Kész
     sign_in_failure: Nem sikerült befejezni a bejelentkezést. Próbáld meg később újra.
     sign_in_host_disconnected: A Cadrumo elvesztette a kapcsolatot ezzel a bejelentkezéssel,

@@ -340,7 +340,13 @@ function failureWords(
   failure: Failure,
   providerName: string,
   method: ProviderSignInMethod | null,
+  /** The attempt had asked for the provider's code before it ended. */
+  codeAsked = false,
 ): string {
+  if (codeAsked && failure.detail.cause === "login_not_completed")
+    return t("desktop.providers.sign_in_code_unfinished", {
+      provider: providerName,
+    });
   if (agentStopping(failure))
     return t("desktop.providers.sign_in_agent_still_running", {
       provider: providerName,
@@ -492,6 +498,8 @@ export function ProviderSignInDialog({
   const deadline = useRef(0);
   const openedAttempt = useRef<string | null>(null);
   const seenDetail = useRef<SeenDetail | null>(null);
+  /** The attempt that asked for the provider's code, once it has. */
+  const codeAskedAttempt = useRef<string | null>(null);
   const clearedAttempt = useRef<string | null>(null);
   const api = useRef(signIn);
   const completed = useRef(onTerminal);
@@ -502,6 +510,8 @@ export function ProviderSignInDialog({
 
   /** Keeps what the service said of a live attempt, for a timeout to say. */
   const noteSeen = useCallback((next: ProviderSignInSnapshot) => {
+    if (next.event === "authorization_code_required")
+      codeAskedAttempt.current = next.attempt_id;
     const detail = detailOf(next);
     if (ACTIVE.has(next.event) && hasDetail(detail))
       seenDetail.current = { attemptId: next.attempt_id, detail };
@@ -737,6 +747,7 @@ export function ProviderSignInDialog({
     clearedAttempt.current = null;
     submittedAttempt.current = null;
     seenDetail.current = null;
+    codeAskedAttempt.current = null;
     setCode("");
     setSubmitting(false);
     setMethod(nextMethod);
@@ -1054,6 +1065,14 @@ export function ProviderSignInDialog({
                     {t("desktop.providers.sign_in_code_label")}
                   </label>
                   <AuthorizationCodeField value={code} onChange={setCode} />
+                  <p
+                    data-slot="sign-in-code-time-limited"
+                    className="text-sm text-muted-foreground"
+                  >
+                    {t("desktop.providers.sign_in_code_time_limited", {
+                      provider: provider.name,
+                    })}
+                  </p>
                   <Button
                     size="sm"
                     disabled={
@@ -1110,7 +1129,14 @@ export function ProviderSignInDialog({
             data-log-ref={shownFailure.detail.log_ref}
             className="text-sm text-destructive"
           >
-            {failureWords(t, shownFailure, provider.name, method)}
+            {failureWords(
+              t,
+              shownFailure,
+              provider.name,
+              method,
+              snapshot !== null &&
+                codeAskedAttempt.current === snapshot.attempt_id,
+            )}
           </p>
         )}
         {shownFailure && !stopping && (

@@ -1175,6 +1175,8 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.providers.sign_in_code_label",
         "desktop.providers.sign_in_code_prompt",
         "desktop.providers.sign_in_code_submit",
+        "desktop.providers.sign_in_code_time_limited",
+        "desktop.providers.sign_in_code_unfinished",
         "desktop.providers.sign_in_code_checking",
         "desktop.providers.sign_in_cause.agent_stop_failed",
         "desktop.providers.sign_in_cause.browser_not_offered",

@@ -647,6 +647,11 @@ desktop:
     sign_in_code_label: Authorization code
     sign_in_code_prompt: Enter the authorization code shown on the provider page.
     sign_in_code_submit: Submit code
+    sign_in_code_time_limited: 'Enter the code as soon as you have it: {provider}
+      waits for it only a short time. If the time runs out, you can start again.'
+    sign_in_code_unfinished: '{provider} sign-in ended without completing while it
+      waited for the code; the time to enter it may have run out. Start again to get
+      a new code.'
     sign_in_done: Done
     sign_in_failure: Sign-in couldn't be completed. Try again later.
     sign_in_host_disconnected: Cadrumo lost contact with this sign-in and cancelled

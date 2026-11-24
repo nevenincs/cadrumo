@@ -684,3 +684,77 @@ test.describe("a start refused while the agent is stopped for a terminal sign-in
     expect(starts(await signInCalls(target))).toBe(given);
   });
 });
+
+test.describe("a sign-in that asks for the provider's code", () => {
+  const shape = SHAPES.find((candidate) => candidate.asksForCode)!;
+
+  test("says the code is awaited only a short time, and an attempt that ends unfinished at the code says the time may have run out", async ({
+    page: target,
+  }) => {
+    await prepare(target, shape);
+    const dialog = await startSignIn(target, shape);
+    await expect(
+      dialog.getByLabel(label("desktop.providers.sign_in_code_label")),
+    ).toBeVisible();
+    await expect(
+      dialog.locator('[data-slot="sign-in-code-time-limited"]'),
+    ).toHaveText(
+      label("desktop.providers.sign_in_code_time_limited", {
+        provider: shape.displayName,
+      }),
+    );
+    await observedAttempt(target);
+    await target.evaluate(
+      (logRef) =>
+        window.__scenarioProviderSignIn!.failCurrentAttempt({
+          reason: "provider_error",
+          cause: "login_not_completed",
+          next_step: "retry",
+          log_ref: logRef,
+        }),
+      LOG_REF,
+    );
+    const alert = dialog.locator('p[role="alert"]').first();
+    await expect(alert).toContainText(
+      label("desktop.providers.sign_in_code_unfinished", {
+        provider: shape.displayName,
+      }),
+    );
+    await expect(alert).toHaveAttribute("data-cause", "login_not_completed");
+    await expect(dialog).not.toContainText(
+      label("desktop.providers.console_command_label"),
+    );
+    await expect(
+      dialog.getByRole("button", {
+        name: label("desktop.providers.sign_in_retry"),
+      }),
+    ).toBeVisible();
+  });
+
+  test("an attempt that ends unfinished before any code was asked for keeps its own words", async ({
+    page: target,
+  }) => {
+    const browser = SHAPES.find((candidate) => !candidate.asksForCode)!;
+    await prepare(target, browser);
+    const dialog = await startSignIn(target, browser);
+    await observedAttempt(target);
+    await target.evaluate(() =>
+      window.__scenarioProviderSignIn!.failCurrentAttempt({
+        reason: "provider_error",
+        cause: "login_not_completed",
+        next_step: "retry",
+      }),
+    );
+    const alert = dialog.locator('p[role="alert"]').first();
+    await expect(alert).toContainText(
+      label("desktop.providers.sign_in_provider_error", {
+        provider: browser.displayName,
+      }),
+    );
+    await expect(dialog).not.toContainText(
+      label("desktop.providers.sign_in_code_unfinished", {
+        provider: browser.displayName,
+      }),
+    );
+  });
+});

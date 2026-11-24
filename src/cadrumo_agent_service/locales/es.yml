@@ -677,6 +677,11 @@ desktop:
     sign_in_code_prompt: Introduce el código de autorización que aparece en la página
       del proveedor.
     sign_in_code_submit: Enviar código
+    sign_in_code_time_limited: 'Escribe el código en cuanto lo tengas: {provider}
+      solo lo espera durante poco tiempo. Si se acaba, puedes volver a empezar.'
+    sign_in_code_unfinished: El inicio de sesión de {provider} terminó sin completarse
+      mientras esperaba el código; puede que se acabara el tiempo para escribirlo.
+      Vuelve a empezar para recibir un código nuevo.
     sign_in_done: Listo
     sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo
       más tarde.

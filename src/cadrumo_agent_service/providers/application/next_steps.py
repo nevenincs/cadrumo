@@ -59,3 +59,13 @@ _STEPS: Final[dict[str, NextStep]] = {
 def next_step_for(cause: str | None) -> NextStep | None:
     """Return the step for ``cause``; every closed cause word declares one."""
     return None if cause is None else _STEPS.get(cause)
+
+
+def attempt_next_step_for(cause: str | None) -> NextStep | None:
+    """Return the step for ``cause`` on an attempt made in the window's own sign-in.
+
+    That window offers the lane's sign-in itself and a packaged installation has no console command to run, so
+    a cause whose step is a console sign-in is answered with trying the window's sign-in again.
+    """
+    step = next_step_for(cause)
+    return NextStep.RETRY if step is NextStep.CONSOLE_SIGN_IN else step

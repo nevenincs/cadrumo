@@ -110,7 +110,7 @@ def test_a_helper_failure_reaches_the_snapshot_and_the_log_with_its_cause(
     assert answer["event"] == "failed"
     assert answer["reason"] == "provider_error"
     assert answer["cause"] == "cli_reported_error"
-    assert answer["next_step"] == "console_sign_in"
+    assert answer["next_step"] == "retry"
     ((level, message),) = records
     assert level == logging.WARNING
     assert "cause=cli_reported_error" in message
@@ -120,7 +120,7 @@ def test_a_helper_failure_reaches_the_snapshot_and_the_log_with_its_cause(
 @pytest.mark.parametrize(
     ("mode", "cause", "next_step"),
     [
-        ("eof", "helper_ended_without_result", "console_sign_in"),
+        ("eof", "helper_ended_without_result", "retry"),
         ("garbage", "helper_output_invalid", "update_app"),
     ],
 )
@@ -163,7 +163,7 @@ def test_a_disconnected_helper_cancellation_keeps_its_cause_and_a_retry(tmp_path
 def test_success_with_a_nonzero_exit_is_named(tmp_path: Path) -> None:
     answer = _settled(_attempt(tmp_path, "succeeded_nonzero"))
     assert (answer["event"], answer["reason"], answer["cause"]) == ("failed", "provider_error", "helper_exit_nonzero")
-    assert answer["next_step"] == "console_sign_in"
+    assert answer["next_step"] == "retry"
 
 
 def test_success_is_confirmed_by_a_fresh_status_read(tmp_path: Path) -> None:
@@ -189,7 +189,7 @@ def test_success_the_status_read_does_not_confirm_fails_with_both_causes(
     assert answer["reason"] == "provider_error"
     assert answer["cause"] == "status_not_confirmed"
     assert answer["status_cause"] == "probe_timed_out"
-    assert answer["next_step"] == "console_sign_in"
+    assert answer["next_step"] == "retry"
     ((level, message),) = records
     assert level == logging.WARNING
     assert "cause=status_not_confirmed" in message
