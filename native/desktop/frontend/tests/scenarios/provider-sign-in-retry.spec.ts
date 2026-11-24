@@ -562,3 +562,199 @@ for (const shape of SHAPES) {
     });
   });
 }
+
+test.describe("a start refused while the agent is stopped for a terminal sign-in", () => {
+  const shape = SHAPES[0]!;
+  const AGENT_STOPPING = {
+    cause: "agent_tree_running",
+    next_step: "retry",
+    log_ref: LOG_REF,
+  };
+
+  test("says the agent is being stopped as progress and starts again on its own once it is gone", async ({
+    page: target,
+  }) => {
+    await prepare(target, shape);
+    await target.evaluate(
+      (detail) =>
+        window.__scenarioProviderSignIn!.rejectNextStart("busy", detail, 2),
+      AGENT_STOPPING,
+    );
+    const dialog = await startSignIn(target, shape);
+    const progress = dialog.locator('[data-slot="sign-in-agent-stopping"]');
+    await expect(progress).toHaveAttribute("role", "status");
+    await expect(progress).toContainText(
+      label("desktop.providers.sign_in_agent_stopping", {
+        provider: shape.displayName,
+      }),
+    );
+    await expect(progress).toHaveAttribute("data-reason", "busy");
+    await expect(progress).toHaveAttribute("data-cause", "agent_tree_running");
+    await expect(progress).toHaveAttribute("data-next-step", "retry");
+    await expect(progress).toHaveAttribute("data-log-ref", LOG_REF);
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+    await expect(dialog).not.toContainText(
+      label("desktop.providers.sign_in_busy", { provider: shape.displayName }),
+    );
+    await expect(
+      dialog.getByRole("button", {
+        name: label("desktop.providers.sign_in_retry"),
+      }),
+    ).toHaveCount(0);
+    // Two refusals, then the third start, made by the window alone, is let
+    // through and reaches the provider's page.
+    await expect
+      .poll(async () => starts(await signInCalls(target)), { timeout: 15_000 })
+      .toBe(3);
+    await expect(dialog.locator("[data-attempt-id]")).toHaveCount(1, {
+      timeout: 10_000,
+    });
+    await expect(progress).toHaveCount(0);
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+    await target.evaluate(() =>
+      window.__scenarioProviderSignIn!.succeedCurrentAttempt(true),
+    );
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test("another busy cause is still said as another sign-in and waits for the person's retry", async ({
+    page: target,
+  }) => {
+    await prepare(target, shape);
+    await target.evaluate(
+      (logRef) =>
+        window.__scenarioProviderSignIn!.rejectNextStart("busy", {
+          cause: "sign_in_owner_held",
+          next_step: "close_other_sign_in",
+          log_ref: logRef,
+        }),
+      LOG_REF,
+    );
+    const dialog = await startSignIn(target, shape);
+    const alert = dialog.locator('p[role="alert"]');
+    await expect(alert).toContainText(
+      label("desktop.providers.sign_in_busy", { provider: shape.displayName }),
+    );
+    await expect(alert).toHaveAttribute("data-cause", "sign_in_owner_held");
+    await expect(
+      dialog.locator('[data-slot="sign-in-agent-stopping"]'),
+    ).toHaveCount(0);
+    await expect(
+      dialog.getByRole("button", {
+        name: label("desktop.providers.sign_in_retry"),
+      }),
+    ).toBeVisible();
+    await target.waitForTimeout(4_000);
+    expect(starts(await signInCalls(target))).toBe(1);
+  });
+
+  test("gives up on its own retries after their bound and offers the person's retry with the cause", async ({
+    page: target,
+  }) => {
+    await target.clock.install();
+    await prepare(target, shape);
+    await target.evaluate(
+      (detail) =>
+        window.__scenarioProviderSignIn!.rejectNextStart("busy", detail, 1_000),
+      AGENT_STOPPING,
+    );
+    const dialog = await startSignIn(target, shape);
+    const progress = dialog.locator('[data-slot="sign-in-agent-stopping"]');
+    await expect(progress).toBeVisible();
+    for (let elapsed = 0; elapsed < 75_000; elapsed += 2_500)
+      await target.clock.runFor(2_500);
+    const alert = dialog.locator('p[role="alert"]').first();
+    await expect(alert).toContainText(
+      label("desktop.providers.sign_in_agent_still_running", {
+        provider: shape.displayName,
+      }),
+    );
+    await expect(alert).toHaveAttribute("data-cause", "agent_tree_running");
+    await expect(alert).toHaveAttribute("data-log-ref", LOG_REF);
+    await expect(progress).toHaveCount(0);
+    await expect(
+      dialog.getByRole("button", {
+        name: label("desktop.providers.sign_in_retry"),
+      }),
+    ).toBeVisible();
+    const given = starts(await signInCalls(target));
+    expect(given).toBeGreaterThan(1);
+    // Retries stop at the bound: nothing more is started without the person.
+    await target.clock.runFor(15_000);
+    expect(starts(await signInCalls(target))).toBe(given);
+  });
+});
+
+test.describe("a sign-in that asks for the provider's code", () => {
+  const shape = SHAPES.find((candidate) => candidate.asksForCode)!;
+
+  test("says the code is awaited only a short time, and an attempt that ends unfinished at the code says the time may have run out", async ({
+    page: target,
+  }) => {
+    await prepare(target, shape);
+    const dialog = await startSignIn(target, shape);
+    await expect(
+      dialog.getByLabel(label("desktop.providers.sign_in_code_label")),
+    ).toBeVisible();
+    await expect(
+      dialog.locator('[data-slot="sign-in-code-time-limited"]'),
+    ).toHaveText(
+      label("desktop.providers.sign_in_code_time_limited", {
+        provider: shape.displayName,
+      }),
+    );
+    await observedAttempt(target);
+    await target.evaluate(
+      (logRef) =>
+        window.__scenarioProviderSignIn!.failCurrentAttempt({
+          reason: "provider_error",
+          cause: "login_not_completed",
+          next_step: "retry",
+          log_ref: logRef,
+        }),
+      LOG_REF,
+    );
+    const alert = dialog.locator('p[role="alert"]').first();
+    await expect(alert).toContainText(
+      label("desktop.providers.sign_in_code_unfinished", {
+        provider: shape.displayName,
+      }),
+    );
+    await expect(alert).toHaveAttribute("data-cause", "login_not_completed");
+    await expect(dialog).not.toContainText(
+      label("desktop.providers.console_command_label"),
+    );
+    await expect(
+      dialog.getByRole("button", {
+        name: label("desktop.providers.sign_in_retry"),
+      }),
+    ).toBeVisible();
+  });
+
+  test("an attempt that ends unfinished before any code was asked for keeps its own words", async ({
+    page: target,
+  }) => {
+    const browser = SHAPES.find((candidate) => !candidate.asksForCode)!;
+    await prepare(target, browser);
+    const dialog = await startSignIn(target, browser);
+    await observedAttempt(target);
+    await target.evaluate(() =>
+      window.__scenarioProviderSignIn!.failCurrentAttempt({
+        reason: "provider_error",
+        cause: "login_not_completed",
+        next_step: "retry",
+      }),
+    );
+    const alert = dialog.locator('p[role="alert"]').first();
+    await expect(alert).toContainText(
+      label("desktop.providers.sign_in_provider_error", {
+        provider: browser.displayName,
+      }),
+    );
+    await expect(dialog).not.toContainText(
+      label("desktop.providers.sign_in_code_unfinished", {
+        provider: browser.displayName,
+      }),
+    );
+  });
+});

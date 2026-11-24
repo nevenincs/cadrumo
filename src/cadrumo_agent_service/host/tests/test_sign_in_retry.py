@@ -29,13 +29,15 @@ from ...providers.application.contracts import (
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
     ProviderStatusEntry,
+    ServiceCause,
+    ServiceRefusalCode,
 )
 from ...providers.application.tests.synthetic_catalog import synthetic_catalog
 from ...providers.domain.record import LocalEngine
 from ...service import AgentService
 from ..auth_attempt import AuthAttempt
 from ..controller import AgentGenerations
-from ..sign_in_refusal import new_log_ref
+from ..sign_in_refusal import new_log_ref, refuse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -275,6 +277,23 @@ def test_a_live_attempt_refuses_another_as_busy_with_a_logged_cause(
         release.set()
         _wait_finished(live)
         live.close()
+
+
+@pytest.mark.parametrize(
+    ("cause", "level"),
+    [("agent_tree_running", logging.INFO), ("sign_in_owner_held", logging.WARNING)],
+)
+def test_a_refusal_that_is_a_step_of_a_terminal_sign_in_is_logged_at_info_and_others_at_warning(
+    cause: ServiceCause, level: int, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger=_REFUSAL_LOGGER):
+        answer = refuse(ServiceRefusalCode.BUSY, cause=cause, provider="example")
+        records = delivered_records(caplog, _REFUSAL_LOGGER)
+    assert (answer["kind"], answer["code"], answer["cause"]) == ("refused", "busy", cause)
+    (record,) = records
+    assert record.levelno == level
+    assert f"cause={cause}" in record.getMessage()
+    assert f"log_ref={answer['log_ref']}" in record.getMessage()
 
 
 @pytest.mark.parametrize("failure", ["raises", "refuses"])

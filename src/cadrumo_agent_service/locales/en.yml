@@ -579,6 +579,10 @@ desktop:
     saved_unread: Saved, but its status couldn't be read. Try again.
     saving: Saving…
     sign_in_action: Sign in
+    sign_in_agent_still_running: The agent has not stopped yet, so {provider} sign-in
+      could not start. Try again in a moment.
+    sign_in_agent_stopping: Cadrumo is stopping the agent to sign in to {provider}.
+      Sign-in continues on its own once it has stopped.
     sign_in_busy: Another {provider} sign-in is still finishing. Wait a moment, then
       try again.
     sign_in_cancel: Cancel sign-in
@@ -643,6 +647,11 @@ desktop:
     sign_in_code_label: Authorization code
     sign_in_code_prompt: Enter the authorization code shown on the provider page.
     sign_in_code_submit: Submit code
+    sign_in_code_time_limited: 'Enter the code as soon as you have it: {provider}
+      waits for it only a short time. If the time runs out, you can start again.'
+    sign_in_code_unfinished: '{provider} sign-in ended without completing while it
+      waited for the code; the time to enter it may have run out. Start again to get
+      a new code.'
     sign_in_done: Done
     sign_in_failure: Sign-in couldn't be completed. Try again later.
     sign_in_host_disconnected: Cadrumo lost contact with this sign-in and cancelled

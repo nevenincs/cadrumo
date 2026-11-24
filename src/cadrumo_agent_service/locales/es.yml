@@ -595,6 +595,10 @@ desktop:
     saved_unread: Guardado, pero no se ha podido leer su estado. Vuelve a intentarlo.
     saving: Guardando…
     sign_in_action: Iniciar sesión
+    sign_in_agent_still_running: El agente aún no se ha detenido, así que no se ha
+      podido iniciar sesión en {provider}. Vuelve a intentarlo dentro de un momento.
+    sign_in_agent_stopping: Cadrumo está deteniendo el agente para iniciar sesión
+      en {provider}. El inicio de sesión seguirá solo en cuanto se haya detenido.
     sign_in_busy: Otro inicio de sesión de {provider} aún está terminando. Espera
       un momento y vuelve a intentarlo.
     sign_in_cancel: Cancelar el inicio de sesión
@@ -673,6 +677,11 @@ desktop:
     sign_in_code_prompt: Introduce el código de autorización que aparece en la página
       del proveedor.
     sign_in_code_submit: Enviar código
+    sign_in_code_time_limited: 'Escribe el código en cuanto lo tengas: {provider}
+      solo lo espera durante poco tiempo. Si se acaba, puedes volver a empezar.'
+    sign_in_code_unfinished: El inicio de sesión de {provider} terminó sin completarse
+      mientras esperaba el código; puede que se acabara el tiempo para escribirlo.
+      Vuelve a empezar para recibir un código nuevo.
     sign_in_done: Listo
     sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo
       más tarde.

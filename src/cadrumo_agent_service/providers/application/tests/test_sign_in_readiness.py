@@ -17,7 +17,7 @@ from ..contracts import (
     ProviderStatusReason,
     ServiceCause,
 )
-from ..next_steps import CONSOLE_SIGN_IN_COMMAND, next_step_for
+from ..next_steps import CONSOLE_SIGN_IN_COMMAND, attempt_next_step_for, next_step_for
 from ..ports import AbsentProviderRecord, StoredProviderRecord, UnreadableProviderRecord
 from ..resolution import status_entry
 from .synthetic_catalog import synthetic_catalog
@@ -86,6 +86,15 @@ _NEXT_STEPS = {
 @pytest.mark.parametrize(("cause", "step"), sorted(_NEXT_STEPS.items()))
 def test_each_failure_cause_maps_to_one_closed_next_step(cause: str, step: str) -> None:
     assert next_step_for(cause) is NextStep(step)
+
+
+@pytest.mark.parametrize(("cause", "step"), sorted(_NEXT_STEPS.items()))
+def test_an_attempt_in_the_window_offers_its_own_retry_where_a_console_sign_in_was_declared(
+    cause: str, step: str
+) -> None:
+    expected = NextStep.RETRY if step == "console_sign_in" else NextStep(step)
+    assert attempt_next_step_for(cause) is expected
+    assert attempt_next_step_for(cause) is not NextStep.CONSOLE_SIGN_IN
 
 
 @pytest.mark.parametrize("cause", [None, "invented"])

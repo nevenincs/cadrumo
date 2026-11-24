@@ -17,7 +17,7 @@ from ..providers.application.contracts import (
     ServiceCause,
     SignInReason,
 )
-from ..providers.application.next_steps import next_step_for
+from ..providers.application.next_steps import attempt_next_step_for
 
 MAX_AUTH_LINE = 16 * 1024
 TERMINAL_EVENTS = frozenset({"succeeded", "cancelled", "failed"})
@@ -110,8 +110,9 @@ def snapshot(
     """Build a secret-free outcome through the model the window's type is generated from.
 
     ``cause`` and ``status_cause`` are closed words, and the next step is the
-    one declared for the cause. ``log_ref`` names the log line of a failure; ``url`` and
-    ``user_code`` are given only while a browser action is awaited.
+    one declared for the cause on an attempt in the window's own sign-in.
+    ``log_ref`` names the log line of a failure; ``url`` and ``user_code`` are
+    given only while a browser action is awaited.
     """
     served = ProviderSignInSnapshot.model_validate(
         {
@@ -120,7 +121,7 @@ def snapshot(
             "event": event,
             "reason": reason,
             "cause": cause,
-            "next_step": next_step_for(cause),
+            "next_step": attempt_next_step_for(cause),
             "status_cause": None if status_cause is None else CliStateCause(status_cause),
             "log_ref": log_ref,
             "url": url,
