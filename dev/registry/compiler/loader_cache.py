@@ -30,6 +30,7 @@ import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
+from importlib import import_module
 from io import BytesIO
 from pathlib import Path
 from threading import Lock
@@ -53,6 +54,11 @@ from dev.cache_root import dev_cache_dir
 
 from .export_fragment_grammar import is_generated_export_provenance
 from .toml_helpers import as_toml_table
+
+# Seed the checkout's storage root before the disk-cache directory is resolved,
+# so a fresh process reads and writes the same store a pytest worker or a later
+# lazy import of the path constants would choose.
+import_module("dev.paths")
 
 type TomlReader = Callable[..., dict[str, object]]
 """Parses one authored registry TOML file, refusing through ``error_factory``."""

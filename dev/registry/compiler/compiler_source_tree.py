@@ -20,11 +20,23 @@ from typing import Final
 import cadrumo
 from cadrumo.core.hashing import content_hash_hex, sha256_hex
 
-__all__ = ["compiler_source_tree_digest"]
+__all__ = ["compiler_source_roots", "compiler_source_tree_digest", "normalized_source_digest"]
 
 _DEVELOPMENT_ROOT: Final = Path(__file__).resolve().parents[1]
 _REPOSITORY_ROOT: Final = _DEVELOPMENT_ROOT.parents[1]
 _EXCLUDED_SEGMENTS: Final = frozenset({"tests", "__pycache__"})
+
+
+def compiler_source_roots() -> dict[str, Path]:
+    """Name every source tree :func:`compiler_source_tree_digest` hashes whole."""
+    package = Path(cadrumo.__file__).resolve().parent
+    return {
+        "core": package / "core",
+        "domain": package / "domain",
+        "application": package / "application",
+        "compiler": _DEVELOPMENT_ROOT / "compiler",
+        "publication": _DEVELOPMENT_ROOT / "pipeline",
+    }
 
 
 @cache
@@ -34,17 +46,9 @@ def compiler_source_tree_digest() -> str:
     Computed once per process: the code it hashes is the code this process
     already imported, so it cannot change underneath a running compile.
     """
-    package = Path(cadrumo.__file__).resolve().parent
-    roots = {
-        "core": package / "core",
-        "domain": package / "domain",
-        "application": package / "application",
-        "compiler": _DEVELOPMENT_ROOT / "compiler",
-        "publication": _DEVELOPMENT_ROOT / "pipeline",
-    }
     sources = [
-        (f"{name}/{path.relative_to(root).as_posix()}", _source_digest(path))
-        for name, root in roots.items()
+        (f"{name}/{path.relative_to(root).as_posix()}", normalized_source_digest(path))
+        for name, root in compiler_source_roots().items()
         for path in root.rglob("*.py")
         if not _EXCLUDED_SEGMENTS.intersection(path.relative_to(root).parts)
     ]
@@ -54,13 +58,14 @@ def compiler_source_tree_digest() -> str:
             "sources": sorted(sources),
             "python": f"{version_info.major}.{version_info.minor}",
             "dependency_manifests": {
-                "pyproject.toml": _source_digest(_REPOSITORY_ROOT / "pyproject.toml"),
-                "uv.lock": _source_digest(_REPOSITORY_ROOT / "uv.lock"),
+                "pyproject.toml": normalized_source_digest(_REPOSITORY_ROOT / "pyproject.toml"),
+                "uv.lock": normalized_source_digest(_REPOSITORY_ROOT / "uv.lock"),
             },
             "dependencies": {"pydantic": version("pydantic"), "pydantic-core": version("pydantic-core")},
         }
     )
 
 
-def _source_digest(path: Path) -> str:
+def normalized_source_digest(path: Path) -> str:
+    """Digest one source file's bytes with line endings normalised."""
     return sha256_hex(path.read_bytes().replace(b"\r\n", b"\n"))

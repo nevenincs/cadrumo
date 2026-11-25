@@ -37,6 +37,7 @@ from __future__ import annotations
 import datetime
 import decimal
 import enum
+import gc
 import hashlib
 import hmac
 import inspect
@@ -135,6 +136,24 @@ class _CompiledCacheUnpickler(pickle.Unpickler):
 
             return _RegistryProjectedType
         raise pickle.UnpicklingError(f"compiled cache references forbidden global {module}.{name}")
+
+
+def load_first_party_pickle(data: bytes) -> object:
+    """Restore pickle bytes that may reference only first-party models and inert value types.
+
+    Cyclic collection is paused for the load and restored to its prior state.
+    Restoring a compiled registry allocates over half a million model objects,
+    and each allocation burst started a collection that walked the growing graph
+    for cycles it never held: measured on the bundled registry, 5.95 s with
+    collection against 2.35 s without.
+    """
+    collecting = gc.isenabled()
+    gc.disable()
+    try:
+        return _CompiledCacheUnpickler(io.BytesIO(data)).load()
+    finally:
+        if collecting:
+            gc.enable()
 
 
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
@@ -527,7 +546,7 @@ def decode_and_validate(raw: bytes) -> CompiledRegistryPayload | None:
 def _decode_payload_bytes(payload_bytes: bytes) -> object:
     """Restore one cache payload, scoping opaque model tokens to its catalogue."""
     if not payload_bytes.startswith(_PAYLOAD_ENVELOPE_PREFIX):
-        return _CompiledCacheUnpickler(io.BytesIO(payload_bytes)).load()
+        return load_first_party_pickle(payload_bytes)
     offset = len(_PAYLOAD_ENVELOPE_PREFIX)
     if len(payload_bytes) < offset + 8:
         raise pickle.UnpicklingError("compiled cache envelope is truncated")
@@ -536,13 +555,13 @@ def _decode_payload_bytes(payload_bytes: bytes) -> object:
     catalogue_end = catalogue_start + catalogue_length
     if catalogue_end > len(payload_bytes):
         raise pickle.UnpicklingError("compiled cache catalogue frame is truncated")
-    catalogues = _CompiledCacheUnpickler(io.BytesIO(payload_bytes[catalogue_start:catalogue_end])).load()
+    catalogues = load_first_party_pickle(payload_bytes[catalogue_start:catalogue_end])
     modelos_bytes = payload_bytes[catalogue_end:]
     if not isinstance(catalogues, RegistryCatalogues):
         raise pickle.UnpicklingError("compiled cache catalogue has a foreign shape")
     authority = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
     with validating_governed_facts(authority):
-        modelos = _CompiledCacheUnpickler(io.BytesIO(modelos_bytes)).load()
+        modelos = load_first_party_pickle(modelos_bytes)
     return modelos, catalogues
 
 
