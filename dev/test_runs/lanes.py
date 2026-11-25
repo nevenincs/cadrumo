@@ -23,6 +23,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import IO, TYPE_CHECKING
 
 from dev.paths import UTF_8
@@ -31,7 +32,6 @@ from .paths import allocate_run_directory, test_log_root
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
-    from pathlib import Path
 
 #: The private transport variable each lane reads for the run's evidence root.
 RUN_ROOT_ENV = "CADRUMO_LANE_RUN_ROOT"
@@ -291,7 +291,7 @@ def lane_command_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(
         prog="python -m dev.test_runs",
-        description="Run the named lanes sequentially.",
+        description="Run the named lanes sequentially, or a gate graph concurrently.",
     )
     sub = parser.add_subparsers(dest="action", required=True)
     lanes = sub.add_parser("lanes", help="run the named lanes in order")
@@ -311,6 +311,22 @@ def lane_command_parser() -> argparse.ArgumentParser:
         help="declare a lane's machine-readable purpose (collection, load, or command)",
     )
     lanes.add_argument("lane", nargs="+", help="just recipe names")
+    # The gate's commands live in its graph file, not on this command line, so
+    # it names no lanes here.
+    gate = sub.add_parser("gate", help="run a gate graph concurrently under one worker budget")
+    gate.set_defaults(lane=[])
+    gate.add_argument("--graph", required=True, type=Path, help="gate graph file (.toml or .json)")
+    gate.add_argument("--budget", required=True, type=int, help="most worker slots running nodes may occupy")
+    gate.add_argument("--record-dir", type=Path, help="directory for the record, node logs and JUnit reports")
+    gate.add_argument("--head-label", help="the caller's name for the tree under test")
+    gate.add_argument("--tree-root", type=Path, help="source tree that must not move (default: the repository)")
+    gate.add_argument("--only", action="append", default=[], metavar="NODE", help="run only this node (repeatable)")
+    gate.add_argument("--dry-run", action="store_true", help="print the schedule order and concurrency, run nothing")
+    gate.add_argument("--json-events", action="store_true", help="emit machine-readable node events")
+    timing = sub.add_parser("gate-timing", help="aggregate a gate record's JUnit reports into per-file seconds")
+    timing.set_defaults(lane=[])
+    timing.add_argument("--record-dir", required=True, type=Path, help="a gate record directory")
+    timing.add_argument("--output", type=Path, help="output file (default: inside the record directory)")
     return parser
 
 
