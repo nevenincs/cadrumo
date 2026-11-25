@@ -5501,6 +5501,7 @@ desktop:
       show: Mostra
       show_all: Totes
       show_filled: Emplenades
+      show_missing: Sense emplenar
       show_required: Obligatòries
       show_unset: Sense completar
       sort: Ordena

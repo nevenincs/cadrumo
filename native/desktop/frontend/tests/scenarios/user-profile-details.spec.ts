@@ -71,7 +71,7 @@ test("the summary is headed with the name the product serves, never as unnamed w
   await expect(heading).not.toHaveText(label("desktop.profile.unnamed"));
 });
 
-test("the summary names the taxpayer and its required-missing count opens every required detail, the missing ones marked", async ({
+test("the summary names the taxpayer and its required-missing count opens the missing details, marked", async ({
   page,
 }) => {
   const profile = await open(page);
@@ -93,14 +93,14 @@ test("the summary names the taxpayer and its required-missing count opens every 
     .click();
   await expect(row(profile, "identity.tax_id")).toBeVisible();
   await expect(row(profile, "identity.name")).toHaveCount(0);
-  // The required view lists what the product reports missing and what it
-  // declares required and already holds, so the stated ones stay in reach.
+  // The count and the view agree: only the details reported missing are
+  // listed, never the required ones the profile already holds.
   for (const path of PROFILE_REQUIRED_STATED)
-    await expect(row(profile, path)).toBeVisible();
+    await expect(row(profile, path)).toHaveCount(0);
   await expect(
     profile.getByText(
       label("desktop.profile.view.results", {
-        count: PROFILE_REQUIRED_DETAILS,
+        count: PROFILE_REQUIRED_MISSING,
       }),
     ),
   ).toBeVisible();
@@ -112,6 +112,24 @@ test("the summary names the taxpayer and its required-missing count opens every 
     "aria-label",
     `Tax ID (NIF/NIE/CIF) (${label("desktop.profile.required")}): ${label("desktop.profile.missing")}`,
   );
+});
+
+test("the required view lists the stated required details as well as the missing ones", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await viewOption(page, "desktop.profile.view.show_required");
+  await expect(row(profile, "identity.tax_id")).toBeVisible();
+  await expect(row(profile, "identity.name")).toHaveCount(0);
+  for (const path of PROFILE_REQUIRED_STATED)
+    await expect(row(profile, path)).toBeVisible();
+  await expect(
+    profile.getByText(
+      label("desktop.profile.view.results", {
+        count: PROFILE_REQUIRED_DETAILS,
+      }),
+    ),
+  ).toBeVisible();
 });
 
 test("search, show, group and sort arrange the saved details", async ({

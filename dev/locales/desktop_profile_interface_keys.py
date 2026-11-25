@@ -205,6 +205,7 @@ DESKTOP_PROFILE_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.profile.view.show",
         "desktop.profile.view.show_all",
         "desktop.profile.view.show_filled",
+        "desktop.profile.view.show_missing",
         "desktop.profile.view.show_required",
         "desktop.profile.view.show_unset",
         "desktop.profile.view.sort",

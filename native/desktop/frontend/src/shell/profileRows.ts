@@ -133,6 +133,7 @@ export function matches(row: Row, show: Show, needle: string) {
     show === "all" ||
     (show === "unset" && row.state !== "filled") ||
     (show === "required" && marked(row)) ||
+    (show === "missing" && row.state === "required") ||
     (show === "filled" && row.state === "filled");
   return (
     shown &&

@@ -5506,6 +5506,7 @@ desktop:
       show: Mostrar
       show_all: Todos
       show_filled: Rellenados
+      show_missing: Sin rellenar
       show_required: Obligatorios
       show_unset: Sin completar
       sort: Ordenar

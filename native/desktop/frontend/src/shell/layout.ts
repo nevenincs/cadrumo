@@ -25,7 +25,7 @@ export type Prefs = {
 
 export type ProfileView = {
   /** Which details are listed. */
-  show: "all" | "unset" | "required" | "filled";
+  show: "all" | "unset" | "required" | "missing" | "filled";
   group: "section" | "status" | "none";
   sort: "form" | "missing" | "alpha";
   /** The groups the person closed; every other one is open. */
@@ -340,7 +340,7 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
       profileView: {
         show: pick(
           profile.show,
-          ["all", "unset", "required", "filled"] as const,
+          ["all", "unset", "required", "missing", "filled"] as const,
           legacyShow(profile.filter),
         ),
         group: pick(

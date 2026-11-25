@@ -886,7 +886,7 @@ export const UserProfilePage = memo(function UserProfilePage({
       filled={total.filled}
       total={total.total}
       missingCount={total.missing}
-      onMissing={() => setView({ show: "required", group: "section" })}
+      onMissing={() => setView({ show: "missing", group: "section" })}
       actions={
         <Button
           size="sm"

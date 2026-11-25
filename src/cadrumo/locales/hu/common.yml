@@ -5482,6 +5482,7 @@ desktop:
       show: Megjelenítés
       show_all: Mind
       show_filled: Kitöltött
+      show_missing: Hiányzó
       show_required: Kötelező
       show_unset: Nincs megadva
       sort: Rendezés
