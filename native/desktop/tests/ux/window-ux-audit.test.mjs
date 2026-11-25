@@ -10,7 +10,13 @@
 //   CADRUMO_UX_DEVTOOLS  (optional) 1: wheel through Chromium DevTools (trusted
 //                    input). Needs the remote-debugging test host in
 //                    CADRUMO_PERSONA_HOST (python -m dev.desktop_agent_live.stage_host),
-//                    loopback only; refused for any other host.
+//                    loopback only; refused for any other host. UX-21 judges the
+//                    wheel only with it: a run without it reports UNMEASURED
+//                    ("run lacks CADRUMO_UX_DEVTOOLS=1"). It is not set by default
+//                    because the driver refuses a host that lacks the
+//                    webview2-remote-debugging feature, which would stop every
+//                    test. The one command (POSIX shell, other variables as above):
+//                      CADRUMO_UX_DEVTOOLS=1 CADRUMO_PERSONA_HOST="$(python -m dev.desktop_agent_live.stage_host)" node --test native/desktop/tests/ux/window-ux-audit.test.mjs
 //   CADRUMO_UX_STAGED_SHA256  sha256 of the host executable staged for this
 //                    build (python -m dev.desktop_automation_stage); a run
 //                    that drives any other executable is not counted
@@ -1585,7 +1591,7 @@ ux(
         `UNMEASURED wheel: the ${win.devtools ? "DevTools" : "WebDriver"} wheel ` +
           (win.devtools
             ? "moved no control scroller"
-            : "is an untrusted synthetic event (tauri-plugin-wdio-webdriver 1.5.1) and moved no scroller; set CADRUMO_UX_DEVTOOLS=1 with the remote-debugging test host for a trusted one") +
+            : "run lacks CADRUMO_UX_DEVTOOLS=1: the WebDriver wheel is an untrusted synthetic event (tauri-plugin-wdio-webdriver 1.5.1) and moved no scroller") +
           `, so no wheel verdict is the app's (control did not move: ${controlFailed.join("; ")})`,
       );
     else failures.push(...wheelFailures);
