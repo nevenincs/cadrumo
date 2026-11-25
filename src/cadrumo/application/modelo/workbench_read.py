@@ -147,7 +147,9 @@ class ModeloWorkbenchReadPorts:
     sums stands, the same reader its calculation's refusal names them from.
     ``observations`` is the profile's store of captured filed observations; with
     ``filings`` it shows which earlier declarations the application holds nothing
-    of, so the form offers a stated figure for a carry that follows them.
+    of, so the form offers a stated figure for a carry that follows them, and it
+    shows whether one the calculation found nothing of is held now, so the form
+    offers working it out again.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -370,6 +372,7 @@ def _load_form(
         credit_resolutions=ports.credit_resolutions,
         transactions=_ledger_transactions(ports),
         m303_arrivals=ports.m303_arrivals,
+        observations=ports.observations,
     )
 
 
@@ -549,6 +552,7 @@ def read_modelo_workbench_filing_state(
         activity_assets=ports.activity_assets,
         credit_resolutions=ports.credit_resolutions,
         transactions=_ledger_transactions(ports),
+        observations=ports.observations,
     )
     facts = _filing_facts(
         unit,

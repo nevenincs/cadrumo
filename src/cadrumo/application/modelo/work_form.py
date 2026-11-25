@@ -136,6 +136,7 @@ def build_modelo_work_form(
     filed_findings: tuple[ModeloVerificationFinding, ...] = (),
     last_export: ModeloFormExport | None = None,
     verification_out_of_date: bool = False,
+    calculation_sources_arrived: bool = False,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
 
@@ -157,7 +158,10 @@ def build_modelo_work_form(
     both, since neither is a fact of the review or the layout. ``last_export``
     is the latest file exported for the declaration and
     ``verification_out_of_date`` whether the movements the last check read
-    changed since; the caller reads both as well.
+    changed since; the caller reads both as well, and
+    ``calculation_sources_arrived``, whether an earlier return a relation of
+    ``revision`` found nothing of is held now, so working it out again would
+    read it.
 
     ``element_names`` are the names the register's elements go by now, for the
     notes that speak of them.
@@ -238,6 +242,7 @@ def build_modelo_work_form(
         last_export=last_export,
         verification_out_of_date=verification_out_of_date,
         filed_findings=filed_findings,
+        calculation_sources_arrived=calculation_sources_arrived,
     )
     reason = inspection_reason(layout, context)
     if reason is not None or layout is None:
@@ -278,6 +283,7 @@ def summarize_modelo_work_form(
     filed_findings: tuple[ModeloVerificationFinding, ...] = (),
     last_export: ModeloFormExport | None = None,
     verification_out_of_date: bool = False,
+    calculation_sources_arrived: bool = False,
 ) -> ModeloWorkFormSummary:
     """Classify one work review against its revision's declared layout, without presenting a field.
 
@@ -317,6 +323,7 @@ def summarize_modelo_work_form(
         last_export=last_export,
         verification_out_of_date=verification_out_of_date,
         filed_findings=filed_findings,
+        calculation_sources_arrived=calculation_sources_arrived,
     )
 
 
@@ -478,6 +485,7 @@ def _assemble_work_form(
         deadline=summary.deadline,
         aeat_data=project_aeat_data(context, aeat_data_imported_at),
         verification_out_of_date=summary.verification_out_of_date,
+        calculation_sources_arrived=summary.calculation_sources_arrived,
         filing=summary.filing,
         last_export=summary.last_export,
         edit_closure=summary.edit_closure,

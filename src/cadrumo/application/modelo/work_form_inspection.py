@@ -207,6 +207,7 @@ def build_inspection_only_form(
         deadline=summary.deadline,
         aeat_data=project_aeat_data(context, aeat_data_imported_at),
         verification_out_of_date=summary.verification_out_of_date,
+        calculation_sources_arrived=summary.calculation_sources_arrived,
         filing=summary.filing,
         last_export=summary.last_export,
         edit_closure=summary.edit_closure,
